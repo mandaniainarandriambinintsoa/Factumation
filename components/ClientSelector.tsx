@@ -167,7 +167,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-96 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
+        <div className="absolute z-50 mt-2 w-[calc(100vw-2rem)] sm:w-96 right-0 sm:right-auto bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
           {!showNewClientForm ? (
             <>
               {/* Barre de recherche */}

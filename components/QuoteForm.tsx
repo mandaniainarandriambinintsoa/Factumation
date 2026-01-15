@@ -790,7 +790,7 @@ const QuoteForm: React.FC = () => {
 
             {/* Entreprise */}
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                 <h3 className={sectionTitleClass + " !mb-0"}>Informations Entreprise</h3>
                 <CompanySelector
                   onSelectCompany={handleSelectCompany}
@@ -857,7 +857,7 @@ const QuoteForm: React.FC = () => {
 
             {/* Client */}
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                 <h3 className={sectionTitleClass + " !mb-0"}>Informations Client</h3>
                 <ClientSelector
                   onSelectClient={handleSelectClient}
