@@ -10,6 +10,7 @@ import QuoteForm from './components/QuoteForm';
 import About from './components/About';
 import Contact from './components/Contact';
 import Dashboard from './components/Dashboard';
+import Settings from './components/Settings';
 
 const App: React.FC = () => {
   return (
@@ -26,6 +27,7 @@ const App: React.FC = () => {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
 

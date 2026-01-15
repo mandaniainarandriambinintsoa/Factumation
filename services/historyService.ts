@@ -1,6 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { InvoiceData, QuoteData, SavedInvoice, SavedQuote, LineItem } from '../types';
 
+// Status types
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'cancelled';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+
 // Helper to calculate total
 const calculateTotal = (items: LineItem[]): number => {
   return items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
@@ -9,7 +13,8 @@ const calculateTotal = (items: LineItem[]): number => {
 // Save invoice to history
 export const saveInvoice = async (
   invoiceData: InvoiceData,
-  pdfBase64?: string
+  pdfBase64?: string,
+  status: InvoiceStatus = 'draft'
 ): Promise<{ data: SavedInvoice | null; error: string | null }> => {
   if (!supabase) {
     return { data: null, error: 'Supabase non configuré' };
@@ -29,13 +34,20 @@ export const saveInvoice = async (
       invoice_date: invoiceData.invoiceDate,
       due_date: invoiceData.dueDate || null,
       company_name: invoiceData.companyName,
+      company_address: invoiceData.companyAddress,
       company_email: invoiceData.companyEmail,
+      company_phone: invoiceData.companyPhone || null,
+      logo_url: invoiceData.logoUrl || null,
       client_name: invoiceData.clientName,
+      client_address: invoiceData.clientAddress,
       client_email: invoiceData.clientEmail,
+      client_phone: invoiceData.clientPhone || null,
       items: invoiceData.items,
       total: calculateTotal(invoiceData.items),
       currency: invoiceData.currency,
+      payment_method: invoiceData.paymentMethod || null,
       pdf_base64: pdfBase64 || null,
+      status,
     })
     .select()
     .single();
@@ -54,7 +66,8 @@ export const saveInvoice = async (
 // Save quote to history
 export const saveQuote = async (
   quoteData: QuoteData,
-  pdfBase64?: string
+  pdfBase64?: string,
+  status: QuoteStatus = 'draft'
 ): Promise<{ data: SavedQuote | null; error: string | null }> => {
   if (!supabase) {
     return { data: null, error: 'Supabase non configuré' };
@@ -74,13 +87,20 @@ export const saveQuote = async (
       quote_date: quoteData.quoteDate,
       validity_date: quoteData.validityDate,
       company_name: quoteData.companyName,
+      company_address: quoteData.companyAddress,
       company_email: quoteData.companyEmail,
+      company_phone: quoteData.companyPhone || null,
+      logo_url: quoteData.logoUrl || null,
       client_name: quoteData.clientName,
+      client_address: quoteData.clientAddress,
       client_email: quoteData.clientEmail,
+      client_phone: quoteData.clientPhone || null,
       items: quoteData.items,
       total: calculateTotal(quoteData.items),
       currency: quoteData.currency,
+      payment_method: quoteData.paymentMethod || null,
       pdf_base64: pdfBase64 || null,
+      status,
     })
     .select()
     .single();
@@ -178,6 +198,110 @@ export const deleteQuote = async (id: string): Promise<{ error: string | null }>
   return { error: null };
 };
 
+// Update invoice status
+export const updateInvoiceStatus = async (
+  id: string,
+  status: InvoiceStatus
+): Promise<{ data: SavedInvoice | null; error: string | null }> => {
+  if (!supabase) {
+    return { data: null, error: 'Supabase non configuré' };
+  }
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating invoice status:', error);
+    return { data: null, error: error.message };
+  }
+
+  return {
+    data: mapDbInvoice(data),
+    error: null,
+  };
+};
+
+// Update quote status
+export const updateQuoteStatus = async (
+  id: string,
+  status: QuoteStatus
+): Promise<{ data: SavedQuote | null; error: string | null }> => {
+  if (!supabase) {
+    return { data: null, error: 'Supabase non configuré' };
+  }
+
+  const { data, error } = await supabase
+    .from('quotes')
+    .update({ status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating quote status:', error);
+    return { data: null, error: error.message };
+  }
+
+  return {
+    data: mapDbQuote(data),
+    error: null,
+  };
+};
+
+// Get single invoice by ID
+export const getInvoiceById = async (
+  id: string
+): Promise<{ data: SavedInvoice | null; error: string | null }> => {
+  if (!supabase) {
+    return { data: null, error: 'Supabase non configuré' };
+  }
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching invoice:', error);
+    return { data: null, error: error.message };
+  }
+
+  return {
+    data: mapDbInvoice(data),
+    error: null,
+  };
+};
+
+// Get single quote by ID
+export const getQuoteById = async (
+  id: string
+): Promise<{ data: SavedQuote | null; error: string | null }> => {
+  if (!supabase) {
+    return { data: null, error: 'Supabase non configuré' };
+  }
+
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching quote:', error);
+    return { data: null, error: error.message };
+  }
+
+  return {
+    data: mapDbQuote(data),
+    error: null,
+  };
+};
+
 // Map database invoice to frontend type
 const mapDbInvoice = (dbInvoice: any): SavedInvoice => ({
   id: dbInvoice.id,
@@ -186,12 +310,20 @@ const mapDbInvoice = (dbInvoice: any): SavedInvoice => ({
   invoiceDate: dbInvoice.invoice_date,
   dueDate: dbInvoice.due_date,
   companyName: dbInvoice.company_name,
+  companyAddress: dbInvoice.company_address,
   companyEmail: dbInvoice.company_email,
+  companyPhone: dbInvoice.company_phone,
+  logoUrl: dbInvoice.logo_url,
   clientName: dbInvoice.client_name,
+  clientAddress: dbInvoice.client_address,
   clientEmail: dbInvoice.client_email,
+  clientPhone: dbInvoice.client_phone,
   items: dbInvoice.items,
   total: parseFloat(dbInvoice.total),
   currency: dbInvoice.currency,
+  paymentMethod: dbInvoice.payment_method,
+  status: dbInvoice.status || 'draft',
+  notes: dbInvoice.notes,
   pdfBase64: dbInvoice.pdf_base64,
   createdAt: dbInvoice.created_at,
   updatedAt: dbInvoice.updated_at,
@@ -205,12 +337,20 @@ const mapDbQuote = (dbQuote: any): SavedQuote => ({
   quoteDate: dbQuote.quote_date,
   validityDate: dbQuote.validity_date,
   companyName: dbQuote.company_name,
+  companyAddress: dbQuote.company_address,
   companyEmail: dbQuote.company_email,
+  companyPhone: dbQuote.company_phone,
+  logoUrl: dbQuote.logo_url,
   clientName: dbQuote.client_name,
+  clientAddress: dbQuote.client_address,
   clientEmail: dbQuote.client_email,
+  clientPhone: dbQuote.client_phone,
   items: dbQuote.items,
   total: parseFloat(dbQuote.total),
   currency: dbQuote.currency,
+  paymentMethod: dbQuote.payment_method,
+  status: dbQuote.status || 'draft',
+  notes: dbQuote.notes,
   pdfBase64: dbQuote.pdf_base64,
   createdAt: dbQuote.created_at,
   updatedAt: dbQuote.updated_at,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, FileText, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { Menu, X, FileText, User, LogOut, LayoutDashboard, ChevronDown, History, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 
@@ -34,13 +34,21 @@ const Navbar: React.FC = () => {
     setIsUserMenuOpen(false);
   };
 
-  const navLinks = [
+  // Liens de navigation de base
+  const baseNavLinks = [
     { name: 'Accueil', path: '/' },
     { name: 'Facture', path: '/create' },
     { name: 'Devis', path: '/quote' },
+  ];
+
+  // Liens supplémentaires
+  const secondaryNavLinks = [
     { name: 'À propos', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
+
+  // Lien Historique (visible seulement si connecté)
+  const historyLink = { name: 'Historique', path: '/dashboard', icon: History };
 
   return (
     <>
@@ -58,7 +66,38 @@ const Navbar: React.FC = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-8">
-              {navLinks.map((link) => (
+              {/* Liens de base */}
+              {baseNavLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={`text-sm font-medium transition-colors duration-200 ${
+                    isActive(link.path)
+                      ? 'text-primary-900 border-b-2 border-primary-900'
+                      : 'text-slate-600 hover:text-primary-900'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Lien Historique - visible seulement si connecté */}
+              {user && (
+                <Link
+                  to={historyLink.path}
+                  className={`text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
+                    isActive(historyLink.path)
+                      ? 'text-primary-900 border-b-2 border-primary-900'
+                      : 'text-slate-600 hover:text-primary-900'
+                  }`}
+                >
+                  <History size={16} />
+                  {historyLink.name}
+                </Link>
+              )}
+
+              {/* Liens secondaires */}
+              {secondaryNavLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
@@ -114,6 +153,14 @@ const Navbar: React.FC = () => {
                               <LayoutDashboard className="w-4 h-4" />
                               Mon historique
                             </Link>
+                            <Link
+                              to="/settings"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            >
+                              <Settings className="w-4 h-4" />
+                              Paramètres
+                            </Link>
                             <hr className="my-1 border-slate-100" />
                             <button
                               onClick={handleSignOut}
@@ -162,7 +209,40 @@ const Navbar: React.FC = () => {
         {isOpen && (
           <div className="md:hidden bg-white border-b border-slate-200 animate-fade-in">
             <div className="px-4 pt-2 pb-4 space-y-1">
-              {navLinks.map((link) => (
+              {/* Liens de base */}
+              {baseNavLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`block px-3 py-3 rounded-md text-base font-medium ${
+                    isActive(link.path)
+                      ? 'bg-primary-50 text-primary-900'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-primary-900'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Lien Historique - visible seulement si connecté */}
+              {user && (
+                <Link
+                  to={historyLink.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-3 rounded-md text-base font-medium ${
+                    isActive(historyLink.path)
+                      ? 'bg-primary-50 text-primary-900'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-primary-900'
+                  }`}
+                >
+                  <History size={18} />
+                  {historyLink.name}
+                </Link>
+              )}
+
+              {/* Liens secondaires */}
+              {secondaryNavLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
@@ -200,12 +280,12 @@ const Navbar: React.FC = () => {
                         </div>
                       </div>
                       <Link
-                        to="/dashboard"
+                        to="/settings"
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 px-3 py-3 text-slate-600 hover:bg-slate-50 rounded-md"
                       >
-                        <LayoutDashboard className="w-5 h-5" />
-                        Mon historique
+                        <Settings className="w-5 h-5" />
+                        Paramètres
                       </Link>
                       <button
                         onClick={() => {

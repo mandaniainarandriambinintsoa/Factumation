@@ -6,9 +6,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'login' | 'register';
+  customMessage?: string;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', customMessage }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -100,11 +101,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             <h2 className="text-2xl font-bold text-slate-900">
               {mode === 'login' ? 'Connexion' : 'Créer un compte'}
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              {mode === 'login'
-                ? 'Connectez-vous pour accéder à votre historique'
-                : 'Inscrivez-vous pour sauvegarder vos factures'}
-            </p>
+            {customMessage ? (
+              <div className="mt-3 p-3 bg-primary-50 border border-primary-100 rounded-lg">
+                <p className="text-sm text-primary-800 font-medium">
+                  {customMessage}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-500">
+                {mode === 'login'
+                  ? 'Connectez-vous pour accéder à votre historique'
+                  : 'Inscrivez-vous pour sauvegarder vos factures'}
+              </p>
+            )}
           </div>
 
           {!isConfigured && (

@@ -1,12 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
-import { InvoiceData, LineItem } from '../types';
-import { CURRENCIES, PAYMENT_METHODS, DEFAULT_WEBHOOK_URL } from '../constants';
+import { InvoiceData, LineItem, FiscalInfo } from '../types';
+import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
+import { sendInvoiceEmail, isBrevoConfigured } from '../services/emailService';
 import { sendInvoiceWithPdfToWebhook } from '../services/invoiceService';
 import { saveInvoice } from '../services/historyService';
+import { DEFAULT_WEBHOOK_URL } from '../constants';
+
+// Email admin pour activer les fonctionnalités cachées (webhook n8n)
+const ADMIN_EMAIL = 'mandaniaina.randriambinintsoa@gmail.com';
+import { getDefaultCompany } from '../services/companyService';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
+import ClientSelector from './ClientSelector';
+import CompanySelector from './CompanySelector';
 
 const getInitialFormData = (): InvoiceData => ({
   companyName: '',
@@ -14,6 +22,13 @@ const getInitialFormData = (): InvoiceData => ({
   companyEmail: '',
   companyPhone: '',
   logoUrl: '',
+  fiscalInfo: {
+    region: 'NONE',
+    nif: '',
+    stat: '',
+    siret: '',
+    tvaNumber: ''
+  },
   clientName: '',
   clientAddress: '',
   clientEmail: '',
@@ -34,20 +49,144 @@ const InvoiceForm: React.FC = () => {
   const [successAction, setSuccessAction] = useState<'pdf' | 'email' | 'saved' | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMessage, setAuthModalMessage] = useState<string | undefined>(undefined);
+  const [pendingAction, setPendingAction] = useState<'save' | 'email' | null>(null);
   const [savingToHistory, setSavingToHistory] = useState(false);
   const [lastGeneratedPdfBase64, setLastGeneratedPdfBase64] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
 
   const [formData, setFormData] = useState<InvoiceData>(getInitialFormData());
 
   const { user } = useAuth();
 
+  // Vérifie si l'utilisateur connecté est l'admin (pour afficher le webhook n8n)
+  const isAdmin = user?.email === ADMIN_EMAIL;
+
   // Reference pour la zone à imprimer en PDF
   const invoiceRef = useRef<HTMLDivElement>(null);
+
+  // Charger la société par défaut au montage ou à la connexion
+  useEffect(() => {
+    const loadDefaultCompany = async () => {
+      if (user) {
+        const { data } = await getDefaultCompany();
+        if (data) {
+          // Pré-remplir les infos entreprise si elles existent et que le formulaire est vide
+          setFormData(prev => ({
+            ...prev,
+            companyName: prev.companyName || data.name || '',
+            companyAddress: prev.companyAddress || data.address || '',
+            companyEmail: prev.companyEmail || data.email || '',
+            companyPhone: prev.companyPhone || data.phone || '',
+            logoUrl: prev.logoUrl || data.logoUrl || '',
+            currency: data.defaultCurrency || prev.currency,
+            paymentMethod: data.defaultPaymentMethod || prev.paymentMethod,
+            // Générer le numéro avec le préfixe personnalisé
+            invoiceNumber: `${data.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+            // Pré-remplir les informations fiscales de la société par défaut
+            fiscalInfo: {
+              region: data.fiscalRegion || 'NONE',
+              siret: data.siret || '',
+              tvaNumber: data.vatNumber || '',
+              nif: data.nif || '',
+              stat: data.stat || '',
+            },
+          }));
+        }
+      }
+    };
+    loadDefaultCompany();
+  }, [user]);
+
+  // Exécuter l'action en attente après connexion
+  useEffect(() => {
+    if (user && pendingAction && !isAuthModalOpen) {
+      if (pendingAction === 'email') {
+        // Petite pause pour laisser le modal se fermer
+        setTimeout(() => {
+          handleSendEmail();
+        }, 100);
+      } else if (pendingAction === 'save') {
+        setTimeout(() => {
+          handleSaveToHistory();
+        }, 100);
+      }
+      setPendingAction(null);
+    }
+  }, [user, isAuthModalOpen]);
+
+  // Handler pour sélectionner un client depuis le carnet
+  const handleSelectClient = (client: {
+    clientName: string;
+    clientEmail: string;
+    clientAddress: string;
+    clientPhone: string;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      clientName: client.clientName,
+      clientEmail: client.clientEmail,
+      clientAddress: client.clientAddress,
+      clientPhone: client.clientPhone,
+    }));
+  };
+
+  // Handler pour sélectionner une société émettrice
+  const handleSelectCompany = (company: {
+    companyName: string;
+    companyEmail: string;
+    companyAddress: string;
+    companyPhone: string;
+    logoUrl?: string;
+    currency?: string;
+    paymentMethod?: string;
+    invoicePrefix?: string;
+    // Informations fiscales
+    fiscalRegion?: string;
+    siret?: string;
+    vatNumber?: string;
+    nif?: string;
+    stat?: string;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      companyName: company.companyName,
+      companyEmail: company.companyEmail,
+      companyAddress: company.companyAddress,
+      companyPhone: company.companyPhone,
+      logoUrl: company.logoUrl || prev.logoUrl,
+      currency: company.currency || prev.currency,
+      paymentMethod: company.paymentMethod || prev.paymentMethod,
+      // Générer le numéro avec le préfixe de la société
+      invoiceNumber: `${company.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      // Pré-remplir les informations fiscales de la société
+      fiscalInfo: {
+        region: company.fiscalRegion || 'NONE',
+        siret: company.siret || '',
+        tvaNumber: company.vatNumber || '',
+        nif: company.nif || '',
+        stat: company.stat || '',
+      },
+    }));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleFiscalInfoChange = (field: keyof FiscalInfo, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      fiscalInfo: {
+        ...prev.fiscalInfo!,
+        [field]: value
+      }
+    }));
+  };
+
+  const selectedFiscalRegion = FISCAL_REGIONS.find(r => r.code === formData.fiscalInfo?.region);
 
   const handleItemChange = (id: string, field: keyof LineItem, value: string | number) => {
     const newItems = formData.items.map(item => {
@@ -160,11 +299,27 @@ const InvoiceForm: React.FC = () => {
     }
   };
 
-  // Action: Envoyer Email avec PDF (Webhook)
+  // Action: Envoyer Email avec PDF (via Brevo)
   const handleSendEmail = async () => {
     if (!invoiceRef.current) return;
 
+    // Vérifier si l'utilisateur est connecté
+    if (!user) {
+      setAuthModalMessage('Pour envoyer la facture directement par email, connectez-vous à votre compte.');
+      setPendingAction('email');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    // Vérifier si Brevo est configuré
+    if (!isBrevoConfigured()) {
+      setEmailError('Service email non configuré. Contactez l\'administrateur.');
+      return;
+    }
+
     setLoading(true);
+    setEmailError(null);
+
     try {
       // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
@@ -190,8 +345,13 @@ const InvoiceForm: React.FC = () => {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Envoyer au webhook avec le PDF en base64
-      await sendInvoiceWithPdfToWebhook(formData, pdfBase64, DEFAULT_WEBHOOK_URL);
+      // Envoyer l'email via Brevo
+      const result = await sendInvoiceEmail(formData, pdfBase64);
+
+      if (!result.success) {
+        setEmailError(result.error || 'Erreur lors de l\'envoi de l\'email');
+        return;
+      }
 
       setSuccessAction('email');
       setSuccess(true);
@@ -205,8 +365,83 @@ const InvoiceForm: React.FC = () => {
       }, 5000);
     } catch (error) {
       console.error("Erreur lors de la génération du PDF ou de l'envoi:", error);
+      setEmailError('Erreur inattendue lors de l\'envoi');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Action: Envoyer via Webhook n8n/Gmail (admin seulement)
+  const handleSendViaWebhook = async () => {
+    if (!invoiceRef.current || !isAdmin) return;
+
+    setWebhookLoading(true);
+    setEmailError(null);
+
+    try {
+      // Générer le PDF avec html2pdf
+      const element = invoiceRef.current;
+      const opt = {
+        margin: 10,
+        filename: `Facture-${formData.invoiceNumber}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+
+      // Convertir le blob en base64
+      const pdfBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
+
+      // Envoyer via webhook n8n
+      const response = await fetch(DEFAULT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          pdfBase64,
+          pdfFileName: `Facture-${formData.invoiceNumber}.pdf`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Pas de détails');
+        console.error('Erreur webhook:', errorText);
+        setEmailError(`Erreur webhook: ${response.status} - ${errorText}`);
+        return;
+      }
+
+      setSuccessAction('email');
+      setSuccess(true);
+
+      // Réinitialiser le formulaire après succès
+      setFormData(getInitialFormData());
+      setIsPreviewMode(false);
+      setTimeout(() => {
+        setSuccess(false);
+        setSuccessAction(null);
+      }, 5000);
+    } catch (error: any) {
+      console.error("Erreur lors de l'envoi via webhook:", error);
+      // Erreur réseau ou CORS
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setEmailError('Erreur réseau/CORS - L\'instance n8n est peut-être en veille. Réessaie dans 30s.');
+      } else {
+        setEmailError(`Erreur: ${error.message || 'Erreur inconnue'}`);
+      }
+    } finally {
+      setWebhookLoading(false);
     }
   };
 
@@ -218,6 +453,8 @@ const InvoiceForm: React.FC = () => {
   // Action: Sauvegarder dans l'historique
   const handleSaveToHistory = async () => {
     if (!user) {
+      setAuthModalMessage('Pour sauvegarder vos factures et y accéder plus tard, connectez-vous à votre compte.');
+      setPendingAction('save');
       setIsAuthModalOpen(true);
       return;
     }
@@ -286,7 +523,7 @@ const InvoiceForm: React.FC = () => {
         case 'email':
           return {
             title: 'Facture envoyée !',
-            description: "Les données ont été transmises avec succès au système d'envoi d'email.",
+            description: "L'email avec la facture en pièce jointe a été envoyé directement au client.",
             buttonText: 'Créer une nouvelle facture'
           };
         case 'saved':
@@ -374,6 +611,23 @@ const InvoiceForm: React.FC = () => {
                     {formData.companyEmail}<br/>
                     {formData.companyPhone}
                   </div>
+                  {/* Informations fiscales */}
+                  {formData.fiscalInfo && formData.fiscalInfo.region !== 'NONE' && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
+                      {formData.fiscalInfo.region === 'MG' && (
+                        <>
+                          {formData.fiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formData.fiscalInfo.nif}</p>}
+                          {formData.fiscalInfo.stat && <p><span className="font-medium">STAT :</span> {formData.fiscalInfo.stat}</p>}
+                        </>
+                      )}
+                      {formData.fiscalInfo.region === 'EU' && (
+                        <>
+                          {formData.fiscalInfo.siret && <p><span className="font-medium">SIRET :</span> {formData.fiscalInfo.siret}</p>}
+                          {formData.fiscalInfo.tvaNumber && <p><span className="font-medium">TVA :</span> {formData.fiscalInfo.tvaNumber}</p>}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-right">
@@ -506,11 +760,11 @@ const InvoiceForm: React.FC = () => {
               )}
             </button>
 
-            {/* Bouton Envoyer la facture */}
+            {/* Bouton Envoyer la facture (Brevo) */}
             <div className="flex flex-col items-center">
               <button
                 onClick={handleSendEmail}
-                disabled={loading || savingToHistory}
+                disabled={loading || savingToHistory || webhookLoading}
                 className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
               >
                 {loading ? (
@@ -525,8 +779,35 @@ const InvoiceForm: React.FC = () => {
                   </>
                 )}
               </button>
-              <span className="text-xs text-slate-400 mt-2 font-medium italic">(envoi par email)</span>
+              <span className="text-xs text-slate-400 mt-2 font-medium italic">(envoi direct à {formData.clientEmail})</span>
+              {emailError && (
+                <span className="text-xs text-red-500 mt-2 font-medium bg-red-50 px-3 py-1 rounded-full">{emailError}</span>
+              )}
             </div>
+
+            {/* Bouton secret: Envoyer via Gmail/n8n (admin seulement) */}
+            {isAdmin && (
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={handleSendViaWebhook}
+                  disabled={loading || savingToHistory || webhookLoading}
+                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-amber-500 text-base font-bold rounded-full text-amber-700 bg-amber-50 shadow-lg hover:bg-amber-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
+                >
+                  {webhookLoading ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                      Envoi n8n...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="-ml-1 mr-3 h-5 w-5" />
+                      Envoyer via Gmail
+                    </>
+                  )}
+                </button>
+                <span className="text-xs text-amber-600 mt-2 font-medium italic">(webhook n8n)</span>
+              </div>
+            )}
 
           </div>
         </div>
@@ -539,7 +820,13 @@ const InvoiceForm: React.FC = () => {
             
             {/* Entreprise */}
             <div>
-              <h3 className={sectionTitleClass}>Informations Entreprise</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={sectionTitleClass + " !mb-0"}>Informations Entreprise</h3>
+                <CompanySelector
+                  onSelectCompany={handleSelectCompany}
+                  currentCompanyName={formData.companyName}
+                />
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Nom de l'entreprise *</label>
@@ -563,12 +850,50 @@ const InvoiceForm: React.FC = () => {
                   <label className={labelClass}>Logo URL</label>
                   <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleInputChange} className={inputClass} placeholder="https://example.com/logo.png" />
                 </div>
+
+                {/* Région fiscale */}
+                <div className="pt-4 border-t border-slate-100">
+                  <label className={labelClass}>Type de société</label>
+                  <select
+                    value={formData.fiscalInfo?.region || 'NONE'}
+                    onChange={(e) => handleFiscalInfoChange('region', e.target.value)}
+                    className={inputClass}
+                  >
+                    {FISCAL_REGIONS.map(region => (
+                      <option key={region.code} value={region.code}>{region.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Champs fiscaux conditionnels */}
+                {selectedFiscalRegion && selectedFiscalRegion.fields.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    {selectedFiscalRegion.fields.map(field => (
+                      <div key={field.key}>
+                        <label className={labelClass}>{field.label}</label>
+                        <input
+                          type="text"
+                          value={(formData.fiscalInfo as any)?.[field.key] || ''}
+                          onChange={(e) => handleFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
+                          className={inputClass}
+                          placeholder={field.placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Client */}
             <div>
-              <h3 className={sectionTitleClass}>Informations Client</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={sectionTitleClass + " !mb-0"}>Informations Client</h3>
+                <ClientSelector
+                  onSelectClient={handleSelectClient}
+                  currentClientEmail={formData.clientEmail}
+                />
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className={labelClass}>Nom du client *</label>
@@ -734,8 +1059,13 @@ const InvoiceForm: React.FC = () => {
       {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthModalMessage(undefined);
+          // Ne pas effacer pendingAction ici pour permettre l'exécution après connexion
+        }}
         initialMode="login"
+        customMessage={authModalMessage}
       />
     </div>
   );
