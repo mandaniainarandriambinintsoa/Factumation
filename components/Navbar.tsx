@@ -12,7 +12,8 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: 'Accueil', path: '/' },
-    { name: 'Créer une facture', path: '/create' },
+    { name: 'Facture', path: '/create' },
+    { name: 'Devis', path: '/quote' },
     { name: 'À propos', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];

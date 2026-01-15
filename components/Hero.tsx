@@ -16,16 +16,26 @@ const Hero: React.FC = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link 
-              to="/create" 
+            <Link
+              to="/create"
               className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full text-white bg-primary-900 hover:bg-primary-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               Créer une facture
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
-            <Link 
-              to="/about" 
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-full text-primary-900 bg-white border border-slate-200 hover:bg-slate-50 transition-all duration-300"
+            <Link
+              to="/quote"
+              className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full text-white bg-primary-500 hover:bg-primary-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+            >
+              Créer un devis
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </div>
+
+          <div className="mt-4">
+            <Link
+              to="/about"
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-primary-900 hover:text-primary-700 transition-colors"
             >
               En savoir plus
             </Link>
