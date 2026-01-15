@@ -156,6 +156,10 @@ export const DEFAULT_CONTACT_WEBHOOK_URL = "https://votre-instance-n8n.com/webho
 - Email : mandaniaina.randriambinitsoa@gmail.com
 - Localisation : Tananarive, Madagascar
 
+## Développement
+
+Ce projet a été initié avec **Google AI Studio** (Gemini) et est maintenu avec **Claude Code** (Anthropic).
+
 ## Licence
 
 Ce projet est sous licence MIT.
