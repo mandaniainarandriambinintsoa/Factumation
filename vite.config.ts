@@ -18,6 +18,22 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Vendors React
+              'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+              // Supabase
+              'vendor-supabase': ['@supabase/supabase-js'],
+              // PDF generation (le plus lourd)
+              'vendor-pdf': ['html2pdf.js'],
+              // Icônes
+              'vendor-icons': ['lucide-react'],
+            }
+          }
+        }
       }
     };
 });

@@ -147,6 +147,32 @@ Une revue de code complete a ete effectuee pour identifier et corriger les vulne
 |----------|--------|----------|
 | **Politiques RLS non optimisees** | 20 politiques re-evaluaient `auth.uid()` pour chaque ligne | Migration appliquee : `auth.uid()` remplace par `(select auth.uid())` |
 
+#### Optimisation du Bundle (Janvier 2026)
+
+Le bundle de production a ete optimise pour reduire le temps de chargement initial :
+
+| Metrique | Avant | Apres | Gain |
+|----------|-------|-------|------|
+| **Bundle initial** | 1,557 KB | 202 KB | **-87%** |
+| **Gzip initial** | 436 KB | 63 KB | **-85%** |
+
+**Techniques appliquees :**
+
+1. **Code splitting avec React.lazy()** - Les pages sont chargees a la demande
+2. **Manual chunks (Vite/Rollup)** - Separation des vendors (react, supabase, icons, pdf)
+3. **Import dynamique de html2pdf.js** - Charge uniquement lors de l'export PDF
+
+**Chunks generes :**
+
+| Chunk | Taille | Chargement |
+|-------|--------|------------|
+| `index.js` | 202 KB | Initial |
+| `vendor-supabase` | 172 KB | Initial |
+| `vendor-react` | 48 KB | Initial |
+| `vendor-icons` | 18 KB | Initial |
+| `vendor-pdf` | 984 KB | A la demande (export PDF) |
+| Pages (Hero, Dashboard, etc.) | 2-28 KB | Lazy load |
+
 #### Edge Function Securisee
 
 L'envoi d'emails passe maintenant par une Edge Function Supabase qui :

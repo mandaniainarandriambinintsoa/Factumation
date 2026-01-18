@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
 import { InvoiceData, LineItem, FiscalInfo } from '../types';
+
+// Import dynamique de html2pdf.js pour réduire le bundle initial
+const loadHtml2Pdf = () => import('html2pdf.js').then(m => m.default);
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
 import { sendInvoiceEmail, isBrevoConfigured } from '../services/emailService';
 import { sendInvoiceWithPdfToWebhook } from '../services/invoiceService';
@@ -332,7 +334,7 @@ const InvoiceForm: React.FC = () => {
       };
 
       // Générer le PDF en blob puis convertir en base64
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+      const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
       // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -389,7 +391,7 @@ const InvoiceForm: React.FC = () => {
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+      const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
       // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -477,7 +479,7 @@ const InvoiceForm: React.FC = () => {
           jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
         };
 
-        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+        const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
         pdfBase64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
