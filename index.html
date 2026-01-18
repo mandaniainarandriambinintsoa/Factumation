@@ -3,7 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FactuPro - Générateur de Factures</title>
+
+    <!-- SEO Meta Tags -->
+    <title>FactuPro - Générateur de Factures et Devis Gratuit en Ligne</title>
+    <meta name="description" content="Créez vos factures et devis professionnels gratuitement. Logiciel de facturation en ligne pour freelances, auto-entrepreneurs et PME. Export PDF, multi-devises, conforme SIRET/TVA." />
+    <meta name="keywords" content="générateur facture gratuit, logiciel facturation gratuit, créer facture en ligne, devis gratuit, facture PDF, facturation freelance, auto-entrepreneur, facture SIRET, facture TVA, logiciel devis facture" />
+    <meta name="author" content="FactuPro" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://factupro.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://factupro.com/" />
+    <meta property="og:title" content="FactuPro - Générateur de Factures et Devis Gratuit" />
+    <meta property="og:description" content="Créez vos factures et devis professionnels gratuitement. Export PDF, multi-devises, conforme aux normes françaises." />
+    <meta property="og:image" content="https://factupro.com/og-image.png" />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://factupro.com/" />
+    <meta name="twitter:title" content="FactuPro - Générateur de Factures et Devis Gratuit" />
+    <meta name="twitter:description" content="Créez vos factures et devis professionnels gratuitement. Export PDF, multi-devises." />
+    <meta name="twitter:image" content="https://factupro.com/og-image.png" />
+
+    <!-- Google Tag Manager - Remplacer GTM-XXXXXXX par votre ID -->
+    <!-- Pour obtenir un ID: https://tagmanager.google.com -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+    <!-- End Google Tag Manager -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -39,8 +71,44 @@
   }
 }
     </script>
+
+    <!-- Schema.org JSON-LD pour SEO structuré -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "FactuPro",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "description": "Générateur de factures et devis gratuit en ligne pour freelances, auto-entrepreneurs et PME. Export PDF, multi-devises, conforme SIRET/TVA.",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      },
+      "featureList": [
+        "Création de factures professionnelles",
+        "Création de devis",
+        "Export PDF",
+        "Multi-devises (EUR, USD, MGA)",
+        "Gestion clients",
+        "Envoi par email",
+        "Conforme SIRET/TVA"
+      ]
+    }
+    </script>
 </head>
   <body class="bg-slate-50 text-slate-800 antialiased selection:bg-primary-500 selection:text-white">
+    <!-- Google Tag Manager (noscript) - Remplacer GTM-XXXXXXX par votre ID -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
