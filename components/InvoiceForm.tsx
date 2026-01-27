@@ -289,20 +289,18 @@ const InvoiceForm: React.FC = () => {
       const element = invoiceRef.current;
 
       // Sauvegarder et modifier les styles temporairement pour le PDF
-      const originalWidth = element.style.width;
       const originalPadding = element.style.padding;
-      element.style.width = '800px';
-      element.style.padding = '8px'; // Réduire le padding pour le PDF
+      element.style.padding = '24px'; // Padding réduit mais raisonnable pour le PDF
 
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
-          windowWidth: 1200,
+          windowWidth: 1400,
         },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
@@ -310,8 +308,7 @@ const InvoiceForm: React.FC = () => {
       // Générer et télécharger le PDF
       await (await loadHtml2Pdf())().set(opt).from(element).save();
 
-      // Restaurer les styles originaux
-      element.style.width = originalWidth;
+      // Restaurer le padding original
       element.style.padding = originalPadding;
 
       setSuccessAction('pdf');
@@ -351,13 +348,13 @@ const InvoiceForm: React.FC = () => {
 
       // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
-      element.style.padding = '8px';
+      element.style.padding = '24px';
 
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -417,13 +414,13 @@ const InvoiceForm: React.FC = () => {
 
       // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
-      element.style.padding = '8px';
+      element.style.padding = '24px';
 
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -513,13 +510,13 @@ const InvoiceForm: React.FC = () => {
 
         // Sauvegarder et modifier les styles temporairement pour le PDF
         const originalPadding = element.style.padding;
-        element.style.padding = '8px';
+        element.style.padding = '24px';
 
         const opt = {
-          margin: [8, 8, 8, 8],
+          margin: [5, 5, 5, 5],
           filename: `Facture-${formData.invoiceNumber}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
+          html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
           jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
         };
 
