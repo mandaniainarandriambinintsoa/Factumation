@@ -258,7 +258,9 @@ const QuoteForm: React.FC = () => {
 
   // Formater un nombre avec séparateurs de milliers (espace)
   const formatNumber = (num: number): string => {
-    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    // Si le nombre est entier, ne pas afficher les décimales
+    const formatted = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
+    return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
   // Formater NIF: ex "4019532272" -> "40 195 32 272" (format 2-3-2-3)
@@ -636,7 +638,7 @@ const QuoteForm: React.FC = () => {
                   </div>
                   {/* Informations fiscales entreprise */}
                   {formData.fiscalInfo && formData.fiscalInfo.region !== 'NONE' && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
+                    <div className="mt-3 text-sm text-slate-600">
                       {formData.fiscalInfo.region === 'MG' && (
                         <>
                           {formData.fiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formatNif(formData.fiscalInfo.nif)}</p>}
@@ -665,7 +667,7 @@ const QuoteForm: React.FC = () => {
                   </div>
 
                   {/* Client Info - sous le numéro de devis */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 text-left">
+                  <div className="mt-4 pt-3 border-t border-slate-100 text-right">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Destinataire</h4>
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
@@ -676,7 +678,7 @@ const QuoteForm: React.FC = () => {
                       </div>
                       {/* Informations fiscales client */}
                       {formData.clientFiscalInfo && formData.clientFiscalInfo.region !== 'NONE' && (
-                        <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
+                        <div className="mt-3 text-sm text-slate-600">
                           {formData.clientFiscalInfo.region === 'MG' && (
                             <>
                               {formData.clientFiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formatNif(formData.clientFiscalInfo.nif)}</p>}
