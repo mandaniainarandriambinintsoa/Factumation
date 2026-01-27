@@ -688,8 +688,10 @@ const InvoiceForm: React.FC = () => {
 
                 {/* Facture + Client - Droite */}
                 <div className="text-right">
-                  <h1 className="text-4xl font-light text-slate-900 mb-1">FACTURE</h1>
-                  <p className="text-lg font-semibold text-primary-900">{formData.invoiceNumber}</p>
+                  <div className="flex items-baseline justify-end gap-3">
+                    <h1 className="text-3xl font-light text-slate-900">FACTURE</h1>
+                    <p className="text-lg font-semibold text-primary-900">{formData.invoiceNumber}</p>
+                  </div>
                   <div className="mt-1 space-y-0.5 text-sm text-slate-600">
                     <p><span className="font-medium">Date :</span> {new Date(formData.invoiceDate).toLocaleDateString()}</p>
                     {formData.dueDate && <p><span className="font-medium">Échéance :</span> {new Date(formData.dueDate).toLocaleDateString()}</p>}

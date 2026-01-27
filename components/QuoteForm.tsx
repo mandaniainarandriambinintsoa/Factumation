@@ -659,8 +659,10 @@ const QuoteForm: React.FC = () => {
 
                 {/* Devis + Client - Droite */}
                 <div className="text-right">
-                  <h1 className="text-4xl font-light text-slate-900 mb-1">DEVIS</h1>
-                  <p className="text-lg font-semibold text-primary-900">{formData.quoteNumber}</p>
+                  <div className="flex items-baseline justify-end gap-3">
+                    <h1 className="text-3xl font-light text-slate-900">DEVIS</h1>
+                    <p className="text-lg font-semibold text-primary-900">{formData.quoteNumber}</p>
+                  </div>
                   <div className="mt-1 space-y-0.5 text-sm text-slate-600">
                     <p><span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}</p>
                     <p><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</p>
