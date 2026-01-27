@@ -285,73 +285,36 @@ const QuoteForm: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleGeneratePdf = () => {
-    if (quoteRef.current) {
-      const quoteHtml = quoteRef.current.innerHTML;
+  // Action: Générer PDF (avec html2pdf)
+  const handleGeneratePdf = async () => {
+    if (!quoteRef.current) return;
 
-      const printWindow = window.open('', '_blank', 'width=900,height=800');
+    setLoading(true);
 
-      if (printWindow) {
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Devis-${formData.quoteNumber}</title>
-              <script src="https://cdn.tailwindcss.com"></script>
-              <script>
-                tailwind.config = {
-                  theme: {
-                    extend: {
-                      fontFamily: { sans: ['Inter', 'sans-serif'] },
-                      colors: {
-                        primary: {
-                          50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
-                        }
-                      }
-                    }
-                  }
-                }
-              </script>
-              <style>
-                body {
-                  background-color: white;
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                }
-                @media print {
-                  @page { margin: 0; size: auto; }
-                  body { margin: 0; }
-                }
-                .quote-container {
-                  padding: 40px !important;
-                  max-width: 100% !important;
-                  width: 100% !important;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="quote-container">
-                ${quoteHtml}
-              </div>
-              <script>
-                window.onload = function() {
-                  setTimeout(function() {
-                    window.print();
-                  }, 800);
-                };
-              </script>
-            </body>
-          </html>
-        `);
+    try {
+      const element = quoteRef.current;
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Devis-${formData.quoteNumber}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+        },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
 
-        printWindow.document.close();
-        printWindow.focus();
+      // Générer et télécharger le PDF
+      await (await loadHtml2Pdf())().set(opt).from(element).save();
 
-        setSuccessAction('pdf');
-        setSuccess(true);
-      } else {
-        alert("Veuillez autoriser les pop-ups pour générer le PDF.");
-      }
+      setSuccessAction('pdf');
+      setSuccess(true);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      alert('Erreur lors de la génération du PDF');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -663,9 +626,11 @@ const QuoteForm: React.FC = () => {
                     <h1 className="text-3xl font-light text-slate-900">DEVIS</h1>
                     <p className="text-lg font-semibold text-primary-900">{formData.quoteNumber}</p>
                   </div>
-                  <div className="mt-1 space-y-0.5 text-sm text-slate-600">
-                    <p><span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}</p>
-                    <p><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</p>
+                  <div className="mt-1 text-sm text-slate-600">
+                    <p>
+                      <span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}
+                      <span className="ml-4"><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</span>
+                    </p>
                   </div>
 
                   {/* Client Info - sous le numéro de devis */}
@@ -748,12 +713,6 @@ const QuoteForm: React.FC = () => {
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Footer text inside PDF */}
-              <div className="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-                 <p className="font-medium text-slate-500 mb-1">Devis valable jusqu'au {new Date(formData.validityDate).toLocaleDateString()}</p>
-                 <p>Merci de votre confiance. Devis généré automatiquement via Factumation.</p>
               </div>
 
             </div>
