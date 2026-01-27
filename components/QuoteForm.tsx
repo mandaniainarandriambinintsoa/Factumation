@@ -256,6 +256,26 @@ const QuoteForm: React.FC = () => {
     return formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
   };
 
+  // Formater un nombre avec séparateurs de milliers (espace)
+  const formatNumber = (num: number): string => {
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  // Formater NIF: ex "10000221111" -> "10 000 221 111"
+  const formatNif = (nif: string): string => {
+    const digits = nif.replace(/\s/g, '');
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  // Formater STAT: ex "2410111200010023" -> "24101 11 2000 0 10023"
+  const formatStat = (stat: string): string => {
+    const digits = stat.replace(/\s/g, '');
+    if (digits.length >= 16) {
+      return `${digits.slice(0,5)} ${digits.slice(5,7)} ${digits.slice(7,11)} ${digits.slice(11,12)} ${digits.slice(12)}`;
+    }
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
   const handlePreviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsPreviewMode(true);
@@ -619,8 +639,8 @@ const QuoteForm: React.FC = () => {
                     <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
                       {formData.fiscalInfo.region === 'MG' && (
                         <>
-                          {formData.fiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formData.fiscalInfo.nif}</p>}
-                          {formData.fiscalInfo.stat && <p><span className="font-medium">STAT :</span> {formData.fiscalInfo.stat}</p>}
+                          {formData.fiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formatNif(formData.fiscalInfo.nif)}</p>}
+                          {formData.fiscalInfo.stat && <p><span className="font-medium">STAT :</span> {formatStat(formData.fiscalInfo.stat)}</p>}
                         </>
                       )}
                       {formData.fiscalInfo.region === 'EU' && (
@@ -674,8 +694,8 @@ const QuoteForm: React.FC = () => {
                       <tr key={item.id}>
                         <td className="py-4 text-slate-800 font-medium">{item.name}</td>
                         <td className="py-4 text-slate-600 text-right">{item.quantity}</td>
-                        <td className="py-4 text-slate-600 text-right">{item.unitPrice.toFixed(2)} {currencySymbol}</td>
-                        <td className="py-4 text-slate-900 font-bold text-right">{(item.quantity * item.unitPrice).toFixed(2)} {currencySymbol}</td>
+                        <td className="py-4 text-slate-600 text-right">{formatNumber(item.unitPrice)} {currencySymbol}</td>
+                        <td className="py-4 text-slate-900 font-bold text-right">{formatNumber(item.quantity * item.unitPrice)} {currencySymbol}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -695,7 +715,7 @@ const QuoteForm: React.FC = () => {
                 <div className="w-full md:w-1/3">
                   <div className="flex justify-between py-2 text-slate-600">
                     <span>Sous-total</span>
-                    <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+                    <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
                   <div className="flex justify-between py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4">
                     <span>TVA (0%)</span>
@@ -703,7 +723,7 @@ const QuoteForm: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center text-xl font-bold text-primary-900">
                     <span>Total</span>
-                    <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+                    <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
                 </div>
               </div>
@@ -1041,7 +1061,7 @@ const QuoteForm: React.FC = () => {
                         />
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">
-                        {(item.quantity * item.unitPrice).toFixed(2)} {currencySymbol}
+                        {formatNumber(item.quantity * item.unitPrice)} {currencySymbol}
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
@@ -1074,7 +1094,7 @@ const QuoteForm: React.FC = () => {
             <div className="w-full md:w-1/3 space-y-3">
                <div className="flex justify-between items-center text-lg font-bold text-primary-900">
                  <span>Total</span>
-                 <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+                 <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                </div>
             </div>
           </div>
