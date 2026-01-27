@@ -292,10 +292,10 @@ const InvoiceForm: React.FC = () => {
       const originalWidth = element.style.width;
       const originalPadding = element.style.padding;
       element.style.width = '800px';
-      element.style.padding = '16px'; // Réduire le padding pour le PDF
+      element.style.padding = '10px'; // Réduire le padding pour le PDF
 
       const opt = {
-        margin: [2, 2, 2, 2],
+        margin: [6, 6, 6, 6],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
@@ -351,10 +351,10 @@ const InvoiceForm: React.FC = () => {
 
       // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
-      element.style.padding = '16px';
+      element.style.padding = '10px';
 
       const opt = {
-        margin: [2, 2, 2, 2],
+        margin: [6, 6, 6, 6],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -417,10 +417,10 @@ const InvoiceForm: React.FC = () => {
 
       // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
-      element.style.padding = '16px';
+      element.style.padding = '10px';
 
       const opt = {
-        margin: [2, 2, 2, 2],
+        margin: [6, 6, 6, 6],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -513,10 +513,10 @@ const InvoiceForm: React.FC = () => {
 
         // Sauvegarder et modifier les styles temporairement pour le PDF
         const originalPadding = element.style.padding;
-        element.style.padding = '16px';
+        element.style.padding = '10px';
 
         const opt = {
-          margin: [2, 2, 2, 2],
+          margin: [6, 6, 6, 6],
           filename: `Facture-${formData.invoiceNumber}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
