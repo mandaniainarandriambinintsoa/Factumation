@@ -288,12 +288,14 @@ const InvoiceForm: React.FC = () => {
     try {
       const element = invoiceRef.current;
 
-      // Forcer une largeur fixe temporairement pour le PDF
+      // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalWidth = element.style.width;
+      const originalPadding = element.style.padding;
       element.style.width = '800px';
+      element.style.padding = '16px'; // Réduire le padding pour le PDF
 
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
@@ -308,8 +310,9 @@ const InvoiceForm: React.FC = () => {
       // Générer et télécharger le PDF
       await (await loadHtml2Pdf())().set(opt).from(element).save();
 
-      // Restaurer la largeur originale
+      // Restaurer les styles originaux
       element.style.width = originalWidth;
+      element.style.padding = originalPadding;
 
       setSuccessAction('pdf');
       setSuccess(true);
@@ -345,8 +348,13 @@ const InvoiceForm: React.FC = () => {
     try {
       // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
+
+      // Sauvegarder et modifier les styles temporairement pour le PDF
+      const originalPadding = element.style.padding;
+      element.style.padding = '16px';
+
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -355,6 +363,9 @@ const InvoiceForm: React.FC = () => {
 
       // Générer le PDF en blob puis convertir en base64
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+      // Restaurer le padding original
+      element.style.padding = originalPadding;
 
       // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -403,8 +414,13 @@ const InvoiceForm: React.FC = () => {
     try {
       // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
+
+      // Sauvegarder et modifier les styles temporairement pour le PDF
+      const originalPadding = element.style.padding;
+      element.style.padding = '16px';
+
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -412,6 +428,9 @@ const InvoiceForm: React.FC = () => {
       };
 
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+      // Restaurer le padding original
+      element.style.padding = originalPadding;
 
       // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -491,15 +510,23 @@ const InvoiceForm: React.FC = () => {
       // Générer le PDF si pas encore fait
       if (!pdfBase64) {
         const element = invoiceRef.current;
+
+        // Sauvegarder et modifier les styles temporairement pour le PDF
+        const originalPadding = element.style.padding;
+        element.style.padding = '16px';
+
         const opt = {
-          margin: 10,
+          margin: [2, 2, 2, 2],
           filename: `Facture-${formData.invoiceNumber}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
+          html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
           jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
         };
 
         const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+        // Restaurer le padding original
+        element.style.padding = originalPadding;
 
         pdfBase64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -615,7 +642,7 @@ const InvoiceForm: React.FC = () => {
           {/* Invoice Paper Representation */}
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
             {/* Ce div avec la ref sera cloné. Il doit contenir tout le style nécessaire. */}
-            <div ref={invoiceRef} className="bg-white p-6 text-slate-800">
+            <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
               
               {/* Invoice Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">

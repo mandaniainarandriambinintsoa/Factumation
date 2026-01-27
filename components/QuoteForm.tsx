@@ -294,12 +294,14 @@ const QuoteForm: React.FC = () => {
     try {
       const element = quoteRef.current;
 
-      // Forcer une largeur fixe temporairement pour le PDF
+      // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalWidth = element.style.width;
+      const originalPadding = element.style.padding;
       element.style.width = '800px';
+      element.style.padding = '16px';
 
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
@@ -314,8 +316,9 @@ const QuoteForm: React.FC = () => {
       // Générer et télécharger le PDF
       await (await loadHtml2Pdf())().set(opt).from(element).save();
 
-      // Restaurer la largeur originale
+      // Restaurer les styles originaux
       element.style.width = originalWidth;
+      element.style.padding = originalPadding;
 
       setSuccessAction('pdf');
       setSuccess(true);
@@ -349,8 +352,13 @@ const QuoteForm: React.FC = () => {
 
     try {
       const element = quoteRef.current;
+
+      // Sauvegarder et modifier les styles temporairement pour le PDF
+      const originalPadding = element.style.padding;
+      element.style.padding = '16px';
+
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -358,6 +366,9 @@ const QuoteForm: React.FC = () => {
       };
 
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+      // Restaurer le padding original
+      element.style.padding = originalPadding;
 
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -404,8 +415,13 @@ const QuoteForm: React.FC = () => {
     try {
       // Générer le PDF avec html2pdf
       const element = quoteRef.current;
+
+      // Sauvegarder et modifier les styles temporairement pour le PDF
+      const originalPadding = element.style.padding;
+      element.style.padding = '16px';
+
       const opt = {
-        margin: [3, 3, 3, 3],
+        margin: [2, 2, 2, 2],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -413,6 +429,9 @@ const QuoteForm: React.FC = () => {
       };
 
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+      // Restaurer le padding original
+      element.style.padding = originalPadding;
 
       // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -469,8 +488,13 @@ const QuoteForm: React.FC = () => {
 
       if (!pdfBase64) {
         const element = quoteRef.current;
+
+        // Sauvegarder et modifier les styles temporairement pour le PDF
+        const originalPadding = element.style.padding;
+        element.style.padding = '16px';
+
         const opt = {
-          margin: [5, 5, 5, 5],
+          margin: [2, 2, 2, 2],
           filename: `Devis-${formData.quoteNumber}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -478,6 +502,9 @@ const QuoteForm: React.FC = () => {
         };
 
         const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+        // Restaurer le padding original
+        element.style.padding = originalPadding;
 
         pdfBase64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -591,7 +618,7 @@ const QuoteForm: React.FC = () => {
       {isPreviewMode ? (
         <div className="animate-fade-in">
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
-            <div ref={quoteRef} className="bg-white p-6 text-slate-800">
+            <div ref={quoteRef} className="bg-white p-8 md:p-12 text-slate-800">
 
               {/* Quote Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">
