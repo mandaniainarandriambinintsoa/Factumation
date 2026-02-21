@@ -6,15 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "remotion:studio": "npx remotion studio remotion/index.ts",
+    "remotion:render": "npx remotion render remotion/index.ts",
+    "remotion:render:promo": "npx remotion render remotion/index.ts FactumationPromo out/promo.mp4",
+    "remotion:render:features": "npx remotion render remotion/index.ts FactumationFeatures out/features.mp4",
+    "remotion:render:features-connected": "npx remotion render remotion/index.ts FactumationFeaturesConnected out/features-connected.mp4",
+    "remotion:render:demo": "npx remotion render remotion/index.ts FactumationDemo out/demo.mp4"
   },
   "dependencies": {
+    "@remotion/cli": "4.0.410",
+    "@remotion/tailwind": "^4.0.410",
+    "@remotion/transitions": "^4.0.410",
     "@supabase/supabase-js": "^2.90.1",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6"
+    "react-router-dom": "^7.9.6",
+    "remotion": "4.0.410",
+    "zod": "^3.22.3"
   },
   "devDependencies": {
     "@types/html2pdf.js": "^0.10.0",
@@ -22,6 +33,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "puppeteer": "^24.36.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -2,6 +2,7 @@
 import React, { Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -23,29 +24,31 @@ const PageLoader: React.FC = () => (
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
-          <Navbar />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
+            <Navbar />
 
-          <main className="flex-grow">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Hero />} />
-                <Route path="/create" element={<InvoiceForm />} />
-                <Route path="/quote" element={<QuoteForm />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </Suspense>
-          </main>
+            <main className="flex-grow">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Hero />} />
+                  <Route path="/create" element={<InvoiceForm />} />
+                  <Route path="/quote" element={<QuoteForm />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </Suspense>
+            </main>
 
-          <Footer />
-        </div>
-      </Router>
-    </AuthProvider>
+            <Footer />
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

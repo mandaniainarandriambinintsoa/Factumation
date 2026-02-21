@@ -40,6 +40,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -59,6 +60,15 @@
         }
       }
     </script>
+    <style>
+      /* Smooth dark mode transition */
+      html.dark {
+        color-scheme: dark;
+      }
+      body, .bg-white, .bg-slate-50, nav, footer {
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      }
+    </style>
     <!-- Import maps pour AI Studio (ignoré par Vite en local) -->
     <script type="importmap">
 {
@@ -103,7 +113,7 @@
     }
     </script>
 </head>
-  <body class="bg-slate-50 text-slate-800 antialiased selection:bg-primary-500 selection:text-white">
+  <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 antialiased selection:bg-primary-500 selection:text-white transition-colors duration-300">
     <!-- Google Tag Manager (noscript) - Remplacer GTM-MBSX4499 par votre ID -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MBSX4499"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
