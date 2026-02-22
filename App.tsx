@@ -1,8 +1,9 @@
 
 import React, { Suspense, lazy } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { I18nProvider } from './contexts/I18nContext';
+
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -14,6 +15,9 @@ const About = lazy(() => import('./components/About'));
 const Contact = lazy(() => import('./components/Contact'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Settings = lazy(() => import('./components/Settings'));
+const BlogList = lazy(() => import('./components/BlogList'));
+const BlogPost = lazy(() => import('./components/BlogPost'));
+const Admin = lazy(() => import('./components/Admin'));
 
 // Composant de chargement
 const PageLoader: React.FC = () => (
@@ -22,33 +26,51 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
+// Layout wrapping I18nProvider (needs to be inside Router for useParams)
+const LangLayout: React.FC = () => {
+  return (
+    <I18nProvider>
+      <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
+        <Navbar />
+        <main className="flex-grow">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route index element={<Hero />} />
+              <Route path="create" element={<InvoiceForm />} />
+              <Route path="quote" element={<QuoteForm />} />
+              <Route path="about" element={<About />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="blog" element={<BlogList />} />
+              <Route path="blog/:slug" element={<BlogPost />} />
+              <Route path="admin/*" element={<Admin />} />
+            </Routes>
+          </Suspense>
+        </main>
+        <Footer />
+      </div>
+    </I18nProvider>
+  );
+};
+
+// Redirect helper that detects user language
+const LangRedirect: React.FC = () => {
+  const stored = localStorage.getItem('factumation-lang');
+  const lang = stored === 'en' ? 'en' : stored === 'fr' ? 'fr' : (navigator.language.slice(0, 2) === 'en' ? 'en' : 'fr');
+  return <Navigate to={`/${lang}`} replace />;
+};
+
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
-            <Navbar />
-
-            <main className="flex-grow">
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Hero />} />
-                  <Route path="/create" element={<InvoiceForm />} />
-                  <Route path="/quote" element={<QuoteForm />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Routes>
-              </Suspense>
-            </main>
-
-            <Footer />
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/:lang/*" element={<LangLayout />} />
+          <Route path="*" element={<LangRedirect />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 

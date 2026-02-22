@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, FileText, User, LogOut, LayoutDashboard, ChevronDown, History, Settings, Sun, Moon } from 'lucide-react';
+import { Menu, X, FileText, User, LogOut, LayoutDashboard, ChevronDown, History, Settings, Shield } from 'lucide-react';
+import { isAdmin } from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
+import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import AuthModal from './AuthModal';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,11 +16,12 @@ const Navbar: React.FC = () => {
 
   const location = useLocation();
   const { user, loading, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
+  const { path } = useLocalizedPath();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (rawPath: string) => location.pathname === path(rawPath);
 
   const openLoginModal = () => {
     setAuthModalMode('login');
@@ -36,61 +40,57 @@ const Navbar: React.FC = () => {
     setIsUserMenuOpen(false);
   };
 
-  // Liens de navigation de base
   const baseNavLinks = [
-    { name: 'Accueil', path: '/' },
-    { name: 'Facture', path: '/create' },
-    { name: 'Devis', path: '/quote' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.invoice'), path: '/create' },
+    { name: t('nav.quote'), path: '/quote' },
   ];
 
-  // Liens supplémentaires
   const secondaryNavLinks = [
-    { name: 'À propos', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+    { name: t('nav.about'), path: '/about' },
+    { name: t('nav.contact'), path: '/contact' },
+    { name: t('nav.blog'), path: '/blog' },
   ];
 
-  // Lien Historique (visible seulement si connecté)
-  const historyLink = { name: 'Historique', path: '/dashboard', icon: History };
+  const historyLink = { name: t('nav.history'), path: '/dashboard', icon: History };
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 transition-colors duration-300">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
+            <Link to={path('/')} className="flex items-center gap-2 group">
               <div className="bg-primary-900 text-white p-2 rounded-lg group-hover:scale-105 transition-transform duration-200">
                 <FileText size={24} />
               </div>
-              <span className="font-bold text-xl text-primary-900 dark:text-white tracking-tight">Factumation</span>
+              <span className="font-bold text-xl text-primary-900 tracking-tight">Factumation</span>
             </Link>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-8">
-              {/* Liens de base */}
               {baseNavLinks.map((link) => (
                 <Link
-                  key={link.name}
-                  to={link.path}
+                  key={link.path}
+                  to={path(link.path)}
                   className={`text-sm font-medium transition-colors duration-200 ${
                     isActive(link.path)
-                      ? 'text-primary-900 dark:text-primary-500 border-b-2 border-primary-900 dark:border-primary-500'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-primary-500'
+                      ? 'text-primary-900 border-b-2 border-primary-900'
+                      : 'text-slate-600 hover:text-primary-900'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
 
-              {/* Lien Historique - visible seulement si connecté */}
               {user && (
                 <Link
-                  to={historyLink.path}
+                  to={path(historyLink.path)}
                   className={`text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 ${
                     isActive(historyLink.path)
-                      ? 'text-primary-900 dark:text-primary-500 border-b-2 border-primary-900 dark:border-primary-500'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-primary-500'
+                      ? 'text-primary-900 border-b-2 border-primary-900'
+                      : 'text-slate-600 hover:text-primary-900'
                   }`}
                 >
                   <History size={16} />
@@ -98,38 +98,31 @@ const Navbar: React.FC = () => {
                 </Link>
               )}
 
-              {/* Liens secondaires */}
               {secondaryNavLinks.map((link) => (
                 <Link
-                  key={link.name}
-                  to={link.path}
+                  key={link.path}
+                  to={path(link.path)}
                   className={`text-sm font-medium transition-colors duration-200 ${
                     isActive(link.path)
-                      ? 'text-primary-900 dark:text-primary-500 border-b-2 border-primary-900 dark:border-primary-500'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-primary-500'
+                      ? 'text-primary-900 border-b-2 border-primary-900'
+                      : 'text-slate-600 hover:text-primary-900'
                   }`}
                 >
                   {link.name}
                 </Link>
               ))}
 
-              {/* Dark Mode Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
-              >
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
+              {/* Language Switcher */}
+              <LanguageSwitcher />
 
               {/* Auth Section */}
               {!loading && (
-                <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-200">
                   {user ? (
                     <div className="relative">
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
                       >
                         {user.avatarUrl ? (
                           <img
@@ -138,47 +131,56 @@ const Navbar: React.FC = () => {
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
                             <User className="w-4 h-4 text-primary-600" />
                           </div>
                         )}
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200 max-w-[120px] truncate">
+                        <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate">
                           {user.name || user.email.split('@')[0]}
                         </span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
 
-                      {/* User Dropdown Menu */}
                       {isUserMenuOpen && (
                         <>
                           <div
                             className="fixed inset-0 z-10"
                             onClick={() => setIsUserMenuOpen(false)}
                           />
-                          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-20">
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-20">
                             <Link
-                              to="/dashboard"
+                              to={path('/dashboard')}
                               onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                             >
                               <LayoutDashboard className="w-4 h-4" />
-                              Mon historique
+                              {t('nav.myHistory')}
                             </Link>
                             <Link
-                              to="/settings"
+                              to={path('/settings')}
                               onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                             >
                               <Settings className="w-4 h-4" />
-                              Paramètres
+                              {t('nav.settings')}
                             </Link>
-                            <hr className="my-1 border-slate-100 dark:border-slate-700" />
+                            {isAdmin(user.email) && (
+                              <Link
+                                to={path('/admin')}
+                                onClick={() => setIsUserMenuOpen(false)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-primary-700 hover:bg-primary-50"
+                              >
+                                <Shield className="w-4 h-4" />
+                                Admin
+                              </Link>
+                            )}
+                            <hr className="my-1 border-slate-100" />
                             <button
                               onClick={handleSignOut}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                             >
                               <LogOut className="w-4 h-4" />
-                              Déconnexion
+                              {t('nav.logout')}
                             </button>
                           </div>
                         </>
@@ -188,15 +190,15 @@ const Navbar: React.FC = () => {
                     <>
                       <button
                         onClick={openLoginModal}
-                        className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-primary-500 transition-colors"
+                        className="text-sm font-medium text-slate-600 hover:text-primary-900 transition-colors"
                       >
-                        Connexion
+                        {t('nav.login')}
                       </button>
                       <button
                         onClick={openRegisterModal}
                         className="text-sm font-medium px-4 py-2 bg-primary-900 text-white rounded-full hover:bg-primary-800 transition-colors"
                       >
-                        S'inscrire
+                        {t('nav.register')}
                       </button>
                     </>
                   )}
@@ -205,7 +207,8 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageSwitcher />
               <button
                 onClick={toggleMenu}
                 className="text-slate-600 hover:text-primary-900 focus:outline-none p-2"
@@ -220,11 +223,10 @@ const Navbar: React.FC = () => {
         {isOpen && (
           <div className="md:hidden bg-white border-b border-slate-200 animate-fade-in">
             <div className="px-4 pt-2 pb-4 space-y-1">
-              {/* Liens de base */}
               {baseNavLinks.map((link) => (
                 <Link
-                  key={link.name}
-                  to={link.path}
+                  key={link.path}
+                  to={path(link.path)}
                   onClick={() => setIsOpen(false)}
                   className={`block px-3 py-3 rounded-md text-base font-medium ${
                     isActive(link.path)
@@ -236,10 +238,9 @@ const Navbar: React.FC = () => {
                 </Link>
               ))}
 
-              {/* Lien Historique - visible seulement si connecté */}
               {user && (
                 <Link
-                  to={historyLink.path}
+                  to={path(historyLink.path)}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-2 px-3 py-3 rounded-md text-base font-medium ${
                     isActive(historyLink.path)
@@ -252,11 +253,10 @@ const Navbar: React.FC = () => {
                 </Link>
               )}
 
-              {/* Liens secondaires */}
               {secondaryNavLinks.map((link) => (
                 <Link
-                  key={link.name}
-                  to={link.path}
+                  key={link.path}
+                  to={path(link.path)}
                   onClick={() => setIsOpen(false)}
                   className={`block px-3 py-3 rounded-md text-base font-medium ${
                     isActive(link.path)
@@ -291,13 +291,23 @@ const Navbar: React.FC = () => {
                         </div>
                       </div>
                       <Link
-                        to="/settings"
+                        to={path('/settings')}
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-2 px-3 py-3 text-slate-600 hover:bg-slate-50 rounded-md"
                       >
                         <Settings className="w-5 h-5" />
-                        Paramètres
+                        {t('nav.settings')}
                       </Link>
+                      {isAdmin(user.email) && (
+                        <Link
+                          to={path('/admin')}
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-2 px-3 py-3 text-primary-700 hover:bg-primary-50 rounded-md"
+                        >
+                          <Shield className="w-5 h-5" />
+                          Admin
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           handleSignOut();
@@ -306,7 +316,7 @@ const Navbar: React.FC = () => {
                         className="flex items-center gap-2 px-3 py-3 text-red-600 hover:bg-red-50 rounded-md w-full"
                       >
                         <LogOut className="w-5 h-5" />
-                        Déconnexion
+                        {t('nav.logout')}
                       </button>
                     </>
                   ) : (
@@ -315,13 +325,13 @@ const Navbar: React.FC = () => {
                         onClick={openLoginModal}
                         className="w-full px-4 py-3 text-center font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50"
                       >
-                        Connexion
+                        {t('nav.login')}
                       </button>
                       <button
                         onClick={openRegisterModal}
                         className="w-full px-4 py-3 text-center font-medium text-white bg-primary-900 rounded-lg hover:bg-primary-800"
                       >
-                        S'inscrire
+                        {t('nav.register')}
                       </button>
                     </div>
                   )}
@@ -332,7 +342,6 @@ const Navbar: React.FC = () => {
         )}
       </nav>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}

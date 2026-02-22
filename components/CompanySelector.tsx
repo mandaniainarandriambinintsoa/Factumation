@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Building2, Mail, Phone, MapPin, X, Check, Loader2, Star } from 'lucide-react';
 import { getCompanies, createCompany, MappedCompany } from '../services/companyService';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 
 interface CompanySelectorProps {
   onSelectCompany: (company: {
