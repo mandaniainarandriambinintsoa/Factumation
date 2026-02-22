@@ -110,33 +110,44 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Blog Articles -->
+  <!-- Blog Article: Facturation en ligne gratuit (FR) -->
   <url>
     <loc>https://factumation.vercel.app/fr/blog/facturation-en-ligne-gratuit-guide-complet</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://factumation.vercel.app/fr/blog/facturation-en-ligne-gratuit-guide-complet" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://factumation.vercel.app/en/blog/free-online-invoice-generator-guide" />
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Blog Article: Comment créer facture (FR) -->
   <url>
     <loc>https://factumation.vercel.app/fr/blog/comment-creer-facture-professionnelle</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://factumation.vercel.app/fr/blog/comment-creer-facture-professionnelle" />
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Blog Article: Facturation électronique 2026 (FR) -->
   <url>
     <loc>https://factumation.vercel.app/fr/blog/facturation-electronique-obligatoire-2026</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://factumation.vercel.app/fr/blog/facturation-electronique-obligatoire-2026" />
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Blog Article: Free invoice generator guide (EN) -->
   <url>
     <loc>https://factumation.vercel.app/en/blog/free-online-invoice-generator-guide</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://factumation.vercel.app/en/blog/free-online-invoice-generator-guide" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://factumation.vercel.app/fr/blog/facturation-en-ligne-gratuit-guide-complet" />
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Blog Article: Auto-entrepreneur (FR) -->
   <url>
     <loc>https://factumation.vercel.app/fr/blog/auto-entrepreneur-simplifiez-facturation</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://factumation.vercel.app/fr/blog/auto-entrepreneur-simplifiez-facturation" />
     <lastmod>2026-02-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
