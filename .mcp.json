@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref",
+        "dzombacjycmrahnrdsnc",
+        "--access-token",
+        "sbp_4e017e17883286b078367e747522ca2492947b43"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "gsc": {
+      "command": "C:\\Users\\Manda\\tools\\mcp-gsc\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\Users\\Manda\\tools\\mcp-gsc\\gsc_server.py"],
+      "env": {
+        "GSC_CREDENTIALS_PATH": "C:\\Users\\Manda\\.config\\send-email-423613-b458d8b96916.json",
+        "GSC_SKIP_OAUTH": "true"
+      }
+    }
+  }
+}
