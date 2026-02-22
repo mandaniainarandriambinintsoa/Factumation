@@ -58,7 +58,8 @@ const LangLayout: React.FC = () => {
 const LangRedirect: React.FC = () => {
   const stored = localStorage.getItem('factumation-lang');
   const lang = stored === 'en' ? 'en' : stored === 'fr' ? 'fr' : (navigator.language.slice(0, 2) === 'en' ? 'en' : 'fr');
-  return <Navigate to={`/${lang}`} replace />;
+  // Preserve search params and hash (needed for OAuth callback tokens)
+  return <Navigate to={`/${lang}${window.location.search}${window.location.hash}`} replace />;
 };
 
 const App: React.FC = () => {
