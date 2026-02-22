@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { signIn, signUp, signInWithGoogle, loading, error, clearError, isConfigured } = useAuth();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (isOpen) {
@@ -39,12 +41,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     setSuccessMessage(null);
 
     if (!email || !password) {
-      setLocalError('Veuillez remplir tous les champs');
+      setLocalError(t('auth.fillFields'));
       return;
     }
 
     if (password.length < 6) {
-      setLocalError('Le mot de passe doit contenir au moins 6 caractères');
+      setLocalError(t('auth.passwordMin'));
       return;
     }
 
@@ -56,7 +58,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
     } else {
       const result = await signUp(email, password, name);
       if (!result.error) {
-        setSuccessMessage('Compte créé ! Vérifiez votre email pour confirmer votre inscription.');
+        setSuccessMessage(t('auth.accountCreated'));
         setEmail('');
         setPassword('');
         setName('');
@@ -99,7 +101,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900">
-              {mode === 'login' ? 'Connexion' : 'Créer un compte'}
+              {mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')}
             </h2>
             {customMessage ? (
               <div className="mt-3 p-3 bg-primary-50 border border-primary-100 rounded-lg">
@@ -110,8 +112,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             ) : (
               <p className="mt-2 text-sm text-slate-500">
                 {mode === 'login'
-                  ? 'Connectez-vous pour accéder à votre historique'
-                  : 'Inscrivez-vous pour sauvegarder vos factures'}
+                  ? t('auth.loginSubtitle')
+                  : t('auth.registerSubtitle')}
               </p>
             )}
           </div>
@@ -121,7 +123,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
               <div className="flex items-start">
                 <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 mr-2 flex-shrink-0" />
                 <p className="text-sm text-amber-800">
-                  L'authentification n'est pas configurée. Veuillez configurer Supabase dans les variables d'environnement.
+                  {t('auth.notConfigured')}
                 </p>
               </div>
             </div>
@@ -169,7 +171,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continuer avec Google
+            {t('auth.continueGoogle')}
           </button>
 
           {/* Divider */}
@@ -178,7 +180,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
               <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">ou</span>
+              <span className="px-2 bg-white text-slate-500">{t('auth.or')}</span>
             </div>
           </div>
 
@@ -187,7 +189,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             {mode === 'register' && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Nom complet
+                  {t('auth.fullName')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -196,7 +198,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
-                    placeholder="Jean Dupont"
+                    placeholder={t('auth.namePlaceholder')}
                   />
                 </div>
               </div>
@@ -204,7 +206,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Email
+                {t('auth.emailLabel')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -213,7 +215,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-shadow"
-                  placeholder="vous@exemple.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                 />
               </div>
@@ -221,7 +223,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Mot de passe
+                {t('auth.passwordLabel')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -245,12 +247,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
               {loading ? (
                 <>
                   <Loader2 className="animate-spin mr-2 w-5 h-5" />
-                  Chargement...
+                  {t('auth.loading')}
                 </>
               ) : mode === 'login' ? (
-                'Se connecter'
+                t('auth.loginButton')
               ) : (
-                "S'inscrire"
+                t('auth.registerButton')
               )}
             </button>
           </form>
@@ -259,22 +261,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           <p className="mt-6 text-center text-sm text-slate-600">
             {mode === 'login' ? (
               <>
-                Pas encore de compte ?{' '}
+                {t('auth.noAccount')}{' '}
                 <button
                   onClick={toggleMode}
                   className="font-medium text-primary-600 hover:text-primary-800"
                 >
-                  Inscrivez-vous
+                  {t('auth.registerLink')}
                 </button>
               </>
             ) : (
               <>
-                Déjà un compte ?{' '}
+                {t('auth.hasAccount')}{' '}
                 <button
                   onClick={toggleMode}
                   className="font-medium text-primary-600 hover:text-primary-800"
                 >
-                  Connectez-vous
+                  {t('auth.loginLink')}
                 </button>
               </>
             )}

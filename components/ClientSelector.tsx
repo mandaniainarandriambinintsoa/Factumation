@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, User, Building2, Mail, Phone, MapPin, X, Check, Loader2, FileText, Trash2 } from 'lucide-react';
 import { getClients, createClient, deleteClient, MappedClient } from '../services/clientService';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 import { FISCAL_REGIONS } from '../constants';
 
 interface ClientSelectorProps {

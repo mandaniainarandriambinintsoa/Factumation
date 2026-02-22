@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, Loader2, Building2, Mail, Phone, MapPin, Image, AlertCircle, CheckCircle2, Settings as SettingsIcon, Plus, Trash2, Star, Edit3, X, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
+import { useLocalizedPath } from '../hooks/useLocalizedPath';
+import SEOHead from './SEOHead';
 import { getCompanies, createCompany, updateCompany, deleteCompany, setDefaultCompany, MappedCompany } from '../services/companyService';
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
 
 const Settings: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useI18n();
+  const { path } = useLocalizedPath();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -40,9 +45,9 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/');
+      navigate(path('/'));
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, path]);
 
   useEffect(() => {
     if (user) {
@@ -133,7 +138,7 @@ const Settings: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setError('Le nom de la société est requis');
+      setError(t('settings.companyNameRequired'));
       return;
     }
 
@@ -261,16 +266,17 @@ const Settings: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <SEOHead title={t('seo.settingsTitle')} description={t('seo.settingsDescription')} path="/settings" />
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-primary-100 rounded-lg">
             <SettingsIcon className="w-6 h-6 text-primary-600" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">Mes Sociétés</h1>
+          <h1 className="text-3xl font-bold text-slate-900">{t('settings.companiesTitle')}</h1>
         </div>
         <p className="text-slate-600">
-          Gérez vos différentes sociétés. Chaque société peut avoir ses propres informations de facturation.
+          {t('settings.subtitle')}
         </p>
       </div>
 

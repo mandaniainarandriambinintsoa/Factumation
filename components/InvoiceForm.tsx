@@ -14,6 +14,8 @@ import { DEFAULT_WEBHOOK_URL } from '../constants';
 const ADMIN_EMAIL = 'mandaniaina.randriambinintsoa@gmail.com';
 import { getDefaultCompany } from '../services/companyService';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
+import SEOHead from './SEOHead';
 import AuthModal from './AuthModal';
 import ClientSelector from './ClientSelector';
 import CompanySelector from './CompanySelector';
@@ -68,6 +70,7 @@ const InvoiceForm: React.FC = () => {
   const [formData, setFormData] = useState<InvoiceData>(getInitialFormData());
 
   const { user } = useAuth();
+  const { t } = useI18n();
 
   // Vérifie si l'utilisateur connecté est l'admin (pour afficher le webhook n8n)
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -619,12 +622,13 @@ const InvoiceForm: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      
+      <SEOHead title={t('seo.invoiceTitle')} description={t('seo.invoiceDescription')} path="/create" />
+
       {/* Header Section */}
       <div className="mb-8 md:flex md:items-center md:justify-between">
         <div>
           <h2 className="text-3xl font-bold leading-tight text-primary-950">
-            {isPreviewMode ? 'Aperçu du document' : 'Nouvelle Facture'}
+            {isPreviewMode ? t('invoice.preview') : t('invoice.title')}
           </h2>
           {!isPreviewMode && (
             <p className="mt-2 text-sm text-slate-500">Remplissez les informations ci-dessous pour générer votre document.</p>

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, FileCheck, Trash2, Download, Loader2, AlertCircle, Calendar, Building2, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
+import { useLocalizedPath } from '../hooks/useLocalizedPath';
+import SEOHead from './SEOHead';
 import { getInvoices, getQuotes, deleteInvoice, deleteQuote } from '../services/historyService';
 import { SavedInvoice, SavedQuote } from '../types';
 import { CURRENCIES } from '../constants';
@@ -10,6 +13,8 @@ type TabType = 'invoices' | 'quotes';
 
 const Dashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t, locale } = useI18n();
+  const { path } = useLocalizedPath();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabType>('invoices');
@@ -21,9 +26,9 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/');
+      navigate(path('/'));
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, path]);
 
   useEffect(() => {
     if (user) {
@@ -56,7 +61,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDeleteInvoice = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) return;
+    if (!confirm(t('dashboard.confirmDeleteInvoice'))) return;
 
     setDeletingId(id);
     const result = await deleteInvoice(id);
@@ -71,7 +76,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDeleteQuote = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) return;
+    if (!confirm(t('dashboard.confirmDeleteQuote'))) return;
 
     setDeletingId(id);
     const result = await deleteQuote(id);
@@ -99,7 +104,7 @@ const Dashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -120,11 +125,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <SEOHead title={t('seo.dashboardTitle')} description={t('seo.dashboardDescription')} path="/dashboard" />
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Mon Historique</h1>
+        <h1 className="text-3xl font-bold text-slate-900">{t('dashboard.title')}</h1>
         <p className="mt-2 text-slate-600">
-          Retrouvez toutes vos factures et devis sauvegardés.
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
@@ -148,7 +154,7 @@ const Dashboard: React.FC = () => {
             }`}
           >
             <FileText size={18} />
-            Factures ({invoices.length})
+            {t('dashboard.invoicesTab')} ({invoices.length})
           </button>
           <button
             onClick={() => setActiveTab('quotes')}
@@ -159,7 +165,7 @@ const Dashboard: React.FC = () => {
             }`}
           >
             <FileCheck size={18} />
-            Devis ({quotes.length})
+            {t('dashboard.quotesTab')} ({quotes.length})
           </button>
         </nav>
       </div>
@@ -173,10 +179,10 @@ const Dashboard: React.FC = () => {
         invoices.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="Aucune facture"
-            description="Vous n'avez pas encore sauvegardé de facture. Créez-en une et cliquez sur 'Sauvegarder dans l'historique'."
-            actionLabel="Créer une facture"
-            onAction={() => navigate('/create')}
+            title={t('dashboard.noInvoices')}
+            description={t('dashboard.noInvoicesDesc')}
+            actionLabel={t('dashboard.createInvoice')}
+            onAction={() => navigate(path('/create'))}
           />
         ) : (
           <div className="grid gap-4">
@@ -204,10 +210,10 @@ const Dashboard: React.FC = () => {
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={FileCheck}
-          title="Aucun devis"
-          description="Vous n'avez pas encore sauvegardé de devis. Créez-en un et cliquez sur 'Sauvegarder dans l'historique'."
-          actionLabel="Créer un devis"
-          onAction={() => navigate('/quote')}
+          title={t('dashboard.noQuotes')}
+          description={t('dashboard.noQuotesDesc')}
+          actionLabel={t('dashboard.createQuote')}
+          onAction={() => navigate(path('/quote'))}
         />
       ) : (
         <div className="grid gap-4">
