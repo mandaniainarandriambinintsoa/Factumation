@@ -16,7 +16,7 @@
   "hero": {
     "title": "Simplified invoicing for",
     "titleHighlight": "professionals",
-    "subtitle": "Create, manage, and send elegant invoices in seconds. No complex registration required. Connect your tools via Webhook.",
+    "subtitle": "Create, manage, and send elegant invoices in seconds. Built for professionals in France, Madagascar, and Africa. No registration required.",
     "createInvoice": "Create an invoice",
     "createQuote": "Create a quote",
     "learnMore": "Learn more",
@@ -26,7 +26,7 @@
   },
   "about": {
     "title": "About Factumation",
-    "subtitle": "A next-generation invoicing and quoting solution, designed to simplify administrative management for freelancers and SMEs through the power of automation.",
+    "subtitle": "A next-generation invoicing and quoting solution for freelancers and SMEs in France, Madagascar, and Africa. Simplify your administrative management through automation.",
     "innovationTitle": "Innovation at the service of your time",
     "innovationDesc": "Factumation is more than a simple invoice editor. It's a technical demonstration of a modern web application integrating the latest AI and No-Code automation technologies.",
     "feature1": "Professional invoice and quote creation",
@@ -54,7 +54,7 @@
     "n8nBrevo": "n8n + Brevo",
     "n8nBrevoDesc": "Workflow automation and professional transactional email sending.",
     "ctaTitle": "Ready to simplify your management?",
-    "ctaSubtitle": "Join the automation era. Create your professional invoices and quotes now, without registration."
+    "ctaSubtitle": "Join professionals across France, Madagascar, and Africa. Create your invoices and quotes now, without registration."
   },
   "contact": {
     "title": "Contact us",
@@ -306,7 +306,7 @@
   },
   "blog": {
     "title": "Blog",
-    "subtitle": "Tips, guides, and news about online invoicing and business management.",
+    "subtitle": "Tips, guides, and news about online invoicing in France, Madagascar, and French-speaking Africa.",
     "readMore": "Read more",
     "backToBlog": "Back to blog",
     "publishedOn": "Published on",
@@ -318,14 +318,14 @@
     "noPosts": "No articles available at the moment."
   },
   "seo": {
-    "homeTitle": "Factumation - Free Online Invoice and Quote Generator",
-    "homeDescription": "Create your professional invoices and quotes for free. Online invoicing software for freelancers, self-employed, and SMEs. PDF export, multi-currency, SIRET/VAT compliant.",
+    "homeTitle": "Factumation - Free Online Invoice and Quote Generator | France & Madagascar",
+    "homeDescription": "Create your professional invoices and quotes for free. Online invoicing software for freelancers and SMEs in France, Madagascar, and Africa. PDF export, multi-currency (EUR, MGA, USD), SIRET/NIF/VAT compliant.",
     "invoiceTitle": "Create a Free Invoice Online - Factumation",
-    "invoiceDescription": "Free online invoice generator. Create professional invoices with PDF export, multi-currency, and email sending. SIRET/VAT compliant.",
+    "invoiceDescription": "Free online invoice generator for France and Madagascar. Create professional invoices with PDF export, multi-currency (EUR, MGA), and email sending. SIRET/NIF/VAT compliant.",
     "quoteTitle": "Create a Free Quote Online - Factumation",
-    "quoteDescription": "Free online quote generator. Create professional quotes with PDF export, multi-currency, and email sending.",
+    "quoteDescription": "Free online quote generator for France and Madagascar. Create professional quotes with PDF export, multi-currency (EUR, MGA), and email sending.",
     "aboutTitle": "About Factumation - Free Invoicing Software",
-    "aboutDescription": "Discover Factumation, the next-generation invoicing and quoting solution for freelancers and SMEs. Automation, PDF export, multi-currency.",
+    "aboutDescription": "Discover Factumation, the next-generation invoicing and quoting solution for freelancers and SMEs in France, Madagascar, and Africa. Automation, PDF export, multi-currency.",
     "contactTitle": "Contact Factumation - Support and Questions",
     "contactDescription": "Contact the Factumation team for any questions about our free online invoicing software.",
     "dashboardTitle": "My History - Factumation",
@@ -333,6 +333,6 @@
     "settingsTitle": "Settings - Factumation",
     "settingsDescription": "Configure your issuing companies and preferences on Factumation.",
     "blogTitle": "Factumation Blog - Invoicing Guides and Tips",
-    "blogDescription": "Guides, tips, and news about online invoicing, business management, and tax obligations."
+    "blogDescription": "Guides, tips, and news about online invoicing in France and Madagascar. Business management, tax obligations, and best practices."
   }
 }

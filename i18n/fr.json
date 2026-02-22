@@ -16,7 +16,7 @@
   "hero": {
     "title": "La facturation simplifiée pour les",
     "titleHighlight": "professionnels",
-    "subtitle": "Créez, gérez et envoyez des factures élégantes en quelques secondes. Aucune inscription complexe requise. Connectez vos outils via Webhook.",
+    "subtitle": "Créez, gérez et envoyez des factures élégantes en quelques secondes. Idéal pour les professionnels en France, Madagascar et Afrique francophone. Aucune inscription requise.",
     "createInvoice": "Créer une facture",
     "createQuote": "Créer un devis",
     "learnMore": "En savoir plus",
@@ -26,7 +26,7 @@
   },
   "about": {
     "title": "À propos de Factumation",
-    "subtitle": "Une solution de facturation et devis nouvelle génération, conçue pour simplifier la gestion administrative des freelances et des PME grâce à la puissance de l'automatisation.",
+    "subtitle": "Une solution de facturation et devis nouvelle génération, conçue pour simplifier la gestion administrative des freelances et PME en France, à Madagascar et dans toute l'Afrique francophone.",
     "innovationTitle": "L'innovation au service de votre temps",
     "innovationDesc": "Factumation n'est pas qu'un simple éditeur de factures. C'est une démonstration technique d'une application web moderne intégrant les dernières technologies d'IA et d'automatisation No-Code.",
     "feature1": "Création de factures et devis professionnels",
@@ -54,7 +54,7 @@
     "n8nBrevo": "n8n + Brevo",
     "n8nBrevoDesc": "Automatisation des workflows et envoi d'emails transactionnels professionnels.",
     "ctaTitle": "Prêt à simplifier votre gestion ?",
-    "ctaSubtitle": "Rejoignez l'ère de l'automatisation. Créez vos factures et devis professionnels dès maintenant, sans inscription."
+    "ctaSubtitle": "Rejoignez des milliers de professionnels en France et à Madagascar. Créez vos factures et devis dès maintenant, sans inscription."
   },
   "contact": {
     "title": "Contactez-nous",
@@ -306,7 +306,7 @@
   },
   "blog": {
     "title": "Blog",
-    "subtitle": "Conseils, guides et actualités sur la facturation en ligne et la gestion d'entreprise.",
+    "subtitle": "Conseils, guides et actualités sur la facturation en ligne en France, à Madagascar et en Afrique francophone.",
     "readMore": "Lire la suite",
     "backToBlog": "Retour au blog",
     "publishedOn": "Publié le",
@@ -318,14 +318,14 @@
     "noPosts": "Aucun article disponible pour le moment."
   },
   "seo": {
-    "homeTitle": "Factumation - Générateur de Factures et Devis Gratuit en Ligne",
-    "homeDescription": "Créez vos factures et devis professionnels gratuitement. Logiciel de facturation en ligne pour freelances, auto-entrepreneurs et PME. Export PDF, multi-devises, conforme SIRET/TVA.",
+    "homeTitle": "Factumation - Générateur de Factures et Devis Gratuit en Ligne | France & Madagascar",
+    "homeDescription": "Créez vos factures et devis professionnels gratuitement. Logiciel de facturation en ligne pour freelances, auto-entrepreneurs et PME en France, Madagascar et Afrique francophone. Export PDF, multi-devises (EUR, MGA, USD), conforme SIRET/NIF.",
     "invoiceTitle": "Créer une Facture Gratuite en Ligne - Factumation",
-    "invoiceDescription": "Générateur de factures gratuit en ligne. Créez des factures professionnelles avec export PDF, multi-devises et envoi par email. Conforme SIRET/TVA.",
+    "invoiceDescription": "Générateur de factures gratuit en ligne pour la France et Madagascar. Créez des factures professionnelles avec export PDF, multi-devises (EUR, MGA) et envoi par email. Conforme SIRET/NIF/TVA.",
     "quoteTitle": "Créer un Devis Gratuit en Ligne - Factumation",
-    "quoteDescription": "Générateur de devis gratuit en ligne. Créez des devis professionnels avec export PDF, multi-devises et envoi par email.",
+    "quoteDescription": "Générateur de devis gratuit en ligne pour la France et Madagascar. Créez des devis professionnels avec export PDF, multi-devises (EUR, MGA) et envoi par email.",
     "aboutTitle": "À propos de Factumation - Logiciel de Facturation Gratuit",
-    "aboutDescription": "Découvrez Factumation, la solution de facturation et devis nouvelle génération pour freelances et PME. Automatisation, export PDF, multi-devises.",
+    "aboutDescription": "Découvrez Factumation, la solution de facturation et devis nouvelle génération pour freelances et PME en France, Madagascar et Afrique. Automatisation, export PDF, multi-devises.",
     "contactTitle": "Contactez Factumation - Support et Questions",
     "contactDescription": "Contactez l'équipe Factumation pour toute question sur notre logiciel de facturation gratuit en ligne.",
     "dashboardTitle": "Mon Historique - Factumation",
@@ -333,6 +333,6 @@
     "settingsTitle": "Paramètres - Factumation",
     "settingsDescription": "Configurez vos sociétés émettrices et vos préférences sur Factumation.",
     "blogTitle": "Blog Factumation - Guides et Conseils Facturation",
-    "blogDescription": "Guides, conseils et actualités sur la facturation en ligne, la gestion d'entreprise et les obligations fiscales."
+    "blogDescription": "Guides, conseils et actualités sur la facturation en ligne en France et à Madagascar. Gestion d'entreprise, obligations fiscales et bonnes pratiques."
   }
 }
