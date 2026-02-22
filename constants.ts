@@ -18,35 +18,35 @@ export const CURRENCIES = [
 ];
 
 export const PAYMENT_METHODS = [
-  'Virement Bancaire',
-  'Carte Bancaire',
-  'Chèque',
-  'PayPal',
-  'Espèces',
-  'mobile money'
+  { code: 'bank_transfer', labelKey: 'constants.bankTransfer' },
+  { code: 'credit_card', labelKey: 'constants.creditCard' },
+  { code: 'check', labelKey: 'constants.check' },
+  { code: 'paypal', labelKey: 'constants.paypal' },
+  { code: 'cash', labelKey: 'constants.cash' },
+  { code: 'mobile_money', labelKey: 'constants.mobileMoney' },
 ];
 
 // Régions fiscales avec leurs champs requis
 export const FISCAL_REGIONS = [
   {
     code: 'NONE',
-    name: 'Aucune (Particulier)',
+    nameKey: 'constants.fiscalNone',
     fields: []
   },
   {
     code: 'MG',
-    name: 'Madagascar',
+    nameKey: 'constants.fiscalMG',
     fields: [
-      { key: 'nif', label: 'NIF', placeholder: 'Numéro d\'Identification Fiscale' },
-      { key: 'stat', label: 'STAT', placeholder: 'Numéro Statistique' }
+      { key: 'nif', labelKey: 'constants.nif', placeholderKey: 'constants.nifPlaceholder' },
+      { key: 'stat', labelKey: 'constants.stat', placeholderKey: 'constants.statPlaceholder' }
     ]
   },
   {
     code: 'EU',
-    name: 'Europe (France)',
+    nameKey: 'constants.fiscalEU',
     fields: [
-      { key: 'siret', label: 'SIRET', placeholder: '14 chiffres' },
-      { key: 'tvaNumber', label: 'N° TVA Intracom.', placeholder: 'FR + 11 chiffres' }
+      { key: 'siret', labelKey: 'constants.siret', placeholderKey: 'constants.siretPlaceholder' },
+      { key: 'tvaNumber', labelKey: 'constants.tvaNumber', placeholderKey: 'constants.tvaPlaceholder' }
     ]
   }
 ];

@@ -53,9 +53,9 @@ const getInitialFormData = (): QuoteData => {
     quoteDate: today.toISOString().split('T')[0],
     validityDate: validityDate.toISOString().split('T')[0],
     currency: 'EUR',
-    paymentMethod: 'Virement Bancaire',
+    paymentMethod: 'bank_transfer',
     items: [
-      { id: Date.now().toString(), name: 'Service de consultation', quantity: 1, unitPrice: 0 }
+      { id: Date.now().toString(), name: '', quantity: 1, unitPrice: 0 }
     ]
   };
 };
@@ -337,7 +337,7 @@ const QuoteForm: React.FC = () => {
 
     // Vérifier si l'utilisateur est connecté
     if (!user) {
-      setAuthModalMessage('Pour envoyer le devis directement par email, connectez-vous à votre compte.');
+      setAuthModalMessage(t('quote.loginToEmailMsg'));
       setPendingAction('email');
       setIsAuthModalOpen(true);
       return;
@@ -475,7 +475,7 @@ const QuoteForm: React.FC = () => {
   // Action: Sauvegarder dans l'historique
   const handleSaveToHistory = async () => {
     if (!user) {
-      setAuthModalMessage('Pour sauvegarder vos devis et y accéder plus tard, connectez-vous à votre compte.');
+      setAuthModalMessage(t('quote.loginToSaveMsg'));
       setPendingAction('save');
       setIsAuthModalOpen(true);
       return;
@@ -551,21 +551,21 @@ const QuoteForm: React.FC = () => {
       switch (successAction) {
         case 'email':
           return {
-            title: 'Devis envoyé !',
-            description: "L'email avec le devis en pièce jointe a été envoyé directement au client.",
-            buttonText: 'Créer un nouveau devis'
+            title: t('quote.successSentTitle'),
+            description: t('quote.successSentDesc'),
+            buttonText: t('quote.newQuote')
           };
         case 'saved':
           return {
-            title: 'Devis sauvegardé !',
-            description: "Votre devis a été sauvegardé dans votre historique. Vous pouvez y accéder depuis votre tableau de bord.",
-            buttonText: 'Retour'
+            title: t('quote.successSavedTitle'),
+            description: t('quote.successSavedDesc'),
+            buttonText: t('invoice.back')
           };
         default:
           return {
-            title: 'Devis généré !',
-            description: "La fenêtre d'impression s'est ouverte. Sélectionnez 'Enregistrer au format PDF' pour sauvegarder votre document.",
-            buttonText: 'Retour'
+            title: t('quote.successPdfTitle'),
+            description: t('quote.successPdfDesc'),
+            buttonText: t('invoice.back')
           };
       }
     };
@@ -609,10 +609,10 @@ const QuoteForm: React.FC = () => {
             {isPreviewMode ? t('invoice.preview') : t('quote.title')}
           </h2>
           {!isPreviewMode && (
-            <p className="mt-2 text-sm text-slate-500">Remplissez les informations ci-dessous pour générer votre devis.</p>
+            <p className="mt-2 text-sm text-slate-500">{t('quote.subtitle')}</p>
           )}
           {isPreviewMode && (
-             <p className="mt-2 text-sm text-slate-500">Vérifiez les informations avant la génération définitive.</p>
+             <p className="mt-2 text-sm text-slate-500">{t('quote.previewSubtitle')}</p>
           )}
         </div>
       </div>
@@ -634,7 +634,7 @@ const QuoteForm: React.FC = () => {
                       <FileText size={32} />
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-slate-900">{formData.companyName || 'Votre Entreprise'}</h3>
+                  <h3 className="text-xl font-bold text-slate-900">{formData.companyName || t('invoice.yourCompany')}</h3>
                   <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
                     {formData.companyAddress}<br/>
                     {formData.companyEmail}<br/>
@@ -662,19 +662,19 @@ const QuoteForm: React.FC = () => {
                 {/* Devis + Client - Droite */}
                 <div className="text-right">
                   <div className="flex items-baseline justify-end gap-3">
-                    <h1 className="text-3xl font-light text-slate-900">DEVIS</h1>
+                    <h1 className="text-3xl font-light text-slate-900">{t('quote.quoteLabel')}</h1>
                     <p className="text-lg font-semibold text-primary-900">{formData.quoteNumber}</p>
                   </div>
                   <div className="mt-1 text-sm text-slate-600 whitespace-nowrap">
-                    <span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}
-                    <span className="ml-4"><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</span>
+                    <span className="font-medium">{t('invoice.dateLabel')}</span> {new Date(formData.quoteDate).toLocaleDateString()}
+                    <span className="ml-4"><span className="font-medium">{t('quote.validUntil')}</span> {new Date(formData.validityDate).toLocaleDateString()}</span>
                   </div>
 
                   {/* Client Info - sous le numéro de devis */}
                   <div className="mt-4 pt-3 border-t border-slate-100 text-right">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Destinataire</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{t('quote.recipient')}</h4>
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
+                      <h3 className="text-xl font-bold text-slate-900">{formData.clientName || t('invoice.clientNameDefault')}</h3>
                       <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
                         {formData.clientAddress}<br/>
                         {formData.clientEmail}<br/>
@@ -707,10 +707,10 @@ const QuoteForm: React.FC = () => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%] text-left">Description</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[10%] text-right">Qté</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[25%] text-right">Prix Unit.</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[30%] text-right">Total</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%] text-left">{t('invoice.itemName')}</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[10%] text-right">{t('invoice.quantity')}</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[25%] text-right">{t('invoice.unitPrice')}</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[30%] text-right">{t('invoice.total')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -729,24 +729,24 @@ const QuoteForm: React.FC = () => {
               {/* Totals & Payment */}
               <div className="flex flex-col md:flex-row justify-between items-start border-t border-slate-200 pt-8">
                 <div className="mb-8 md:mb-0 md:w-1/2">
-                   <h4 className="text-sm font-bold text-slate-900 mb-2">Conditions</h4>
+                   <h4 className="text-sm font-bold text-slate-900 mb-2">{t('quote.conditions')}</h4>
                    <p className="text-sm text-slate-600">
-                     Méthode de paiement : <span className="font-medium text-slate-800">{formData.paymentMethod}</span><br/>
-                     Devise : {formData.currency}
+                     {t('invoice.methodLabel')} <span className="font-medium text-slate-800">{t(PAYMENT_METHODS.find(m => m.code === formData.paymentMethod)?.labelKey || '')}</span><br/>
+                     {t('invoice.currencyLabel')} {formData.currency}
                    </p>
                 </div>
 
                 <div className="w-full md:w-2/5">
                   <div className="flex justify-between gap-1 py-2 text-slate-600 whitespace-nowrap">
-                    <span>Sous-total</span>
+                    <span>{t('invoice.subtotal')}</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
                   <div className="flex justify-between gap-1 py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4 whitespace-nowrap">
-                    <span>TVA (0%)</span>
+                    <span>{t('invoice.vat')}</span>
                     <span>0.00 {currencySymbol}</span>
                   </div>
                   <div className="flex justify-between gap-1 items-center text-xl font-bold text-primary-900 whitespace-nowrap">
-                    <span>Total</span>
+                    <span>{t('invoice.total')}</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
                 </div>
@@ -764,7 +764,7 @@ const QuoteForm: React.FC = () => {
               className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-medium rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 transition-all duration-200 min-w-[160px]"
             >
               <Pencil className="mr-2 h-5 w-5" />
-              Modifier
+              {t('invoice.edit')}
             </button>
 
             <button
@@ -773,7 +773,7 @@ const QuoteForm: React.FC = () => {
               className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 hover:shadow-md transition-all duration-200 min-w-[160px]"
             >
               <Download className="-ml-1 mr-2 h-5 w-5" />
-              Générer PDF
+              {t('invoice.generatePdf')}
             </button>
 
             {/* Bouton Sauvegarder dans l'historique */}
@@ -785,17 +785,17 @@ const QuoteForm: React.FC = () => {
               {savingToHistory ? (
                 <>
                   <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                  Sauvegarde...
+                  {t('invoice.saving')}
                 </>
               ) : user ? (
                 <>
                   <Save className="-ml-1 mr-2 h-5 w-5" />
-                  Sauvegarder
+                  {t('invoice.save')}
                 </>
               ) : (
                 <>
                   <LogIn className="-ml-1 mr-2 h-5 w-5" />
-                  Connectez-vous
+                  {t('invoice.login')}
                 </>
               )}
             </button>
@@ -810,16 +810,16 @@ const QuoteForm: React.FC = () => {
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    Envoi en cours...
+                    {t('invoice.sending')}
                   </>
                 ) : (
                   <>
                     <Mail className="-ml-1 mr-3 h-5 w-5" />
-                    Envoyer le devis
+                    {t('quote.sendQuote')}
                   </>
                 )}
               </button>
-              <span className="text-xs text-slate-400 mt-2 font-medium italic">(envoi direct à {formData.clientEmail})</span>
+              <span className="text-xs text-slate-400 mt-2 font-medium italic">({t('invoice.sendEmail')} → {formData.clientEmail})</span>
               {emailError && (
                 <span className="text-xs text-red-500 mt-2 font-medium bg-red-50 px-3 py-1 rounded-full">{emailError}</span>
               )}
@@ -836,16 +836,16 @@ const QuoteForm: React.FC = () => {
                   {webhookLoading ? (
                     <>
                       <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                      Envoi n8n...
+                      {t('invoice.sendingN8n')}
                     </>
                   ) : (
                     <>
                       <Mail className="-ml-1 mr-3 h-5 w-5" />
-                      Envoyer via Gmail
+                      {t('invoice.sendViaGmail')}
                     </>
                   )}
                 </button>
-                <span className="text-xs text-amber-600 mt-2 font-medium italic">(webhook n8n)</span>
+                <span className="text-xs text-amber-600 mt-2 font-medium italic">{t('invoice.webhookN8n')}</span>
               </div>
             )}
 
@@ -861,7 +861,7 @@ const QuoteForm: React.FC = () => {
             {/* Client - À GAUCHE */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <h3 className={sectionTitleClass + " !mb-0"}>Informations Client</h3>
+                <h3 className={sectionTitleClass + " !mb-0"}>{t('quote.clientSection')}</h3>
                 <ClientSelector
                   onSelectClient={handleSelectClient}
                   currentClientEmail={formData.clientEmail}
@@ -869,34 +869,34 @@ const QuoteForm: React.FC = () => {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className={labelClass}>Nom du client *</label>
-                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Client Important" />
+                  <label className={labelClass}>{t('invoice.clientName')} *</label>
+                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderClientName')} />
                 </div>
                 <div>
-                  <label className={labelClass}>Adresse *</label>
-                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder="456 Boulevard du Succès..." />
+                  <label className={labelClass}>{t('invoice.clientAddress')} *</label>
+                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderClientAddress')} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>Email *</label>
+                    <label className={labelClass}>{t('invoice.clientEmail')} *</label>
                     <input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} className={inputClass} placeholder="email@client.com" />
                   </div>
                   <div>
-                    <label className={labelClass}>Téléphone</label>
+                    <label className={labelClass}>{t('invoice.clientPhone')}</label>
                     <input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} className={inputClass} placeholder="06 98 76 54 32" />
                   </div>
                 </div>
 
                 {/* Type de société client */}
                 <div className="pt-4 border-t border-slate-100">
-                  <label className={labelClass}>Type de société</label>
+                  <label className={labelClass}>{t('invoice.fiscalType')}</label>
                   <select
                     value={formData.clientFiscalInfo?.region || 'NONE'}
                     onChange={(e) => handleClientFiscalInfoChange('region', e.target.value)}
                     className={inputClass}
                   >
                     {FISCAL_REGIONS.map(region => (
-                      <option key={region.code} value={region.code}>{region.name}</option>
+                      <option key={region.code} value={region.code}>{t(region.nameKey)}</option>
                     ))}
                   </select>
                 </div>
@@ -906,13 +906,13 @@ const QuoteForm: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                     {selectedClientFiscalRegion.fields.map(field => (
                       <div key={field.key}>
-                        <label className={labelClass}>{field.label}</label>
+                        <label className={labelClass}>{t(field.labelKey)}</label>
                         <input
                           type="text"
                           value={(formData.clientFiscalInfo as any)?.[field.key] || ''}
                           onChange={(e) => handleClientFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
                           className={inputClass}
-                          placeholder={field.placeholder}
+                          placeholder={t(field.placeholderKey)}
                         />
                       </div>
                     ))}
@@ -925,8 +925,8 @@ const QuoteForm: React.FC = () => {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                 <div>
-                  <h3 className={sectionTitleClass + " !mb-0"}>Informations Entreprise</h3>
-                  <span className="text-xs text-slate-500 italic">Émetteur du devis</span>
+                  <h3 className={sectionTitleClass + " !mb-0"}>{t('quote.companySection')}</h3>
+                  <span className="text-xs text-slate-500 italic">{t('quote.issuer')}</span>
                 </div>
                 <CompanySelector
                   onSelectCompany={handleSelectCompany}
@@ -935,38 +935,38 @@ const QuoteForm: React.FC = () => {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className={labelClass}>Nom de l'entreprise *</label>
-                  <input required type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Ma Société SAS" />
+                  <label className={labelClass}>{t('invoice.companyName')} *</label>
+                  <input required type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderCompanyName')} />
                 </div>
                 <div>
-                  <label className={labelClass}>Adresse *</label>
-                  <textarea required rows={2} name="companyAddress" value={formData.companyAddress} onChange={handleInputChange} className={inputClass} placeholder="123 Rue de l'Innovation..." />
+                  <label className={labelClass}>{t('invoice.companyAddress')} *</label>
+                  <textarea required rows={2} name="companyAddress" value={formData.companyAddress} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderCompanyAddress')} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>Email *</label>
+                    <label className={labelClass}>{t('invoice.companyEmail')} *</label>
                     <input required type="email" name="companyEmail" value={formData.companyEmail} onChange={handleInputChange} className={inputClass} placeholder="contact@masociete.com" />
                   </div>
                   <div>
-                    <label className={labelClass}>Téléphone</label>
+                    <label className={labelClass}>{t('invoice.companyPhone')}</label>
                     <input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} className={inputClass} placeholder="01 23 45 67 89" />
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>Logo URL</label>
+                  <label className={labelClass}>{t('invoice.logoUrl')}</label>
                   <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleInputChange} className={inputClass} placeholder="https://example.com/logo.png" />
                 </div>
 
                 {/* Région fiscale */}
                 <div className="pt-4 border-t border-slate-100">
-                  <label className={labelClass}>Type de société</label>
+                  <label className={labelClass}>{t('invoice.fiscalType')}</label>
                   <select
                     value={formData.fiscalInfo?.region || 'NONE'}
                     onChange={(e) => handleFiscalInfoChange('region', e.target.value)}
                     className={inputClass}
                   >
                     {FISCAL_REGIONS.map(region => (
-                      <option key={region.code} value={region.code}>{region.name}</option>
+                      <option key={region.code} value={region.code}>{t(region.nameKey)}</option>
                     ))}
                   </select>
                 </div>
@@ -976,13 +976,13 @@ const QuoteForm: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                     {selectedFiscalRegion.fields.map(field => (
                       <div key={field.key}>
-                        <label className={labelClass}>{field.label}</label>
+                        <label className={labelClass}>{t(field.labelKey)}</label>
                         <input
                           type="text"
                           value={(formData.fiscalInfo as any)?.[field.key] || ''}
                           onChange={(e) => handleFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
                           className={inputClass}
-                          placeholder={field.placeholder}
+                          placeholder={t(field.placeholderKey)}
                         />
                       </div>
                     ))}
@@ -994,22 +994,22 @@ const QuoteForm: React.FC = () => {
 
           {/* Détails Devis */}
           <div className="pt-4">
-            <h3 className={sectionTitleClass}>Détails du Devis</h3>
+            <h3 className={sectionTitleClass}>{t('quote.detailsSection')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <label className={labelClass}>Numéro Devis *</label>
+                <label className={labelClass}>{t('quote.quoteNumber')} *</label>
                 <input required type="text" name="quoteNumber" value={formData.quoteNumber} onChange={handleInputChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Date d'émission *</label>
+                <label className={labelClass}>{t('invoice.invoiceDate')} *</label>
                 <input required type="date" name="quoteDate" value={formData.quoteDate} onChange={handleInputChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Date de validité *</label>
+                <label className={labelClass}>{t('quote.validityDate')} *</label>
                 <input required type="date" name="validityDate" value={formData.validityDate} onChange={handleInputChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Devise</label>
+                <label className={labelClass}>{t('invoice.currency')}</label>
                 <select name="currency" value={formData.currency} onChange={handleInputChange} className={inputClass}>
                   {CURRENCIES.map(c => (
                     <option key={c.code} value={c.code}>{c.code} - {c.symbol}</option>
@@ -1017,10 +1017,10 @@ const QuoteForm: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Méthode de Paiement</label>
+                <label className={labelClass}>{t('invoice.paymentMethod')}</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className={inputClass}>
                   {PAYMENT_METHODS.map(m => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m.code} value={m.code}>{t(m.labelKey)}</option>
                   ))}
                 </select>
               </div>
@@ -1029,16 +1029,16 @@ const QuoteForm: React.FC = () => {
 
           {/* Articles */}
           <div className="pt-4">
-            <h3 className={sectionTitleClass}>Articles et Services</h3>
+            <h3 className={sectionTitleClass}>{t('quote.itemsSection')}</h3>
 
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/2">Description</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Qté</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Prix Unit.</th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Total</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/2">{t('invoice.itemName')}</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">{t('invoice.quantity')}</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">{t('invoice.unitPrice')}</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">{t('invoice.total')}</th>
                     <th scope="col" className="relative px-3 py-3">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -1053,7 +1053,7 @@ const QuoteForm: React.FC = () => {
                           required
                           value={item.name}
                           onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
-                          placeholder="Nom de l'article"
+                          placeholder={t('invoice.itemPlaceholder')}
                           className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
                         />
                       </td>
@@ -1103,7 +1103,7 @@ const QuoteForm: React.FC = () => {
               className="mt-4 inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
             >
               <Plus size={16} className="mr-2" />
-              Ajouter une ligne
+              {t('invoice.addItem')}
             </button>
           </div>
 
@@ -1111,7 +1111,7 @@ const QuoteForm: React.FC = () => {
           <div className="border-t border-slate-200 pt-6 flex justify-end">
             <div className="w-full md:w-1/3 space-y-3">
                <div className="flex justify-between items-center text-lg font-bold text-primary-900">
-                 <span>Total</span>
+                 <span>{t('invoice.total')}</span>
                  <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                </div>
             </div>
@@ -1124,7 +1124,7 @@ const QuoteForm: React.FC = () => {
               className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               <FileText className="-ml-1 mr-3 h-5 w-5" />
-              Prévisualiser le devis
+              {t('quote.previewBtn')}
             </button>
           </div>
 

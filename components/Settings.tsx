@@ -37,7 +37,7 @@ const Settings: React.FC = () => {
     iban: '',
     bic: '',
     defaultCurrency: 'EUR',
-    defaultPaymentMethod: 'Virement Bancaire',
+    defaultPaymentMethod: 'bank_transfer',
     invoicePrefix: 'INV',
     quotePrefix: 'DEV',
     isDefault: false,
@@ -85,7 +85,7 @@ const Settings: React.FC = () => {
       iban: '',
       bic: '',
       defaultCurrency: 'EUR',
-      defaultPaymentMethod: 'Virement Bancaire',
+      defaultPaymentMethod: 'bank_transfer',
       invoicePrefix: 'INV',
       quotePrefix: 'DEV',
       isDefault: false,
@@ -292,7 +292,7 @@ const Settings: React.FC = () => {
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start animate-fade-in">
           <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
-          <p className="text-sm text-green-800">Société sauvegardée avec succès !</p>
+          <p className="text-sm text-green-800">{t('settings.saved')}</p>
         </div>
       )}
 
@@ -301,12 +301,12 @@ const Settings: React.FC = () => {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="font-semibold text-slate-900">Sociétés</h2>
+              <h2 className="font-semibold text-slate-900">{t('settings.companiesTitle')}</h2>
               <button
                 type="button"
                 onClick={handleStartNew}
                 className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                title="Ajouter une société"
+                title={t('settings.addCompany')}
               >
                 <Plus size={20} />
               </button>
@@ -315,14 +315,14 @@ const Settings: React.FC = () => {
             {companies.length === 0 && !showNewCompanyForm ? (
               <div className="p-8 text-center">
                 <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 mb-4">Aucune société enregistrée</p>
+                <p className="text-slate-500 mb-4">{t('settings.noCompanies')}</p>
                 <button
                   type="button"
                   onClick={handleStartNew}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors"
                 >
                   <Plus size={16} />
-                  Créer ma première société
+                  {t('settings.addCompany')}
                 </button>
               </div>
             ) : (
@@ -359,7 +359,7 @@ const Settings: React.FC = () => {
                               handleSetDefault(company.id);
                             }}
                             className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded transition-colors"
-                            title="Définir par défaut"
+                            title={t('settings.setDefault')}
                           >
                             <Star size={16} />
                           </button>
@@ -372,7 +372,7 @@ const Settings: React.FC = () => {
                           }}
                           disabled={deletingId === company.id}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                          title="Supprimer"
+                          title={t('settings.delete')}
                         >
                           {deletingId === company.id ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -400,12 +400,12 @@ const Settings: React.FC = () => {
                     {editingCompany ? (
                       <>
                         <Edit3 className="w-5 h-5 text-primary-600" />
-                        Modifier la société
+                        {t('settings.editCompany')}
                       </>
                     ) : (
                       <>
                         <Plus className="w-5 h-5 text-primary-600" />
-                        Nouvelle société
+                        {t('settings.newCompany')}
                       </>
                     )}
                   </h2>
@@ -420,7 +420,7 @@ const Settings: React.FC = () => {
 
                 <div className="space-y-5">
                   <div>
-                    <label className={labelClass}>Nom de la société *</label>
+                    <label className={labelClass}>{t('settings.companyName')} *</label>
                     <input
                       type="text"
                       name="name"
@@ -433,7 +433,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Adresse complète</label>
+                    <label className={labelClass}>{t('settings.address')}</label>
                     <textarea
                       name="address"
                       value={formData.address}
@@ -448,7 +448,7 @@ const Settings: React.FC = () => {
                     <div>
                       <label className={labelClass}>
                         <Mail className="w-4 h-4 inline mr-1.5" />
-                        Email
+                        {t('settings.emailLabel')}
                       </label>
                       <input
                         type="email"
@@ -463,7 +463,7 @@ const Settings: React.FC = () => {
                     <div>
                       <label className={labelClass}>
                         <Phone className="w-4 h-4 inline mr-1.5" />
-                        Téléphone
+                        {t('settings.phoneLabel')}
                       </label>
                       <input
                         type="tel"
@@ -479,7 +479,7 @@ const Settings: React.FC = () => {
                   <div>
                     <label className={labelClass}>
                       <Image className="w-4 h-4 inline mr-1.5" />
-                      URL du Logo
+                      {t('settings.logoUrl')}
                     </label>
                     <input
                       type="url"
@@ -510,12 +510,12 @@ const Settings: React.FC = () => {
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary-600" />
-                  Informations fiscales & bancaires
+                  {t('settings.bankInfo')}
                 </h3>
 
                 {/* Sélecteur de région fiscale */}
                 <div className="mb-6">
-                  <label className={labelClass}>Type de société / Région fiscale</label>
+                  <label className={labelClass}>{t('settings.fiscalRegion')}</label>
                   <select
                     name="fiscalRegion"
                     value={formData.fiscalRegion}
@@ -524,7 +524,7 @@ const Settings: React.FC = () => {
                   >
                     {FISCAL_REGIONS.map(region => (
                       <option key={region.code} value={region.code}>
-                        {region.name}
+                        {t(region.nameKey)}
                       </option>
                     ))}
                   </select>
@@ -534,25 +534,25 @@ const Settings: React.FC = () => {
                 {formData.fiscalRegion === 'EU' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div>
-                      <label className={labelClass}>SIRET</label>
+                      <label className={labelClass}>{t('constants.siret')}</label>
                       <input
                         type="text"
                         name="siret"
                         value={formData.siret}
                         onChange={handleInputChange}
                         className={inputClass}
-                        placeholder="14 chiffres"
+                        placeholder={t('constants.siretPlaceholder')}
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>N° TVA Intracommunautaire</label>
+                      <label className={labelClass}>{t('constants.tvaNumber')}</label>
                       <input
                         type="text"
                         name="vatNumber"
                         value={formData.vatNumber}
                         onChange={handleInputChange}
                         className={inputClass}
-                        placeholder="FR + 11 chiffres"
+                        placeholder={t('constants.tvaPlaceholder')}
                       />
                     </div>
                   </div>
@@ -561,25 +561,25 @@ const Settings: React.FC = () => {
                 {formData.fiscalRegion === 'MG' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
                     <div>
-                      <label className={labelClass}>NIF (Numéro d'Identification Fiscale)</label>
+                      <label className={labelClass}>{t('constants.nif')}</label>
                       <input
                         type="text"
                         name="nif"
                         value={formData.nif}
                         onChange={handleInputChange}
                         className={inputClass}
-                        placeholder="Numéro NIF"
+                        placeholder={t('constants.nifPlaceholder')}
                       />
                     </div>
                     <div>
-                      <label className={labelClass}>STAT (Numéro Statistique)</label>
+                      <label className={labelClass}>{t('constants.stat')}</label>
                       <input
                         type="text"
                         name="stat"
                         value={formData.stat}
                         onChange={handleInputChange}
                         className={inputClass}
-                        placeholder="Numéro STAT"
+                        placeholder={t('constants.statPlaceholder')}
                       />
                     </div>
                   </div>
@@ -588,7 +588,7 @@ const Settings: React.FC = () => {
                 {/* Informations bancaires */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className={labelClass}>IBAN</label>
+                    <label className={labelClass}>{t('settings.iban')}</label>
                     <input
                       type="text"
                       name="iban"
@@ -600,7 +600,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>BIC</label>
+                    <label className={labelClass}>{t('settings.bic')}</label>
                     <input
                       type="text"
                       name="bic"
@@ -617,12 +617,12 @@ const Settings: React.FC = () => {
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
                   <SettingsIcon className="w-5 h-5 text-primary-600" />
-                  Préférences de facturation
+                  {t('settings.defaultPayment')}
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className={labelClass}>Devise par défaut</label>
+                    <label className={labelClass}>{t('settings.defaultCurrency')}</label>
                     <select
                       name="defaultCurrency"
                       value={formData.defaultCurrency}
@@ -638,7 +638,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Méthode de paiement</label>
+                    <label className={labelClass}>{t('settings.defaultPayment')}</label>
                     <select
                       name="defaultPaymentMethod"
                       value={formData.defaultPaymentMethod}
@@ -646,13 +646,13 @@ const Settings: React.FC = () => {
                       className={inputClass}
                     >
                       {PAYMENT_METHODS.map(m => (
-                        <option key={m} value={m}>{m}</option>
+                        <option key={m.code} value={m.code}>{t(m.labelKey)}</option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className={labelClass}>Préfixe factures</label>
+                    <label className={labelClass}>{t('settings.invoicePrefix')}</label>
                     <input
                       type="text"
                       name="invoicePrefix"
@@ -668,7 +668,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Préfixe devis</label>
+                    <label className={labelClass}>{t('settings.quotePrefix')}</label>
                     <input
                       type="text"
                       name="quotePrefix"
@@ -696,11 +696,11 @@ const Settings: React.FC = () => {
                     />
                     <span className="text-sm text-slate-700">
                       <Star className="w-4 h-4 inline mr-1 text-amber-500" />
-                      Définir comme société par défaut
+                      {t('settings.setDefault')}
                     </span>
                   </label>
                   <p className="mt-1.5 ml-7 text-xs text-slate-500">
-                    La société par défaut sera pré-sélectionnée lors de la création de factures et devis
+                    {t('settings.setDefaultDesc')}
                   </p>
                 </div>
               </div>
@@ -712,7 +712,7 @@ const Settings: React.FC = () => {
                   onClick={handleCancelEdit}
                   className="px-6 py-3 text-slate-600 font-medium rounded-full hover:bg-slate-100 transition-colors"
                 >
-                  Annuler
+                  {t('settings.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -722,12 +722,12 @@ const Settings: React.FC = () => {
                   {saving ? (
                     <>
                       <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                      Sauvegarde...
+                      {t('settings.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="-ml-1 mr-2 h-5 w-5" />
-                      {editingCompany ? 'Mettre à jour' : 'Créer la société'}
+                      {editingCompany ? t('settings.save') : t('settings.addCompany')}
                     </>
                   )}
                 </button>
@@ -737,10 +737,10 @@ const Settings: React.FC = () => {
             <div className="bg-white rounded-xl border border-slate-200 p-12 shadow-sm text-center">
               <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-slate-900 mb-2">
-                Sélectionnez une société
+                {t('settings.selectCompany')}
               </h3>
               <p className="text-slate-500 mb-6">
-                Cliquez sur une société dans la liste pour modifier ses informations, ou créez-en une nouvelle.
+                {t('settings.selectCompanyDesc')}
               </p>
               <button
                 type="button"
@@ -748,7 +748,7 @@ const Settings: React.FC = () => {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary-900 text-white font-semibold rounded-full hover:bg-primary-800 transition-colors"
               >
                 <Plus size={20} />
-                Nouvelle société
+                {t('settings.newCompany')}
               </button>
             </div>
           )}
