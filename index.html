@@ -39,7 +39,6 @@
     <!-- Preconnects for critical third-party origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
 
     <!-- Hash URL redirect script (for old /#/ links) -->
     <script>
@@ -62,31 +61,8 @@
     })(window,document,'script','dataLayer','GTM-MBSX4499')},1500)});</script>
     <!-- End Google Tag Manager -->
 
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" /></noscript>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-            colors: {
-              primary: {
-                50: '#eff6ff',
-                100: '#dbeafe',
-                500: '#3b82f6',
-                800: '#1e40af',
-                900: '#1e3a8a',
-                950: '#172554',
-              }
-            }
-          }
-        }
-      }
-    </script>
-    <style></style>
     <!-- Import maps pour AI Studio (ignoré par Vite en local) -->
     <script type="importmap">
 {
@@ -183,6 +159,10 @@
     <!-- End Google Tag Manager (noscript) -->
 
     <div id="root"></div>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/fr" />
+      <p><a href="/fr">Factumation - Accueil</a> | <a href="/en">Factumation - Home</a></p>
+    </noscript>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
