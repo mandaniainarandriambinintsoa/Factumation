@@ -1,12 +1,29 @@
 # robots.txt pour Factumation
-# https://factumation.com
+# https://factumation.vercel.app
 
 User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /*.json
+
+# AI Crawlers - explicitly allowed
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Amazonbot
 Allow: /
 
 # Sitemap
 Sitemap: https://factumation.vercel.app/sitemap.xml
-
-# Bloquer les ressources inutiles pour le crawl
-Disallow: /api/
-Disallow: /*.json$

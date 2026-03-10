@@ -1,0 +1,46 @@
+# Factumation
+
+> Free online invoice and quote generator for freelancers, self-employed, and SMBs in France, Madagascar, and French-speaking Africa.
+
+## What is Factumation?
+
+Factumation is a 100% free web application that lets professionals create, manage, and send professional invoices and quotes. No subscription, no hidden fees, no credit card required.
+
+## Key Features
+
+- Professional invoice and quote creation
+- PDF export
+- Multi-currency support: EUR, USD, GBP, CAD, CHF, MGA (Malagasy Ariary)
+- Client management
+- Email delivery with PDF attachment
+- SIRET (France) and NIF/STAT (Madagascar) compliance
+- Bilingual interface: French and English
+
+## Target Audience
+
+- Freelancers and self-employed professionals
+- Auto-entrepreneurs (France)
+- Small and medium businesses (PME)
+- Professionals in France, Madagascar, and French-speaking Africa
+
+## Pricing
+
+Free. No paid plans. No feature restrictions.
+
+## Links
+
+- Homepage (FR): https://factumation.vercel.app/fr
+- Homepage (EN): https://factumation.vercel.app/en
+- Create Invoice: https://factumation.vercel.app/fr/create
+- Create Quote: https://factumation.vercel.app/fr/quote
+- Blog: https://factumation.vercel.app/fr/blog
+- About: https://factumation.vercel.app/fr/about
+- Contact: https://factumation.vercel.app/fr/contact
+
+## Blog Articles
+
+- Facturation en ligne gratuit : Guide complet 2026: https://factumation.vercel.app/fr/blog/facturation-en-ligne-gratuit-guide-complet
+- Comment creer une facture professionnelle en ligne: https://factumation.vercel.app/fr/blog/comment-creer-facture-professionnelle
+- Facturation electronique obligatoire 2026: https://factumation.vercel.app/fr/blog/facturation-electronique-obligatoire-2026
+- Auto-entrepreneur : simplifiez votre facturation: https://factumation.vercel.app/fr/blog/auto-entrepreneur-simplifiez-facturation
+- Free Online Invoice Generator Guide 2026: https://factumation.vercel.app/en/blog/free-online-invoice-generator-guide
