@@ -2,6 +2,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { I18nProvider } from './contexts/I18nContext';
 
 import Navbar from './components/Navbar';
@@ -18,6 +19,7 @@ const Settings = lazy(() => import('./components/Settings'));
 const BlogList = lazy(() => import('./components/BlogList'));
 const BlogPost = lazy(() => import('./components/BlogPost'));
 const Admin = lazy(() => import('./components/Admin'));
+const Pricing = lazy(() => import('./components/Pricing'));
 
 // Composant de chargement
 const PageLoader: React.FC = () => (
@@ -38,6 +40,7 @@ const LangLayout: React.FC = () => {
               <Route index element={<Hero />} />
               <Route path="create" element={<InvoiceForm />} />
               <Route path="quote" element={<QuoteForm />} />
+              <Route path="pricing" element={<Pricing />} />
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
               <Route path="dashboard" element={<Dashboard />} />
@@ -65,12 +68,14 @@ const LangRedirect: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/:lang/*" element={<LangLayout />} />
-          <Route path="*" element={<LangRedirect />} />
-        </Routes>
-      </BrowserRouter>
+      <SubscriptionProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/:lang/*" element={<LangLayout />} />
+            <Route path="*" element={<LangRedirect />} />
+          </Routes>
+        </BrowserRouter>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 };

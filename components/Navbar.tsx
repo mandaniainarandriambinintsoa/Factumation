@@ -47,6 +47,7 @@ const Navbar: React.FC = () => {
   ];
 
   const secondaryNavLinks = [
+    { name: t('nav.pricing'), path: '/pricing' },
     { name: t('nav.about'), path: '/about' },
     { name: t('nav.contact'), path: '/contact' },
     { name: t('nav.blog'), path: '/blog' },
