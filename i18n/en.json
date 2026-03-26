@@ -11,7 +11,8 @@
     "register": "Sign up",
     "logout": "Log out",
     "settings": "Settings",
-    "myHistory": "My history"
+    "myHistory": "My history",
+    "pricing": "Pricing"
   },
   "hero": {
     "title": "Simplified invoicing for",
@@ -316,6 +317,38 @@
     "ctaTitle": "Ready to try Factumation?",
     "ctaSubtitle": "Create your professional invoices and quotes for free, without registration.",
     "noPosts": "No articles available at the moment."
+  },
+  "pricing": {
+    "title": "Simple and transparent pricing",
+    "subtitle": "Start for free, upgrade to Pro when you're ready. No surprises.",
+    "freeName": "Free",
+    "proName": "Pro",
+    "businessName": "Business",
+    "free": "$0",
+    "month": "month",
+    "popular": "Most popular",
+    "currentPlan": "Current plan",
+    "freePlan": "Current plan",
+    "upgrade": "Upgrade to this plan",
+    "unlimited": "Unlimited",
+    "invoicesPerMonth": "invoices/month",
+    "quotesPerMonth": "quotes/month",
+    "companies": "companies",
+    "customLogo": "Custom logo",
+    "emailSending": "Email sending",
+    "noWatermark": "No watermark",
+    "recurringInvoices": "Recurring invoices",
+    "manageSub": "Manage subscription",
+    "yourPlan": "Your plan",
+    "nextBilling": "Next renewal",
+    "usage": "Usage this month",
+    "invoicesUsed": "invoices used",
+    "quotesUsed": "quotes used",
+    "limitReached": "You've reached your free plan limit.",
+    "invoiceLimitMsg": "You've used your 2 free invoices this month.",
+    "quoteLimitMsg": "You've used your 2 free quotes this month.",
+    "emailProOnly": "Email sending is available on Pro and Business plans.",
+    "upgradeNow": "Upgrade to Pro"
   },
   "seo": {
     "homeTitle": "Factumation - Free Online Invoice and Quote Generator | France & Madagascar",

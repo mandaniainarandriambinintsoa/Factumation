@@ -11,7 +11,8 @@
     "register": "S'inscrire",
     "logout": "Déconnexion",
     "settings": "Paramètres",
-    "myHistory": "Mon historique"
+    "myHistory": "Mon historique",
+    "pricing": "Tarifs"
   },
   "hero": {
     "title": "La facturation simplifiée pour les",
@@ -316,6 +317,38 @@
     "ctaTitle": "Prêt à essayer Factumation ?",
     "ctaSubtitle": "Créez vos factures et devis professionnels gratuitement, sans inscription.",
     "noPosts": "Aucun article disponible pour le moment."
+  },
+  "pricing": {
+    "title": "Tarifs simples et transparents",
+    "subtitle": "Commencez gratuitement, passez à Pro quand vous êtes prêt. Aucune surprise.",
+    "freeName": "Gratuit",
+    "proName": "Pro",
+    "businessName": "Business",
+    "free": "0€",
+    "month": "mois",
+    "popular": "Le plus populaire",
+    "currentPlan": "Plan actuel",
+    "freePlan": "Plan actuel",
+    "upgrade": "Passer à ce plan",
+    "unlimited": "Illimité",
+    "invoicesPerMonth": "factures/mois",
+    "quotesPerMonth": "devis/mois",
+    "companies": "sociétés",
+    "customLogo": "Logo personnalisé",
+    "emailSending": "Envoi par email",
+    "noWatermark": "Sans watermark",
+    "recurringInvoices": "Factures récurrentes",
+    "manageSub": "Gérer mon abonnement",
+    "yourPlan": "Votre plan",
+    "nextBilling": "Prochain renouvellement",
+    "usage": "Utilisation ce mois",
+    "invoicesUsed": "factures utilisées",
+    "quotesUsed": "devis utilisés",
+    "limitReached": "Vous avez atteint la limite de votre plan gratuit.",
+    "invoiceLimitMsg": "Vous avez utilisé vos 2 factures gratuites ce mois-ci.",
+    "quoteLimitMsg": "Vous avez utilisé vos 2 devis gratuits ce mois-ci.",
+    "emailProOnly": "L'envoi par email est réservé aux plans Pro et Business.",
+    "upgradeNow": "Passer à Pro"
   },
   "seo": {
     "homeTitle": "Factumation - Générateur de Factures et Devis Gratuit en Ligne | France & Madagascar",

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn } from 'lucide-react';
+import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn, Lock, Crown } from 'lucide-react';
 import { QuoteData, LineItem, FiscalInfo } from '../types';
 
 // Import dynamique de html2pdf.js pour réduire le bundle initial
@@ -15,6 +15,7 @@ import { DEFAULT_QUOTE_WEBHOOK_URL } from '../constants';
 const ADMIN_EMAIL = 'mandaniaina.randriambinintsoa@gmail.com';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import SEOHead from './SEOHead';
 import AuthModal from './AuthModal';
 import ClientSelector from './ClientSelector';
@@ -76,7 +77,8 @@ const QuoteForm: React.FC = () => {
   const [formData, setFormData] = useState<QuoteData>(getInitialFormData());
 
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { canCreateQuote, isPro, plan, usage, refresh: refreshSubscription } = useSubscription();
 
   // Vérifie si l'utilisateur connecté est l'admin (pour afficher le webhook n8n)
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -294,6 +296,12 @@ const QuoteForm: React.FC = () => {
   const handleGeneratePdf = async () => {
     if (!quoteRef.current) return;
 
+    // Vérifier la limite du plan
+    if (user && !canCreateQuote) {
+      setEmailError(t('pricing.quoteLimitMsg'));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -340,6 +348,12 @@ const QuoteForm: React.FC = () => {
       setAuthModalMessage(t('quote.loginToEmailMsg'));
       setPendingAction('email');
       setIsAuthModalOpen(true);
+      return;
+    }
+
+    // Vérifier si le plan permet l'envoi email
+    if (!isPro) {
+      setEmailError(t('pricing.emailProOnly'));
       return;
     }
 
@@ -616,6 +630,28 @@ const QuoteForm: React.FC = () => {
         </div>
       </div>
 
+      {/* Bannière limite plan */}
+      {user && !canCreateQuote && (
+        <div className="mb-6 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+          <Crown className="text-amber-500 shrink-0" size={20} />
+          <div className="flex-grow">
+            <p className="text-sm font-semibold text-amber-800">{t('pricing.quoteLimitMsg')}</p>
+            <p className="text-xs text-amber-600 mt-0.5">{t('pricing.limitReached')}</p>
+          </div>
+          <a href={`/${locale}/pricing`} className="shrink-0 inline-flex items-center gap-1 bg-amber-500 text-white text-sm font-bold px-4 py-2 rounded-full hover:bg-amber-600 transition-colors">
+            <Crown size={14} /> {t('pricing.upgradeNow')}
+          </a>
+        </div>
+      )}
+
+      {/* Usage indicator */}
+      {user && canCreateQuote && plan.id === 'free' && (
+        <div className="mb-6 flex items-center gap-2 text-xs text-slate-400">
+          <FileText size={14} />
+          <span>{usage.quotes}/{plan.features.quotesPerMonth} {t('pricing.quotesUsed')}</span>
+        </div>
+      )}
+
       {/* VIEW: PREVIEW MODE */}
       {isPreviewMode ? (
         <div className="animate-fade-in">
@@ -799,26 +835,47 @@ const QuoteForm: React.FC = () => {
               )}
             </button>
 
-            {/* Bouton Envoyer le devis (Brevo) */}
+            {/* Bouton Envoyer le devis (Resend) */}
             <div className="flex flex-col items-center">
-              <button
-                onClick={handleSendEmail}
-                disabled={loading || savingToHistory || webhookLoading}
-                className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                    {t('invoice.sending')}
-                  </>
-                ) : (
-                  <>
-                    <Mail className="-ml-1 mr-3 h-5 w-5" />
-                    {t('quote.sendQuote')}
-                  </>
+              <div className="relative">
+                <button
+                  onClick={handleSendEmail}
+                  disabled={loading || savingToHistory || webhookLoading || !isPro}
+                  className={`inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full min-w-[200px] transition-all duration-300 ${
+                    isPro
+                      ? 'text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1'
+                      : 'text-slate-400 bg-slate-200 cursor-not-allowed'
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                      {t('invoice.sending')}
+                    </>
+                  ) : !isPro ? (
+                    <>
+                      <Lock className="-ml-1 mr-3 h-5 w-5" />
+                      {t('quote.sendQuote')}
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="-ml-1 mr-3 h-5 w-5" />
+                      {t('quote.sendQuote')}
+                    </>
+                  )}
+                </button>
+                {!isPro && (
+                  <span className="absolute -top-2 -right-2 inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full">
+                    <Crown size={12} /> PRO
+                  </span>
                 )}
-              </button>
-              <span className="text-xs text-slate-400 mt-2 font-medium italic">({t('invoice.sendEmail')} → {formData.clientEmail})</span>
+              </div>
+              {isPro && (
+                <span className="text-xs text-slate-400 mt-2 font-medium italic">({t('invoice.sendEmail')} → {formData.clientEmail})</span>
+              )}
+              {!isPro && (
+                <span className="text-xs text-slate-400 mt-2">{t('pricing.emailProOnly')}</span>
+              )}
               {emailError && (
                 <span className="text-xs text-red-500 mt-2 font-medium bg-red-50 px-3 py-1 rounded-full">{emailError}</span>
               )}
