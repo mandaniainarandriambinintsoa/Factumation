@@ -1,11 +1,13 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { I18nProvider } from './contexts/I18nContext';
 
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import SidebarTopBar from './components/SidebarTopBar';
 import Footer from './components/Footer';
 
 // Lazy load des pages pour le code splitting
@@ -28,28 +30,64 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
+// Shared routes block
+const AppRoutes: React.FC = () => (
+  <Suspense fallback={<PageLoader />}>
+    <Routes>
+      <Route index element={<Hero />} />
+      <Route path="create" element={<InvoiceForm />} />
+      <Route path="quote" element={<QuoteForm />} />
+      <Route path="pricing" element={<Pricing />} />
+      <Route path="about" element={<About />} />
+      <Route path="contact" element={<Contact />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="settings" element={<Settings />} />
+      <Route path="blog" element={<BlogList />} />
+      <Route path="blog/:slug" element={<BlogPost />} />
+      <Route path="admin/*" element={<Admin />} />
+    </Routes>
+  </Suspense>
+);
+
 // Layout wrapping I18nProvider (needs to be inside Router for useParams)
 const LangLayout: React.FC = () => {
+  const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Show loader while auth state is resolving to avoid layout flash
+  if (loading) {
+    return (
+      <I18nProvider>
+        <PageLoader />
+      </I18nProvider>
+    );
+  }
+
+  // Logged-in: sidebar layout
+  if (user) {
+    return (
+      <I18nProvider>
+        <div className="min-h-screen bg-slate-50 font-sans">
+          <Sidebar isMobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+          <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <div className="lg:pl-64 flex flex-col min-h-screen">
+            <main className="flex-grow">
+              <AppRoutes />
+            </main>
+            <Footer />
+          </div>
+        </div>
+      </I18nProvider>
+    );
+  }
+
+  // Not logged in: classic navbar layout
   return (
     <I18nProvider>
       <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
         <Navbar />
         <main className="flex-grow">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route index element={<Hero />} />
-              <Route path="create" element={<InvoiceForm />} />
-              <Route path="quote" element={<QuoteForm />} />
-              <Route path="pricing" element={<Pricing />} />
-              <Route path="about" element={<About />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="blog" element={<BlogList />} />
-              <Route path="blog/:slug" element={<BlogPost />} />
-              <Route path="admin/*" element={<Admin />} />
-            </Routes>
-          </Suspense>
+          <AppRoutes />
         </main>
         <Footer />
       </div>
