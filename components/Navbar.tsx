@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
             </Link>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-6">
               {baseNavLinks.map((link) => (
                 <Link
                   key={link.path}
@@ -208,7 +208,7 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center gap-2">
+            <div className="lg:hidden flex items-center gap-2">
               <LanguageSwitcher />
               <button
                 onClick={toggleMenu}
@@ -222,7 +222,7 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Menu Content */}
         {isOpen && (
-          <div className="md:hidden bg-white border-b border-slate-200 animate-fade-in">
+          <div className="lg:hidden bg-white border-b border-slate-200 animate-fade-in">
             <div className="px-4 pt-2 pb-4 space-y-1">
               {baseNavLinks.map((link) => (
                 <Link
