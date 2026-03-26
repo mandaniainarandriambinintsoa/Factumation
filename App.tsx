@@ -69,8 +69,8 @@ const LangLayout: React.FC = () => {
       <I18nProvider>
         <div className="min-h-screen bg-slate-50 font-sans">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
           <div className="xl:pl-64 flex flex-col min-h-screen">
+            <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
             <main className="flex-grow">
               <AppRoutes />
             </main>

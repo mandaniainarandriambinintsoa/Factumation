@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, FileText, User } from 'lucide-react';
+import { Menu, FileText, User, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import LanguageSwitcher from './LanguageSwitcher';
 
@@ -11,13 +12,14 @@ interface SidebarTopBarProps {
 
 const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const { path } = useLocalizedPath();
 
   return (
-    <header className="xl:hidden sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
-        {/* Left: hamburger + logo */}
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
+        {/* Left: hamburger + logo (mobile/tablet only) */}
+        <div className="flex items-center gap-3 xl:hidden">
           <button
             onClick={onMenuToggle}
             className="p-2 rounded-lg text-slate-600 hover:text-primary-900 hover:bg-slate-100 transition-colors"
@@ -32,11 +34,23 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
           </Link>
         </div>
 
-        {/* Right: language + user */}
+        {/* Left spacer on desktop (sidebar has the logo) */}
+        <div className="hidden xl:block" />
+
+        {/* Right: language + settings + user */}
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
+
+          <Link
+            to={path('/settings')}
+            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-primary-900 hover:bg-slate-100 transition-colors"
+          >
+            <Settings size={16} />
+            <span>{t('nav.settings')}</span>
+          </Link>
+
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pl-2 xl:pl-3 xl:ml-1 xl:border-l xl:border-slate-200">
               <span className="text-sm font-medium text-slate-700 hidden md:inline max-w-[150px] truncate">
                 {user.name || user.email.split('@')[0]}
               </span>

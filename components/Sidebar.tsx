@@ -119,9 +119,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <hr className="mb-3 border-slate-100" />
 
         <div className="space-y-1">
-          <LanguageSwitcher />
+          <div className="xl:hidden">
+            <LanguageSwitcher />
+          </div>
 
-          <Link to={path('/settings')} onClick={onClose} className={linkClass('/settings')}>
+          <Link to={path('/settings')} onClick={onClose} className={`xl:hidden ${linkClass('/settings')}`}>
             <Settings size={18} />
             {t('nav.settings')}
           </Link>
