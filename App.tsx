@@ -63,17 +63,19 @@ const LangLayout: React.FC = () => {
     );
   }
 
-  // Logged-in: top bar + slide-out sidebar layout
+  // Logged-in: sidebar layout (fixed on xl+, slide-out below)
   if (user) {
     return (
       <I18nProvider>
-        <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
+        <div className="min-h-screen bg-slate-50 font-sans">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-grow">
-            <AppRoutes />
-          </main>
-          <Footer />
+          <div className="xl:pl-64 flex flex-col min-h-screen">
+            <main className="flex-grow">
+              <AppRoutes />
+            </main>
+            <Footer />
+          </div>
         </div>
       </I18nProvider>
     );
