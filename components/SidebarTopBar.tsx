@@ -49,11 +49,9 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
             <span>{t('nav.settings')}</span>
           </Link>
 
+          {/* User avatar - mobile/tablet only (desktop has it in sidebar) */}
           {user && (
-            <div className="flex items-center gap-2 pl-2 xl:pl-3 xl:ml-1 xl:border-l xl:border-slate-200">
-              <span className="text-sm font-medium text-slate-700 hidden md:inline max-w-[150px] truncate">
-                {user.name || user.email.split('@')[0]}
-              </span>
+            <div className="xl:hidden flex items-center gap-2 pl-2">
               <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
