@@ -113,16 +113,18 @@ VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-### Configuration de l'envoi d'emails (Brevo)
+### Configuration de l'envoi d'emails (Resend)
 
-La cle API Brevo est stockee de maniere securisee dans les secrets Supabase :
+La cle API Resend est stockee dans les secrets Supabase :
 
 ```bash
 # Via Supabase CLI
-supabase secrets set BREVO_API_KEY=votre-cle-api-brevo
+supabase secrets set RESEND_API_KEY=re_xxxxx
 ```
 
 Ou via le Dashboard Supabase : **Project Settings** > **Edge Functions** > **Secrets**
+
+Compte gratuit : https://resend.com (100 emails/jour)
 
 ---
 

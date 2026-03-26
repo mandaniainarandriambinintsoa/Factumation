@@ -5,7 +5,7 @@ import { InvoiceData, LineItem, FiscalInfo } from '../types';
 // Import dynamique de html2pdf.js pour réduire le bundle initial
 const loadHtml2Pdf = () => import('html2pdf.js').then(m => m.default);
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
-import { sendInvoiceEmail, isBrevoConfigured } from '../services/emailService';
+import { sendInvoiceEmail, isEmailConfigured } from '../services/emailService';
 import { sendInvoiceWithPdfToWebhook } from '../services/invoiceService';
 import { saveInvoice } from '../services/historyService';
 import { DEFAULT_WEBHOOK_URL } from '../constants';
@@ -338,8 +338,7 @@ const InvoiceForm: React.FC = () => {
       return;
     }
 
-    // Vérifier si Brevo est configuré
-    if (!isBrevoConfigured()) {
+    if (!isEmailConfigured()) {
       setEmailError('Service email non configuré. Contactez l\'administrateur.');
       return;
     }

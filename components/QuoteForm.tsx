@@ -5,7 +5,7 @@ import { QuoteData, LineItem, FiscalInfo } from '../types';
 // Import dynamique de html2pdf.js pour réduire le bundle initial
 const loadHtml2Pdf = () => import('html2pdf.js').then(m => m.default);
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
-import { sendQuoteEmail, isBrevoConfigured } from '../services/emailService';
+import { sendQuoteEmail, isEmailConfigured } from '../services/emailService';
 import { sendQuoteWithPdfToWebhook } from '../services/quoteService';
 import { saveQuote } from '../services/historyService';
 import { getDefaultCompany } from '../services/companyService';
@@ -343,8 +343,7 @@ const QuoteForm: React.FC = () => {
       return;
     }
 
-    // Vérifier si Brevo est configuré
-    if (!isBrevoConfigured()) {
+    if (!isEmailConfigured()) {
       setEmailError('Service email non configuré. Contactez l\'administrateur.');
       return;
     }

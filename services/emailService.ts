@@ -1,34 +1,29 @@
 /**
- * Service d'envoi d'emails via Edge Function Supabase (sécurisé)
+ * Service d'envoi d'emails via Edge Function Supabase + Resend
  *
- * La clé API Brevo est stockée côté serveur dans les secrets Supabase.
+ * La clé API Resend est stockée côté serveur dans les secrets Supabase.
  *
  * Configuration requise:
- * 1. Créer un compte sur https://www.brevo.com (gratuit, sans carte bancaire)
- * 2. Générer une clé API: https://app.brevo.com/settings/keys/api
- * 3. Ajouter la clé comme secret Supabase: BREVO_API_KEY
- *    - Via CLI: supabase secrets set BREVO_API_KEY=your-api-key
+ * 1. Créer un compte sur https://resend.com (gratuit: 100 emails/jour)
+ * 2. Générer une clé API: https://resend.com/api-keys
+ * 3. Ajouter la clé comme secret Supabase: RESEND_API_KEY
+ *    - Via CLI: supabase secrets set RESEND_API_KEY=re_xxxxx
  *    - Via Dashboard: Project Settings > Edge Functions > Secrets
+ * 4. (Optionnel) Vérifier un domaine custom dans Resend pour l'expéditeur
  */
 
 import { InvoiceData, QuoteData } from '../types';
 import { supabase } from '../lib/supabase';
 
-// Edge Function URL
-const EDGE_FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL
-  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`
-  : null;
-
 /**
  * Vérifie si le service email est configuré
  */
-export const isBrevoConfigured = (): boolean => {
-  // L'email est disponible si Supabase est configuré (Edge Function)
-  return !!supabase && !!EDGE_FUNCTION_URL;
+export const isEmailConfigured = (): boolean => {
+  return !!supabase;
 };
 
 /**
- * Envoie un email via l'Edge Function Supabase
+ * Envoie un email via l'Edge Function Supabase (Resend)
  */
 const sendEmailViaEdgeFunction = async (
   type: 'invoice' | 'quote',
@@ -48,7 +43,7 @@ const sendEmailViaEdgeFunction = async (
   },
   pdfBase64: string
 ): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase || !EDGE_FUNCTION_URL) {
+  if (!supabase) {
     return {
       success: false,
       error: 'Service email non configuré. Veuillez configurer Supabase.',
@@ -56,36 +51,21 @@ const sendEmailViaEdgeFunction = async (
   }
 
   try {
-    // Get the current session for authentication
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
+    const { data: result, error } = await supabase.functions.invoke('send-email', {
+      body: { type, data, pdfBase64 },
+    });
 
-    if (!accessToken) {
+    if (error) {
       return {
         success: false,
-        error: 'Vous devez être connecté pour envoyer des emails.',
+        error: error.message || 'Erreur lors de l\'envoi de l\'email',
       };
     }
 
-    const response = await fetch(EDGE_FUNCTION_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        type,
-        data,
-        pdfBase64,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
+    if (result?.error) {
       return {
         success: false,
-        error: result.error || `Erreur HTTP ${response.status}`,
+        error: result.error,
       };
     }
 
