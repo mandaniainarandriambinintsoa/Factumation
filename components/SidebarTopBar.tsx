@@ -14,8 +14,8 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
   const { path } = useLocalizedPath();
 
   return (
-    <header className="lg:hidden sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200">
-      <div className="flex items-center justify-between h-full px-4">
+    <header className="sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         {/* Left: hamburger + logo */}
         <div className="flex items-center gap-3">
           <button
@@ -28,22 +28,27 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
             <div className="bg-primary-900 text-white p-1.5 rounded-lg">
               <FileText size={18} />
             </div>
-            <span className="font-bold text-primary-900">Factumation</span>
+            <span className="font-bold text-primary-900 hidden sm:inline">Factumation</span>
           </Link>
         </div>
 
-        {/* Right: language + avatar */}
-        <div className="flex items-center gap-2">
+        {/* Right: language + user */}
+        <div className="flex items-center gap-3">
           <LanguageSwitcher />
           {user && (
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-primary-100 flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary-600" />
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-700 hidden md:inline max-w-[150px] truncate">
+                {user.name || user.email.split('@')[0]}
+              </span>
+              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-primary-100 flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary-600" />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
