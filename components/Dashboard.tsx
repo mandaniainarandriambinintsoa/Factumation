@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Modal state
-  const [modal, setModal] = useState<{ type: 'markPaid' | 'reminder'; invoice: SavedInvoice } | null>(null);
+  const [modal, setModal] = useState<{ type: 'markPaid' | 'markSent' | 'reminder'; invoice: SavedInvoice } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
@@ -126,6 +126,26 @@ const Dashboard: React.FC = () => {
     setActionLoading(false);
     setModal(null);
     setActionSuccess(t('homeDashboard.markedPaidSuccess'));
+  };
+
+  const handleMarkSent = async () => {
+    if (!modal || modal.type !== 'markSent') return;
+    setActionLoading(true);
+    setActionError(null);
+
+    const result = await updateInvoiceStatus(modal.invoice.id, 'sent');
+    if (result.error) {
+      setActionError(result.error);
+      setActionLoading(false);
+      return;
+    }
+
+    setInvoices((prev) =>
+      prev.map((inv) => (inv.id === modal.invoice.id ? { ...inv, status: 'sent' as const } : inv))
+    );
+    setActionLoading(false);
+    setModal(null);
+    setActionSuccess(t('homeDashboard.markedSentSuccess'));
   };
 
   const handleSendReminder = async () => {
@@ -327,6 +347,15 @@ const Dashboard: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-1">
+                        {invoice.status === 'draft' && (
+                          <button
+                            onClick={() => setModal({ type: 'markSent', invoice })}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title={t('homeDashboard.markAsSent')}
+                          >
+                            <Send size={20} />
+                          </button>
+                        )}
                         {invoice.status === 'sent' && (
                           <>
                             <button
@@ -469,7 +498,55 @@ const Dashboard: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            {modal.type === 'markPaid' ? (
+            {modal.type === 'markSent' ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <Send className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsSentTitle')}</h3>
+                    <p className="text-sm text-slate-500">{modal.invoice.invoiceNumber}</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-4 mb-5">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                    <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                    <span className="font-bold text-blue-600">
+                      {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsSentConfirm')}</p>
+
+                {actionError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setModal(null); setActionError(null); }}
+                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+                  >
+                    {t('homeDashboard.cancel')}
+                  </button>
+                  <button
+                    onClick={handleMarkSent}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {t('homeDashboard.confirmSent')}
+                  </button>
+                </div>
+              </>
+            ) : modal.type === 'markPaid' ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 bg-green-100 rounded-xl">
