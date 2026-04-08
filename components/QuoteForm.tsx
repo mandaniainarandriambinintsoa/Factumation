@@ -395,13 +395,16 @@ const QuoteForm: React.FC = () => {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Envoyer l'email via Brevo
+      // Envoyer l'email via Resend
       const result = await sendQuoteEmail(formData, pdfBase64);
 
       if (!result.success) {
         setEmailError(result.error || 'Erreur lors de l\'envoi de l\'email');
         return;
       }
+
+      // Sauvegarder le devis en DB avec status "sent"
+      await saveQuote(formData, pdfBase64, 'sent');
 
       setSuccessAction('email');
       setSuccess(true);

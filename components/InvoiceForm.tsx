@@ -393,13 +393,16 @@ const InvoiceForm: React.FC = () => {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Envoyer l'email via Brevo
+      // Envoyer l'email via Resend
       const result = await sendInvoiceEmail(formData, pdfBase64);
 
       if (!result.success) {
         setEmailError(result.error || 'Erreur lors de l\'envoi de l\'email');
         return;
       }
+
+      // Sauvegarder la facture en DB avec status "sent"
+      await saveInvoice(formData, pdfBase64, 'sent');
 
       setSuccessAction('email');
       setSuccess(true);
