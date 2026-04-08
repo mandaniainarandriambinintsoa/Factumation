@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 
 // Lazy load des pages pour le code splitting
 const Hero = lazy(() => import('./components/Hero'));
+const HomeDashboard = lazy(() => import('./components/HomeDashboard'));
 const InvoiceForm = lazy(() => import('./components/InvoiceForm'));
 const QuoteForm = lazy(() => import('./components/QuoteForm'));
 const About = lazy(() => import('./components/About'));
@@ -31,10 +32,10 @@ const PageLoader: React.FC = () => (
 );
 
 // Shared routes block
-const AppRoutes: React.FC = () => (
+const AppRoutes: React.FC<{ isLoggedIn: boolean }> = ({ isLoggedIn }) => (
   <Suspense fallback={<PageLoader />}>
     <Routes>
-      <Route index element={<Hero />} />
+      <Route index element={isLoggedIn ? <HomeDashboard /> : <Hero />} />
       <Route path="create" element={<InvoiceForm />} />
       <Route path="quote" element={<QuoteForm />} />
       <Route path="pricing" element={<Pricing />} />
@@ -72,7 +73,7 @@ const LangLayout: React.FC = () => {
           <div className="xl:pl-64 flex flex-col min-h-screen">
             <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
             <main className="flex-grow">
-              <AppRoutes />
+              <AppRoutes isLoggedIn />
             </main>
             <Footer />
           </div>
@@ -87,7 +88,7 @@ const LangLayout: React.FC = () => {
       <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
         <Navbar />
         <main className="flex-grow">
-          <AppRoutes />
+          <AppRoutes isLoggedIn={false} />
         </main>
         <Footer />
       </div>
