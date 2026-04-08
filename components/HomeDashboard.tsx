@@ -2,15 +2,35 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, FileCheck, Plus, TrendingUp, Clock, CheckCircle2,
-  Loader2, ArrowRight, Calendar, User,
-  Send, Ban, XCircle, Timer
+  Loader2, ArrowRight, Calendar, User, X,
+  Send, Ban, XCircle, Timer, RefreshCw, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
-import { getInvoices, getQuotes } from '../services/historyService';
-import { SavedInvoice, SavedQuote, InvoiceStatus, QuoteStatus } from '../types';
+import { getInvoices, getQuotes, updateInvoiceStatus } from '../services/historyService';
+import { SavedInvoice, SavedQuote } from '../types';
 import { CURRENCIES } from '../constants';
+import { supabase } from '../lib/supabase';
+
+type RecentDoc = {
+  type: 'invoice' | 'quote';
+  id: string;
+  number: string;
+  date: string;
+  clientName: string;
+  clientEmail: string;
+  companyName: string;
+  companyEmail: string;
+  companyPhone?: string;
+  total: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  dueDate?: string;
+  items: { id: string; name: string; quantity: number; unitPrice: number }[];
+  pdfBase64?: string;
+};
 
 const HomeDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -22,11 +42,25 @@ const HomeDashboard: React.FC = () => {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal state
+  const [modal, setModal] = useState<{ type: 'markPaid' | 'reminder'; doc: RecentDoc } | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
+
+  // Auto-dismiss success message
+  useEffect(() => {
+    if (actionSuccess) {
+      const timer = setTimeout(() => setActionSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [actionSuccess]);
 
   const loadData = async () => {
     setLoading(true);
@@ -46,6 +80,72 @@ const HomeDashboard: React.FC = () => {
       year: 'numeric',
     });
 
+  const formatCurrency = (amount: number) =>
+    amount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  // Mark invoice as paid
+  const handleMarkPaid = async () => {
+    if (!modal || modal.type !== 'markPaid') return;
+    setActionLoading(true);
+    setActionError(null);
+
+    const result = await updateInvoiceStatus(modal.doc.id, 'paid');
+    if (result.error) {
+      setActionError(result.error);
+      setActionLoading(false);
+      return;
+    }
+
+    // Update local state
+    setInvoices((prev) =>
+      prev.map((inv) => (inv.id === modal.doc.id ? { ...inv, status: 'paid' } : inv))
+    );
+    setActionLoading(false);
+    setModal(null);
+    setActionSuccess(t('homeDashboard.markedPaidSuccess'));
+  };
+
+  // Send reminder email
+  const handleSendReminder = async () => {
+    if (!modal || modal.type !== 'reminder' || !supabase) return;
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'reminder',
+          data: {
+            companyName: modal.doc.companyName,
+            companyEmail: modal.doc.companyEmail,
+            companyPhone: modal.doc.companyPhone,
+            clientName: modal.doc.clientName,
+            clientEmail: modal.doc.clientEmail,
+            documentNumber: modal.doc.number,
+            documentDate: modal.doc.date,
+            dueDate: modal.doc.dueDate,
+            currency: modal.doc.currency,
+            items: modal.doc.items,
+          },
+          pdfBase64: modal.doc.pdfBase64 || '',
+        },
+      });
+
+      if (error || result?.error) {
+        setActionError(error?.message || result?.error || t('homeDashboard.reminderError'));
+        setActionLoading(false);
+        return;
+      }
+
+      setActionLoading(false);
+      setModal(null);
+      setActionSuccess(t('homeDashboard.reminderSentSuccess'));
+    } catch (err) {
+      setActionError(t('homeDashboard.reminderError'));
+      setActionLoading(false);
+    }
+  };
+
   // KPI calculations
   const kpis = useMemo(() => {
     const paidInvoices = invoices.filter((i) => i.status === 'paid');
@@ -54,12 +154,9 @@ const HomeDashboard: React.FC = () => {
 
     const totalRevenue = paidInvoices.reduce((sum, i) => sum + i.total, 0);
     const pendingAmount = pendingInvoices.reduce((sum, i) => sum + i.total, 0);
-    const draftAmount = draftInvoices.reduce((sum, i) => sum + i.total, 0);
 
     const acceptedQuotes = quotes.filter((q) => q.status === 'accepted');
-    const pendingQuotes = quotes.filter((q) => q.status === 'sent');
 
-    // Determine primary currency (most used)
     const currencyCounts: Record<string, number> = {};
     invoices.forEach((i) => {
       currencyCounts[i.currency] = (currencyCounts[i.currency] || 0) + 1;
@@ -69,31 +166,36 @@ const HomeDashboard: React.FC = () => {
     return {
       totalRevenue,
       pendingAmount,
-      draftAmount,
       totalInvoices: invoices.length,
       paidCount: paidInvoices.length,
       pendingCount: pendingInvoices.length,
       draftCount: draftInvoices.length,
       totalQuotes: quotes.length,
       acceptedCount: acceptedQuotes.length,
-      pendingQuotesCount: pendingQuotes.length,
       primaryCurrency: getCurrencySymbol(primaryCurrency),
     };
   }, [invoices, quotes]);
 
-  // Recent documents (last 5, mixed invoices + quotes, sorted by date)
-  const recentDocs = useMemo(() => {
-    const all = [
+  // Recent documents
+  const recentDocs = useMemo<RecentDoc[]>(() => {
+    const all: RecentDoc[] = [
       ...invoices.map((i) => ({
         type: 'invoice' as const,
         id: i.id,
         number: i.invoiceNumber,
         date: i.invoiceDate,
         clientName: i.clientName,
+        clientEmail: i.clientEmail,
+        companyName: i.companyName,
+        companyEmail: i.companyEmail,
+        companyPhone: i.companyPhone,
         total: i.total,
         currency: i.currency,
         status: i.status,
         createdAt: i.createdAt,
+        dueDate: i.dueDate,
+        items: i.items,
+        pdfBase64: i.pdfBase64,
       })),
       ...quotes.map((q) => ({
         type: 'quote' as const,
@@ -101,10 +203,16 @@ const HomeDashboard: React.FC = () => {
         number: q.quoteNumber,
         date: q.quoteDate,
         clientName: q.clientName,
+        clientEmail: q.clientEmail,
+        companyName: q.companyName,
+        companyEmail: q.companyEmail,
+        companyPhone: q.companyPhone,
         total: q.total,
         currency: q.currency,
         status: q.status,
         createdAt: q.createdAt,
+        items: q.items,
+        pdfBase64: q.pdfBase64,
       })),
     ];
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
@@ -132,10 +240,18 @@ const HomeDashboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Success toast */}
+      {actionSuccess && (
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-[slideIn_0.3s_ease]">
+          <CheckCircle2 className="w-5 h-5" />
+          <span className="font-medium">{actionSuccess}</span>
+        </div>
+      )}
+
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-          {t('homeDashboard.welcome')}{firstName ? `, ${firstName}` : ''} 👋
+          {t('homeDashboard.welcome')}{firstName ? `, ${firstName}` : ''}
         </h1>
         <p className="mt-1 text-slate-500">{t('homeDashboard.subtitle')}</p>
       </div>
@@ -174,14 +290,14 @@ const HomeDashboard: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard
           label={t('homeDashboard.kpiRevenue')}
-          value={`${kpis.totalRevenue.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ${kpis.primaryCurrency}`}
+          value={`${formatCurrency(kpis.totalRevenue)} ${kpis.primaryCurrency}`}
           icon={TrendingUp}
           color="text-green-600 bg-green-50"
           sub={t('homeDashboard.kpiPaid').replace('{count}', String(kpis.paidCount))}
         />
         <KpiCard
           label={t('homeDashboard.kpiPending')}
-          value={`${kpis.pendingAmount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ${kpis.primaryCurrency}`}
+          value={`${formatCurrency(kpis.pendingAmount)} ${kpis.primaryCurrency}`}
           icon={Clock}
           color="text-blue-600 bg-blue-50"
           sub={t('homeDashboard.kpiAwaitingPayment').replace('{count}', String(kpis.pendingCount))}
@@ -228,13 +344,13 @@ const HomeDashboard: React.FC = () => {
             {recentDocs.map((doc) => {
               const sc = statusConfig[doc.status] || statusConfig.draft;
               const StatusIcon = sc.icon;
+              const isInvoiceSent = doc.type === 'invoice' && doc.status === 'sent';
               return (
                 <div
                   key={`${doc.type}-${doc.id}`}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer"
-                  onClick={() => navigate(path('/dashboard'))}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors"
                 >
-                  <div className={`p-2.5 rounded-lg ${doc.type === 'invoice' ? 'bg-primary-50' : 'bg-green-50'}`}>
+                  <div className={`p-2.5 rounded-lg flex-shrink-0 ${doc.type === 'invoice' ? 'bg-primary-50' : 'bg-green-50'}`}>
                     {doc.type === 'invoice' ? (
                       <FileText className="w-5 h-5 text-primary-600" />
                     ) : (
@@ -243,7 +359,7 @@ const HomeDashboard: React.FC = () => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-slate-900 truncate">{doc.number}</span>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sc.color}`}>
                         <StatusIcon className="w-3 h-3" />
@@ -267,12 +383,157 @@ const HomeDashboard: React.FC = () => {
                       {doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(doc.currency)}
                     </p>
                   </div>
+
+                  {/* Action buttons for sent invoices */}
+                  {isInvoiceSent && (
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setModal({ type: 'markPaid', doc }); }}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title={t('homeDashboard.markAsPaid')}
+                      >
+                        <CreditCard className="w-4.5 h-4.5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setModal({ type: 'reminder', doc }); }}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title={t('homeDashboard.sendReminder')}
+                      >
+                        <RefreshCw className="w-4.5 h-4.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setActionError(null); }} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-[scaleIn_0.2s_ease]">
+            <button
+              onClick={() => { setModal(null); setActionError(null); }}
+              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {modal.type === 'markPaid' ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <CreditCard className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsPaidTitle')}</h3>
+                    <p className="text-sm text-slate-500">{modal.doc.number}</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-4 mb-5">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                    <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                    <span className="font-bold text-green-600">
+                      {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                    <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsPaidConfirm')}</p>
+
+                {actionError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setModal(null); setActionError(null); }}
+                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+                  >
+                    {t('homeDashboard.cancel')}
+                  </button>
+                  <button
+                    onClick={handleMarkPaid}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {t('homeDashboard.confirmPaid')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-blue-100 rounded-xl">
+                    <RefreshCw className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.sendReminderTitle')}</h3>
+                    <p className="text-sm text-slate-500">{modal.doc.number}</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-4 mb-5">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                    <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">Email</span>
+                    <span className="text-slate-700">{modal.doc.clientEmail}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                    <span className="font-bold text-blue-600">
+                      {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                    <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.reminderConfirm')}</p>
+
+                {actionError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setModal(null); setActionError(null); }}
+                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+                  >
+                    {t('homeDashboard.cancel')}
+                  </button>
+                  <button
+                    onClick={handleSendReminder}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {t('homeDashboard.confirmReminder')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

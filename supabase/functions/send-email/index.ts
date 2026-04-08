@@ -47,14 +47,15 @@ serve(async (req: Request) => {
 
     const { type, data, pdfBase64 } = await req.json();
 
-    if (!type || !data || !pdfBase64) {
-      return new Response(JSON.stringify({ error: 'Missing required fields: type, data, pdfBase64' }), {
+    if (!type || !data) {
+      return new Response(JSON.stringify({ error: 'Missing required fields: type, data' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const isInvoice = type === 'invoice';
+    const isReminder = type === 'reminder';
+    const isInvoice = type === 'invoice' || isReminder;
     const docLabel = isInvoice ? 'Facture' : 'Devis';
     const docLabelEn = isInvoice ? 'Invoice' : 'Quote';
     const filename = `${docLabel}-${data.documentNumber}.pdf`;
@@ -70,40 +71,83 @@ serve(async (req: Request) => {
       currency: data.currency || 'EUR',
     }).format(total);
 
-    const subject = `${docLabel} ${data.documentNumber} - ${data.companyName}`;
+    let subject: string;
+    let html: string;
 
-    const html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
-        <div style="background: #2563eb; padding: 24px; border-radius: 8px 8px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 20px;">${docLabel} ${data.documentNumber}</h1>
+    if (isReminder) {
+      subject = `Relance : Facture ${data.documentNumber} - ${data.companyName}`;
+      html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+          <div style="background: #dc2626; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">Relance — Facture ${data.documentNumber}</h1>
+          </div>
+          <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+            <p>Bonjour <strong>${data.clientName}</strong>,</p>
+            <p>Nous nous permettons de vous relancer concernant la facture <strong>${data.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>, qui reste à ce jour impayée.</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 8px 12px; font-weight: 600;">N° Facture</td>
+                <td style="padding: 8px 12px;">${data.documentNumber}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 12px; font-weight: 600;">Date</td>
+                <td style="padding: 8px 12px;">${data.documentDate}</td>
+              </tr>
+              ${data.dueDate ? `<tr style="background: #f3f4f6;"><td style="padding: 8px 12px; font-weight: 600;">Échéance</td><td style="padding: 8px 12px; color: #dc2626; font-weight: 600;">${data.dueDate}</td></tr>` : ''}
+              <tr style="background: #fef2f2;">
+                <td style="padding: 8px 12px; font-weight: 600;">Montant dû</td>
+                <td style="padding: 8px 12px; font-weight: 700; color: #dc2626;">${formattedTotal}</td>
+              </tr>
+            </table>
+
+            <p>Nous vous prions de bien vouloir procéder au règlement dans les meilleurs délais. Si le paiement a déjà été effectué, nous vous remercions de ne pas tenir compte de ce message.</p>
+
+            <p style="color: #6b7280; font-size: 14px;">La facture est jointe à cet email pour votre référence.</p>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              ${data.companyName}${data.companyPhone ? ` | ${data.companyPhone}` : ''} | ${data.companyEmail}<br/>
+              Envoyé via <a href="https://factumation.vercel.app" style="color: #2563eb;">Factumation</a>
+            </p>
+          </div>
         </div>
-        <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p>Bonjour <strong>${data.clientName}</strong>,</p>
-          <p>Veuillez trouver ci-joint ${isInvoice ? 'la facture' : 'le devis'} <strong>${data.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>.</p>
+      `;
+    } else {
+      subject = `${docLabel} ${data.documentNumber} - ${data.companyName}`;
+      html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+          <div style="background: #2563eb; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">${docLabel} ${data.documentNumber}</h1>
+          </div>
+          <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+            <p>Bonjour <strong>${data.clientName}</strong>,</p>
+            <p>Veuillez trouver ci-joint ${isInvoice ? 'la facture' : 'le devis'} <strong>${data.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>.</p>
 
-          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-            <tr style="background: #f3f4f6;">
-              <td style="padding: 8px 12px; font-weight: 600;">Date</td>
-              <td style="padding: 8px 12px;">${data.documentDate}</td>
-            </tr>
-            ${data.dueDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Echéance</td><td style="padding: 8px 12px;">${data.dueDate}</td></tr>` : ''}
-            ${data.validityDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Validité</td><td style="padding: 8px 12px;">${data.validityDate}</td></tr>` : ''}
-            <tr style="background: #f3f4f6;">
-              <td style="padding: 8px 12px; font-weight: 600;">Montant total</td>
-              <td style="padding: 8px 12px; font-weight: 700; color: #2563eb;">${formattedTotal}</td>
-            </tr>
-          </table>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 8px 12px; font-weight: 600;">Date</td>
+                <td style="padding: 8px 12px;">${data.documentDate}</td>
+              </tr>
+              ${data.dueDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Echéance</td><td style="padding: 8px 12px;">${data.dueDate}</td></tr>` : ''}
+              ${data.validityDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Validité</td><td style="padding: 8px 12px;">${data.validityDate}</td></tr>` : ''}
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 8px 12px; font-weight: 600;">Montant total</td>
+                <td style="padding: 8px 12px; font-weight: 700; color: #2563eb;">${formattedTotal}</td>
+              </tr>
+            </table>
 
-          <p style="color: #6b7280; font-size: 14px;">Le document PDF est en pièce jointe de cet email.</p>
+            <p style="color: #6b7280; font-size: 14px;">Le document PDF est en pièce jointe de cet email.</p>
 
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-            ${data.companyName}${data.companyPhone ? ` | ${data.companyPhone}` : ''} | ${data.companyEmail}<br/>
-            Envoyé via <a href="https://factumation.vercel.app" style="color: #2563eb;">Factumation</a>
-          </p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              ${data.companyName}${data.companyPhone ? ` | ${data.companyPhone}` : ''} | ${data.companyEmail}<br/>
+              Envoyé via <a href="https://factumation.vercel.app" style="color: #2563eb;">Factumation</a>
+            </p>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
 
     // Send via Resend API
     const resendResponse = await fetch('https://api.resend.com/emails', {
@@ -118,12 +162,14 @@ serve(async (req: Request) => {
         reply_to: data.companyEmail,
         subject,
         html,
-        attachments: [
-          {
-            filename,
-            content: pdfBase64,
-          },
-        ],
+        ...(pdfBase64 ? {
+          attachments: [
+            {
+              filename,
+              content: pdfBase64,
+            },
+          ],
+        } : {}),
       }),
     });
 

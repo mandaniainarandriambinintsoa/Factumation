@@ -145,7 +145,22 @@
     "statusCancelled": "Cancelled",
     "statusAccepted": "Accepted",
     "statusRejected": "Rejected",
-    "statusExpired": "Expired"
+    "statusExpired": "Expired",
+    "markAsPaid": "Mark as paid",
+    "sendReminder": "Send reminder",
+    "markAsPaidTitle": "Confirm payment",
+    "markAsPaidConfirm": "Do you confirm this invoice has been paid? The status will change to \"Paid\" and the amount will be added to your revenue.",
+    "confirmPaid": "Confirm payment",
+    "markedPaidSuccess": "Invoice marked as paid!",
+    "sendReminderTitle": "Send payment reminder",
+    "reminderConfirm": "A reminder email will be sent to the client with the outstanding amount and the invoice attached.",
+    "confirmReminder": "Send reminder",
+    "reminderSentSuccess": "Reminder sent successfully!",
+    "reminderError": "Failed to send reminder",
+    "cancel": "Cancel",
+    "client": "Client",
+    "amount": "Amount",
+    "date": "Date"
   },
   "settings": {
     "title": "Settings",

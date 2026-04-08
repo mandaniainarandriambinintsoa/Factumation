@@ -145,7 +145,22 @@
     "statusCancelled": "Annulé",
     "statusAccepted": "Accepté",
     "statusRejected": "Refusé",
-    "statusExpired": "Expiré"
+    "statusExpired": "Expiré",
+    "markAsPaid": "Marquer comme payée",
+    "sendReminder": "Envoyer une relance",
+    "markAsPaidTitle": "Confirmer le paiement",
+    "markAsPaidConfirm": "Confirmez-vous que cette facture a été réglée ? Le statut passera à « Payé » et le montant sera ajouté à votre chiffre d'affaires.",
+    "confirmPaid": "Confirmer le paiement",
+    "markedPaidSuccess": "Facture marquée comme payée !",
+    "sendReminderTitle": "Envoyer une relance",
+    "reminderConfirm": "Un email de relance sera envoyé au client avec le rappel du montant dû et la facture en pièce jointe.",
+    "confirmReminder": "Envoyer la relance",
+    "reminderSentSuccess": "Relance envoyée avec succès !",
+    "reminderError": "Erreur lors de l'envoi de la relance",
+    "cancel": "Annuler",
+    "client": "Client",
+    "amount": "Montant",
+    "date": "Date"
   },
   "settings": {
     "title": "Paramètres",
