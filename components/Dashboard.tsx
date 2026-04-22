@@ -13,6 +13,15 @@ import { getInvoices, getQuotes, deleteInvoice, deleteQuote, updateInvoiceStatus
 import { SavedInvoice, SavedQuote } from '../types';
 import { CURRENCIES } from '../constants';
 import { supabase } from '../lib/supabase';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './ui/dialog';
 
 type TabType = 'invoices' | 'quotes';
 
@@ -29,7 +38,6 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Modal state
   const [modal, setModal] = useState<{ type: 'markPaid' | 'markSent' | 'reminder'; invoice: SavedInvoice } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -232,6 +240,11 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
+  const closeModal = () => {
+    setModal(null);
+    setActionError(null);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEOHead title={t('seo.dashboardTitle')} description={t('seo.dashboardDescription')} path="/dashboard" />
@@ -244,7 +257,6 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">{t('dashboard.title')}</h1>
         <p className="mt-2 text-slate-600">
@@ -252,7 +264,6 @@ const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
           <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
@@ -264,6 +275,7 @@ const Dashboard: React.FC = () => {
       <div className="border-b border-slate-200 mb-6">
         <nav className="flex gap-8">
           <button
+            type="button"
             onClick={() => setActiveTab('invoices')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               activeTab === 'invoices'
@@ -275,6 +287,7 @@ const Dashboard: React.FC = () => {
             {t('dashboard.invoicesTab')} ({invoices.length})
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('quotes')}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               activeTab === 'quotes'
@@ -288,7 +301,6 @@ const Dashboard: React.FC = () => {
         </nav>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin w-8 h-8 text-primary-600" />
@@ -348,45 +360,55 @@ const Dashboard: React.FC = () => {
 
                       <div className="flex items-center gap-1">
                         {invoice.status === 'draft' && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setModal({ type: 'markSent', invoice })}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                             title={t('homeDashboard.markAsSent')}
                           >
                             <Send size={20} />
-                          </button>
+                          </Button>
                         )}
                         {invoice.status === 'sent' && (
                           <>
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setModal({ type: 'markPaid', invoice })}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className="text-green-600 hover:bg-green-50 hover:text-green-700"
                               title={t('homeDashboard.markAsPaid')}
                             >
                               <CreditCard size={20} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setModal({ type: 'reminder', invoice })}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                               title={t('homeDashboard.sendReminder')}
                             >
                               <RefreshCw size={20} />
-                            </button>
+                            </Button>
                           </>
                         )}
                         {invoice.pdfBase64 && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => downloadPdf(invoice.pdfBase64!, `Facture-${invoice.invoiceNumber}.pdf`)}
-                            className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                            className="text-slate-400 hover:text-primary-600 hover:bg-primary-50"
                             title="Télécharger le PDF"
                           >
                             <Download size={20} />
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDeleteInvoice(invoice.id)}
                           disabled={deletingId === invoice.id}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50"
                           title="Supprimer"
                         >
                           {deletingId === invoice.id ? (
@@ -394,7 +416,7 @@ const Dashboard: React.FC = () => {
                           ) : (
                             <Trash2 size={20} />
                           )}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -457,18 +479,22 @@ const Dashboard: React.FC = () => {
 
                     <div className="flex items-center gap-1">
                       {quote.pdfBase64 && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => downloadPdf(quote.pdfBase64!, `Devis-${quote.quoteNumber}.pdf`)}
-                          className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          className="text-slate-400 hover:text-primary-600 hover:bg-primary-50"
                           title="Télécharger le PDF"
                         >
                           <Download size={20} />
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDeleteQuote(quote.id)}
                         disabled={deletingId === quote.id}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        className="text-slate-400 hover:text-red-600 hover:bg-red-50"
                         title="Supprimer"
                       >
                         {deletingId === quote.id ? (
@@ -476,7 +502,7 @@ const Dashboard: React.FC = () => {
                         ) : (
                           <Trash2 size={20} />
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -486,183 +512,161 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setActionError(null); }} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <button
-              onClick={() => { setModal(null); setActionError(null); }}
-              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {modal.type === 'markSent' ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+      {/* Confirmation Modal via Radix Dialog */}
+      <Dialog open={!!modal} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent className="max-w-md">
+          {modal?.type === 'markSent' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-100 rounded-xl">
                     <Send className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsSentTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.invoice.invoiceNumber}</p>
+                    <DialogTitle>{t('homeDashboard.markAsSentTitle')}</DialogTitle>
+                    <DialogDescription>{modal.invoice.invoiceNumber}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-blue-600">
-                      {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
-                    </span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsSentConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleMarkSent}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {t('homeDashboard.confirmSent')}
-                  </button>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-blue-600">
+                    {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
+                  </span>
                 </div>
-              </>
-            ) : modal.type === 'markPaid' ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.markAsSentConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleMarkSent} disabled={actionLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('homeDashboard.confirmSent')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modal?.type === 'markPaid' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-green-100 rounded-xl">
                     <CreditCard className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsPaidTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.invoice.invoiceNumber}</p>
+                    <DialogTitle>{t('homeDashboard.markAsPaidTitle')}</DialogTitle>
+                    <DialogDescription>{modal.invoice.invoiceNumber}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-green-600">
-                      {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
-                    <span className="text-slate-700">{formatDate(modal.invoice.invoiceDate)}</span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsPaidConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleMarkPaid}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    {t('homeDashboard.confirmPaid')}
-                  </button>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-green-600">
+                    {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
+                  </span>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                  <span className="text-slate-700">{formatDate(modal.invoice.invoiceDate)}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.markAsPaidConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleMarkPaid} disabled={actionLoading} className="flex-1 bg-green-600 hover:bg-green-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {t('homeDashboard.confirmPaid')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modal?.type === 'reminder' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-100 rounded-xl">
                     <RefreshCw className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.sendReminderTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.invoice.invoiceNumber}</p>
+                    <DialogTitle>{t('homeDashboard.sendReminderTitle')}</DialogTitle>
+                    <DialogDescription>{modal.invoice.invoiceNumber}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">Email</span>
-                    <span className="text-slate-700">{modal.invoice.clientEmail}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-blue-600">
-                      {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
-                    <span className="text-slate-700">{formatDate(modal.invoice.invoiceDate)}</span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.invoice.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.reminderConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleSendReminder}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {t('homeDashboard.confirmReminder')}
-                  </button>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">Email</span>
+                  <span className="text-slate-700">{modal.invoice.clientEmail}</span>
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-blue-600">
+                    {modal.invoice.total.toFixed(2)} {getCurrencySymbol(modal.invoice.currency)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                  <span className="text-slate-700">{formatDate(modal.invoice.invoiceDate)}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.reminderConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleSendReminder} disabled={actionLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('homeDashboard.confirmReminder')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// Empty State Component
 interface EmptyStateProps {
   icon: React.FC<{ className?: string }>;
   title: string;
@@ -685,12 +689,9 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       </div>
       <h3 className="text-lg font-medium text-slate-900 mb-2">{title}</h3>
       <p className="text-slate-500 mb-6 max-w-md mx-auto">{description}</p>
-      <button
-        onClick={onAction}
-        className="inline-flex items-center px-6 py-3 bg-primary-900 text-white font-medium rounded-full hover:bg-primary-800 transition-colors"
-      >
+      <Button size="pill" onClick={onAction}>
         {actionLabel}
-      </button>
+      </Button>
     </div>
   );
 };

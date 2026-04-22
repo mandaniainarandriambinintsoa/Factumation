@@ -10,7 +10,6 @@ import { sendInvoiceWithPdfToWebhook } from '../services/invoiceService';
 import { saveInvoice } from '../services/historyService';
 import { DEFAULT_WEBHOOK_URL } from '../constants';
 
-// Email admin pour activer les fonctionnalités cachées (webhook n8n)
 const ADMIN_EMAIL = 'mandaniaina.randriambinintsoa@gmail.com';
 import { getDefaultCompany } from '../services/companyService';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +19,10 @@ import SEOHead from './SEOHead';
 import AuthModal from './AuthModal';
 import ClientSelector from './ClientSelector';
 import CompanySelector from './CompanySelector';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 const getInitialFormData = (): InvoiceData => ({
   companyName: '',
@@ -74,19 +77,15 @@ const InvoiceForm: React.FC = () => {
   const { t, locale } = useI18n();
   const { canCreateInvoice, isPro, plan, usage, refresh: refreshSubscription } = useSubscription();
 
-  // Vérifie si l'utilisateur connecté est l'admin (pour afficher le webhook n8n)
   const isAdmin = user?.email === ADMIN_EMAIL;
 
-  // Reference pour la zone à imprimer en PDF
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  // Charger la société par défaut au montage ou à la connexion
   useEffect(() => {
     const loadDefaultCompany = async () => {
       if (user) {
         const { data } = await getDefaultCompany();
         if (data) {
-          // Pré-remplir les infos entreprise si elles existent et que le formulaire est vide
           setFormData(prev => ({
             ...prev,
             companyName: prev.companyName || data.name || '',
@@ -96,9 +95,7 @@ const InvoiceForm: React.FC = () => {
             logoUrl: prev.logoUrl || data.logoUrl || '',
             currency: data.defaultCurrency || prev.currency,
             paymentMethod: data.defaultPaymentMethod || prev.paymentMethod,
-            // Générer le numéro avec le préfixe personnalisé
             invoiceNumber: `${data.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-            // Pré-remplir les informations fiscales de la société par défaut
             fiscalInfo: {
               region: data.fiscalRegion || 'NONE',
               siret: data.siret || '',
@@ -113,11 +110,9 @@ const InvoiceForm: React.FC = () => {
     loadDefaultCompany();
   }, [user]);
 
-  // Exécuter l'action en attente après connexion
   useEffect(() => {
     if (user && pendingAction && !isAuthModalOpen) {
       if (pendingAction === 'email') {
-        // Petite pause pour laisser le modal se fermer
         setTimeout(() => {
           handleSendEmail();
         }, 100);
@@ -130,7 +125,6 @@ const InvoiceForm: React.FC = () => {
     }
   }, [user, isAuthModalOpen]);
 
-  // Handler pour sélectionner un client depuis le carnet
   const handleSelectClient = (client: {
     clientName: string;
     clientEmail: string;
@@ -158,7 +152,6 @@ const InvoiceForm: React.FC = () => {
     }));
   };
 
-  // Handler pour sélectionner une société émettrice
   const handleSelectCompany = (company: {
     companyName: string;
     companyEmail: string;
@@ -168,7 +161,6 @@ const InvoiceForm: React.FC = () => {
     currency?: string;
     paymentMethod?: string;
     invoicePrefix?: string;
-    // Informations fiscales
     fiscalRegion?: string;
     siret?: string;
     vatNumber?: string;
@@ -184,9 +176,7 @@ const InvoiceForm: React.FC = () => {
       logoUrl: company.logoUrl || prev.logoUrl,
       currency: company.currency || prev.currency,
       paymentMethod: company.paymentMethod || prev.paymentMethod,
-      // Générer le numéro avec le préfixe de la société
       invoiceNumber: `${company.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      // Pré-remplir les informations fiscales de la société
       fiscalInfo: {
         region: company.fiscalRegion || 'NONE',
         siret: company.siret || '',
@@ -254,14 +244,11 @@ const InvoiceForm: React.FC = () => {
     return formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
   };
 
-  // Formater un nombre avec séparateurs de milliers (espace)
   const formatNumber = (num: number): string => {
-    // Si le nombre est entier, ne pas afficher les décimales
     const formatted = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
     return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
-  // Formater NIF: ex "4019532272" -> "40 195 32 272" (format 2-3-2-3)
   const formatNif = (nif: string): string => {
     const digits = nif.replace(/\s/g, '');
     if (digits.length >= 10) {
@@ -270,7 +257,6 @@ const InvoiceForm: React.FC = () => {
     return digits;
   };
 
-  // Formater STAT: ex "2410111200010023" -> "24101 11 2000 0 10023"
   const formatStat = (stat: string): string => {
     const digits = stat.replace(/\s/g, '');
     if (digits.length >= 16) {
@@ -279,18 +265,15 @@ const InvoiceForm: React.FC = () => {
     return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
-  // Triggered by the "Prévisualiser" button
   const handlePreviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsPreviewMode(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Action: Générer PDF (avec html2pdf)
   const handleGeneratePdf = async () => {
     if (!invoiceRef.current) return;
 
-    // Vérifier la limite du plan (seulement pour les users connectés, les non-connectés peuvent générer librement)
     if (user && !canCreateInvoice) {
       setEmailError(t('pricing.invoiceLimitMsg'));
       return;
@@ -300,10 +283,8 @@ const InvoiceForm: React.FC = () => {
 
     try {
       const element = invoiceRef.current;
-
-      // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
-      element.style.padding = '24px'; // Padding réduit mais raisonnable pour le PDF
+      element.style.padding = '24px';
 
       const opt = {
         margin: [5, 5, 5, 5],
@@ -318,10 +299,8 @@ const InvoiceForm: React.FC = () => {
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
-      // Générer et télécharger le PDF
       await (await loadHtml2Pdf())().set(opt).from(element).save();
 
-      // Restaurer le padding original
       element.style.padding = originalPadding;
 
       setSuccessAction('pdf');
@@ -334,11 +313,9 @@ const InvoiceForm: React.FC = () => {
     }
   };
 
-  // Action: Envoyer Email avec PDF (via Resend)
   const handleSendEmail = async () => {
     if (!invoiceRef.current) return;
 
-    // Vérifier si l'utilisateur est connecté
     if (!user) {
       setAuthModalMessage(t('invoice.loginToEmailMsg'));
       setPendingAction('email');
@@ -346,7 +323,6 @@ const InvoiceForm: React.FC = () => {
       return;
     }
 
-    // Vérifier si le plan permet l'envoi email
     if (!isPro) {
       setEmailError(t('pricing.emailProOnly'));
       return;
@@ -361,10 +337,7 @@ const InvoiceForm: React.FC = () => {
     setEmailError(null);
 
     try {
-      // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
-
-      // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
       element.style.padding = '24px';
 
@@ -376,13 +349,10 @@ const InvoiceForm: React.FC = () => {
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
-      // Générer le PDF en blob puis convertir en base64
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
-      // Restaurer le padding original
       element.style.padding = originalPadding;
 
-      // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -393,7 +363,6 @@ const InvoiceForm: React.FC = () => {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Envoyer l'email via Resend
       const result = await sendInvoiceEmail(formData, pdfBase64);
 
       if (!result.success) {
@@ -401,13 +370,11 @@ const InvoiceForm: React.FC = () => {
         return;
       }
 
-      // Sauvegarder la facture en DB avec status "sent"
       await saveInvoice(formData, pdfBase64, 'sent');
 
       setSuccessAction('email');
       setSuccess(true);
 
-      // Réinitialiser le formulaire après succès de l'envoi
       setFormData(getInitialFormData());
       setIsPreviewMode(false);
       setTimeout(() => {
@@ -422,7 +389,6 @@ const InvoiceForm: React.FC = () => {
     }
   };
 
-  // Action: Envoyer via Webhook n8n/Gmail (admin seulement)
   const handleSendViaWebhook = async () => {
     if (!invoiceRef.current || !isAdmin) return;
 
@@ -430,10 +396,7 @@ const InvoiceForm: React.FC = () => {
     setEmailError(null);
 
     try {
-      // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
-
-      // Sauvegarder et modifier les styles temporairement pour le PDF
       const originalPadding = element.style.padding;
       element.style.padding = '24px';
 
@@ -447,10 +410,8 @@ const InvoiceForm: React.FC = () => {
 
       const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
-      // Restaurer le padding original
       element.style.padding = originalPadding;
 
-      // Convertir le blob en base64
       const pdfBase64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -461,7 +422,6 @@ const InvoiceForm: React.FC = () => {
         reader.readAsDataURL(pdfBlob);
       });
 
-      // Envoyer via webhook n8n
       const response = await fetch(DEFAULT_WEBHOOK_URL, {
         method: 'POST',
         headers: {
@@ -484,7 +444,6 @@ const InvoiceForm: React.FC = () => {
       setSuccessAction('email');
       setSuccess(true);
 
-      // Réinitialiser le formulaire après succès
       setFormData(getInitialFormData());
       setIsPreviewMode(false);
       setTimeout(() => {
@@ -493,7 +452,6 @@ const InvoiceForm: React.FC = () => {
       }, 5000);
     } catch (error: any) {
       console.error("Erreur lors de l'envoi via webhook:", error);
-      // Erreur réseau ou CORS
       if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
         setEmailError('Erreur réseau/CORS - L\'instance n8n est peut-être en veille. Réessaie dans 30s.');
       } else {
@@ -509,7 +467,6 @@ const InvoiceForm: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Action: Sauvegarder dans l'historique
   const handleSaveToHistory = async () => {
     if (!user) {
       setAuthModalMessage(t('invoice.loginToSaveMsg'));
@@ -525,11 +482,8 @@ const InvoiceForm: React.FC = () => {
     try {
       let pdfBase64 = lastGeneratedPdfBase64;
 
-      // Générer le PDF si pas encore fait
       if (!pdfBase64) {
         const element = invoiceRef.current;
-
-        // Sauvegarder et modifier les styles temporairement pour le PDF
         const originalPadding = element.style.padding;
         element.style.padding = '24px';
 
@@ -543,7 +497,6 @@ const InvoiceForm: React.FC = () => {
 
         const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
 
-        // Restaurer le padding original
         element.style.padding = originalPadding;
 
         pdfBase64 = await new Promise<string>((resolve, reject) => {
@@ -579,8 +532,7 @@ const InvoiceForm: React.FC = () => {
     }
   };
 
-  const inputClass = "block w-full rounded-md border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2.5 px-3 bg-white border";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-1";
+  const selectClass = "block w-full rounded-md border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2.5 px-3 bg-white border";
   const sectionTitleClass = "text-lg font-semibold text-primary-900 border-b border-slate-200 pb-2 mb-6";
   const currencySymbol = CURRENCIES.find(c => c.code === formData.currency)?.symbol || '';
 
@@ -623,15 +575,15 @@ const InvoiceForm: React.FC = () => {
         <p className="text-slate-600 mb-8 text-lg">
           {successMsg.description}
         </p>
-        <button
+        <Button
           onClick={() => {
             setSuccess(false);
             setSuccessAction(null);
           }}
-          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 hover:bg-primary-800 transition-colors"
+          size="pill"
         >
           {successMsg.buttonText}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -680,11 +632,9 @@ const InvoiceForm: React.FC = () => {
       {/* VIEW: PREVIEW MODE */}
       {isPreviewMode ? (
         <div className="animate-fade-in">
-          {/* Invoice Paper Representation */}
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
-            {/* Ce div avec la ref sera cloné. Il doit contenir tout le style nécessaire. */}
             <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
-              
+
               {/* Invoice Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">
                 {/* Entreprise (Émetteur) - Gauche */}
@@ -702,7 +652,6 @@ const InvoiceForm: React.FC = () => {
                     {formData.companyEmail}<br/>
                     {formData.companyPhone}
                   </div>
-                  {/* Informations fiscales entreprise */}
                   {formData.fiscalInfo && formData.fiscalInfo.region !== 'NONE' && (
                     <div className="mt-3 text-sm text-slate-600">
                       {formData.fiscalInfo.region === 'MG' && (
@@ -732,7 +681,6 @@ const InvoiceForm: React.FC = () => {
                     {formData.dueDate && <span className="ml-4"><span className="font-medium">{t('invoice.dueDateLabel')}</span> {new Date(formData.dueDate).toLocaleDateString()}</span>}
                   </div>
 
-                  {/* Client Info - sous le numéro de facture */}
                   <div className="mt-4 pt-3 border-t border-slate-100 text-right">
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">{formData.clientName || t('invoice.clientNameDefault')}</h3>
@@ -741,7 +689,6 @@ const InvoiceForm: React.FC = () => {
                         {formData.clientEmail}<br/>
                         {formData.clientPhone}
                       </div>
-                      {/* Informations fiscales client */}
                       {formData.clientFiscalInfo && formData.clientFiscalInfo.region !== 'NONE' && (
                         <div className="mt-3 text-sm text-slate-600">
                           {formData.clientFiscalInfo.region === 'MG' && (
@@ -819,79 +766,81 @@ const InvoiceForm: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex flex-col lg:flex-row justify-center items-center gap-4 mb-12 flex-wrap">
 
-            {/* Bouton Modifier */}
-            <button
+            <Button
+              variant="outline"
+              size="pill"
               onClick={handleEdit}
               disabled={loading || savingToHistory}
-              className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-medium rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 transition-all duration-200 min-w-[160px]"
+              className="min-w-[160px] shadow-sm"
             >
-              <Pencil className="mr-2 h-5 w-5" />
+              <Pencil className="h-5 w-5" />
               {t('invoice.edit')}
-            </button>
+            </Button>
 
-            {/* Bouton Générer PDF */}
-            <button
+            <Button
+              variant="outline"
+              size="pill"
               onClick={handleGeneratePdf}
               disabled={loading || savingToHistory}
-              className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 hover:shadow-md transition-all duration-200 min-w-[160px]"
+              className="min-w-[160px] font-bold shadow-sm hover:shadow-md"
             >
-              <Download className="-ml-1 mr-2 h-5 w-5" />
+              <Download className="h-5 w-5" />
               {t('invoice.generatePdf')}
-            </button>
+            </Button>
 
-            {/* Bouton Sauvegarder dans l'historique */}
-            <button
+            <Button
+              size="pill"
               onClick={handleSaveToHistory}
               disabled={loading || savingToHistory}
-              className="inline-flex items-center justify-center px-6 py-3 border border-green-300 shadow-sm text-base font-bold rounded-full text-green-700 bg-green-50 hover:bg-green-100 hover:shadow-md transition-all duration-200 min-w-[200px]"
+              className="min-w-[200px] font-bold border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:shadow-md shadow-sm"
             >
               {savingToHistory ? (
                 <>
-                  <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                  <Loader2 className="animate-spin h-5 w-5" />
                   {t('invoice.saving')}
                 </>
               ) : user ? (
                 <>
-                  <Save className="-ml-1 mr-2 h-5 w-5" />
+                  <Save className="h-5 w-5" />
                   {t('invoice.save')}
                 </>
               ) : (
                 <>
-                  <LogIn className="-ml-1 mr-2 h-5 w-5" />
+                  <LogIn className="h-5 w-5" />
                   {t('invoice.login')}
                 </>
               )}
-            </button>
+            </Button>
 
-            {/* Bouton Envoyer la facture (Resend) */}
             <div className="flex flex-col items-center">
               <div className="relative">
-                <button
+                <Button
+                  size="pill"
                   onClick={handleSendEmail}
                   disabled={loading || savingToHistory || webhookLoading || !isPro}
-                  className={`inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full min-w-[200px] transition-all duration-300 ${
+                  className={`min-w-[200px] font-bold transition-all duration-300 ${
                     isPro
-                      ? 'text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1'
-                      : 'text-slate-400 bg-slate-200 cursor-not-allowed'
+                      ? 'shadow-lg hover:shadow-xl hover:-translate-y-1'
+                      : 'bg-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed'
                   }`}
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                      <Loader2 className="animate-spin h-5 w-5" />
                       {t('invoice.sending')}
                     </>
                   ) : !isPro ? (
                     <>
-                      <Lock className="-ml-1 mr-3 h-5 w-5" />
+                      <Lock className="h-5 w-5" />
                       {t('invoice.sendInvoice')}
                     </>
                   ) : (
                     <>
-                      <Mail className="-ml-1 mr-3 h-5 w-5" />
+                      <Mail className="h-5 w-5" />
                       {t('invoice.sendInvoice')}
                     </>
                   )}
-                </button>
+                </Button>
                 {!isPro && (
                   <span className="absolute -top-2 -right-2 inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full">
                     <Crown size={12} /> PRO
@@ -909,26 +858,26 @@ const InvoiceForm: React.FC = () => {
               )}
             </div>
 
-            {/* Bouton secret: Envoyer via Gmail/n8n (admin seulement) */}
             {isAdmin && (
               <div className="flex flex-col items-center">
-                <button
+                <Button
+                  size="pill"
                   onClick={handleSendViaWebhook}
                   disabled={loading || savingToHistory || webhookLoading}
-                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-amber-500 text-base font-bold rounded-full text-amber-700 bg-amber-50 shadow-lg hover:bg-amber-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
+                  className="min-w-[200px] font-bold border-2 border-amber-500 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:shadow-xl hover:-translate-y-1 shadow-lg transition-all duration-300"
                 >
                   {webhookLoading ? (
                     <>
-                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                      <Loader2 className="animate-spin h-5 w-5" />
                       {t('invoice.sendingN8n')}
                     </>
                   ) : (
                     <>
-                      <Mail className="-ml-1 mr-3 h-5 w-5" />
+                      <Mail className="h-5 w-5" />
                       {t('invoice.sendViaGmail')}
                     </>
                   )}
-                </button>
+                </Button>
                 <span className="text-xs text-amber-600 mt-2 font-medium italic">{t('invoice.webhookN8n')}</span>
               </div>
             )}
@@ -938,8 +887,7 @@ const InvoiceForm: React.FC = () => {
       ) : (
         /* VIEW: FORM MODE */
         <form onSubmit={handlePreviewSubmit} className="animate-fade-in space-y-8 bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-slate-100">
-          
-          {/* Sections Grid */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
             {/* Client - À GAUCHE */}
@@ -952,32 +900,31 @@ const InvoiceForm: React.FC = () => {
                 />
               </div>
               <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>{t('invoice.clientName')} *</label>
-                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderClientName')} />
+                <div className="space-y-1.5">
+                  <Label>{t('invoice.clientName')} *</Label>
+                  <Input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} placeholder={t('invoice.placeholderClientName')} />
                 </div>
-                <div>
-                  <label className={labelClass}>{t('invoice.clientAddress')} *</label>
-                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderClientAddress')} />
+                <div className="space-y-1.5">
+                  <Label>{t('invoice.clientAddress')} *</Label>
+                  <Textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} placeholder={t('invoice.placeholderClientAddress')} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>{t('invoice.clientEmail')} *</label>
-                    <input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} className={inputClass} placeholder="email@client.com" />
+                  <div className="space-y-1.5">
+                    <Label>{t('invoice.clientEmail')} *</Label>
+                    <Input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} placeholder="email@client.com" />
                   </div>
-                  <div>
-                    <label className={labelClass}>{t('invoice.clientPhone')}</label>
-                    <input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} className={inputClass} placeholder="06 98 76 54 32" />
+                  <div className="space-y-1.5">
+                    <Label>{t('invoice.clientPhone')}</Label>
+                    <Input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} placeholder="06 98 76 54 32" />
                   </div>
                 </div>
 
-                {/* Type de société client */}
-                <div className="pt-4 border-t border-slate-100">
-                  <label className={labelClass}>{t('invoice.fiscalType')}</label>
+                <div className="pt-4 border-t border-slate-100 space-y-1.5">
+                  <Label>{t('invoice.fiscalType')}</Label>
                   <select
                     value={formData.clientFiscalInfo?.region || 'NONE'}
                     onChange={(e) => handleClientFiscalInfoChange('region', e.target.value)}
-                    className={inputClass}
+                    className={selectClass}
                   >
                     {FISCAL_REGIONS.map(region => (
                       <option key={region.code} value={region.code}>{t(region.nameKey)}</option>
@@ -985,17 +932,15 @@ const InvoiceForm: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Champs fiscaux conditionnels client */}
                 {selectedClientFiscalRegion && selectedClientFiscalRegion.fields.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                     {selectedClientFiscalRegion.fields.map(field => (
-                      <div key={field.key}>
-                        <label className={labelClass}>{t(field.labelKey)}</label>
-                        <input
+                      <div key={field.key} className="space-y-1.5">
+                        <Label>{t(field.labelKey)}</Label>
+                        <Input
                           type="text"
                           value={(formData.clientFiscalInfo as any)?.[field.key] || ''}
                           onChange={(e) => handleClientFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
-                          className={inputClass}
                           placeholder={t(field.placeholderKey)}
                         />
                       </div>
@@ -1018,36 +963,35 @@ const InvoiceForm: React.FC = () => {
                 />
               </div>
               <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>{t('invoice.companyName')} *</label>
-                  <input required type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderCompanyName')} />
+                <div className="space-y-1.5">
+                  <Label>{t('invoice.companyName')} *</Label>
+                  <Input required type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} placeholder={t('invoice.placeholderCompanyName')} />
                 </div>
-                <div>
-                  <label className={labelClass}>{t('invoice.companyAddress')} *</label>
-                  <textarea required rows={2} name="companyAddress" value={formData.companyAddress} onChange={handleInputChange} className={inputClass} placeholder={t('invoice.placeholderCompanyAddress')} />
+                <div className="space-y-1.5">
+                  <Label>{t('invoice.companyAddress')} *</Label>
+                  <Textarea required rows={2} name="companyAddress" value={formData.companyAddress} onChange={handleInputChange} placeholder={t('invoice.placeholderCompanyAddress')} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>{t('invoice.companyEmail')} *</label>
-                    <input required type="email" name="companyEmail" value={formData.companyEmail} onChange={handleInputChange} className={inputClass} placeholder="contact@masociete.com" />
+                  <div className="space-y-1.5">
+                    <Label>{t('invoice.companyEmail')} *</Label>
+                    <Input required type="email" name="companyEmail" value={formData.companyEmail} onChange={handleInputChange} placeholder="contact@masociete.com" />
                   </div>
-                  <div>
-                    <label className={labelClass}>{t('invoice.companyPhone')}</label>
-                    <input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} className={inputClass} placeholder="01 23 45 67 89" />
+                  <div className="space-y-1.5">
+                    <Label>{t('invoice.companyPhone')}</Label>
+                    <Input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} placeholder="01 23 45 67 89" />
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>{t('invoice.logoUrl')}</label>
-                  <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleInputChange} className={inputClass} placeholder="https://example.com/logo.png" />
+                <div className="space-y-1.5">
+                  <Label>{t('invoice.logoUrl')}</Label>
+                  <Input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleInputChange} placeholder="https://example.com/logo.png" />
                 </div>
 
-                {/* Région fiscale */}
-                <div className="pt-4 border-t border-slate-100">
-                  <label className={labelClass}>{t('invoice.fiscalType')}</label>
+                <div className="pt-4 border-t border-slate-100 space-y-1.5">
+                  <Label>{t('invoice.fiscalType')}</Label>
                   <select
                     value={formData.fiscalInfo?.region || 'NONE'}
                     onChange={(e) => handleFiscalInfoChange('region', e.target.value)}
-                    className={inputClass}
+                    className={selectClass}
                   >
                     {FISCAL_REGIONS.map(region => (
                       <option key={region.code} value={region.code}>{t(region.nameKey)}</option>
@@ -1055,17 +999,15 @@ const InvoiceForm: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Champs fiscaux conditionnels */}
                 {selectedFiscalRegion && selectedFiscalRegion.fields.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                     {selectedFiscalRegion.fields.map(field => (
-                      <div key={field.key}>
-                        <label className={labelClass}>{t(field.labelKey)}</label>
-                        <input
+                      <div key={field.key} className="space-y-1.5">
+                        <Label>{t(field.labelKey)}</Label>
+                        <Input
                           type="text"
                           value={(formData.fiscalInfo as any)?.[field.key] || ''}
                           onChange={(e) => handleFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
-                          className={inputClass}
                           placeholder={t(field.placeholderKey)}
                         />
                       </div>
@@ -1080,29 +1022,29 @@ const InvoiceForm: React.FC = () => {
           <div className="pt-4">
             <h3 className={sectionTitleClass}>{t('invoice.detailsSection')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              <div>
-                <label className={labelClass}>{t('invoice.invoiceNumber')} *</label>
-                <input required type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} className={inputClass} />
+              <div className="space-y-1.5">
+                <Label>{t('invoice.invoiceNumber')} *</Label>
+                <Input required type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} />
               </div>
-              <div>
-                <label className={labelClass}>{t('invoice.invoiceDate')} *</label>
-                <input required type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} className={inputClass} />
+              <div className="space-y-1.5">
+                <Label>{t('invoice.invoiceDate')} *</Label>
+                <Input required type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} />
               </div>
-              <div>
-                <label className={labelClass}>{t('invoice.dueDate')}</label>
-                <input type="date" name="dueDate" value={formData.dueDate} onChange={handleInputChange} className={inputClass} />
+              <div className="space-y-1.5">
+                <Label>{t('invoice.dueDate')}</Label>
+                <Input type="date" name="dueDate" value={formData.dueDate} onChange={handleInputChange} />
               </div>
-              <div>
-                <label className={labelClass}>{t('invoice.currency')}</label>
-                <select name="currency" value={formData.currency} onChange={handleInputChange} className={inputClass}>
+              <div className="space-y-1.5">
+                <Label>{t('invoice.currency')}</Label>
+                <select name="currency" value={formData.currency} onChange={handleInputChange} className={selectClass}>
                   {CURRENCIES.map(c => (
                     <option key={c.code} value={c.code}>{c.code} - {c.symbol}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className={labelClass}>{t('invoice.paymentMethod')}</label>
-                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className={inputClass}>
+              <div className="space-y-1.5">
+                <Label>{t('invoice.paymentMethod')}</Label>
+                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className={selectClass}>
                   {PAYMENT_METHODS.map(m => (
                     <option key={m.code} value={m.code}>{t(m.labelKey)}</option>
                   ))}
@@ -1114,7 +1056,7 @@ const InvoiceForm: React.FC = () => {
           {/* Articles */}
           <div className="pt-4">
             <h3 className={sectionTitleClass}>{t('invoice.itemsSection')}</h3>
-            
+
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
@@ -1132,48 +1074,51 @@ const InvoiceForm: React.FC = () => {
                   {formData.items.map((item) => (
                     <tr key={item.id}>
                       <td className="px-3 py-4 whitespace-nowrap">
-                        <input 
-                          type="text" 
+                        <Input
+                          type="text"
                           required
-                          value={item.name} 
+                          value={item.name}
                           onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
                           placeholder={t('invoice.itemPlaceholder')}
-                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                          className="border-transparent hover:bg-slate-50"
                         />
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap">
-                        <input 
-                          type="number" 
+                        <Input
+                          type="number"
                           min="1"
                           required
-                          value={item.quantity} 
+                          value={item.quantity}
                           onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value) || 0)}
-                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                          className="border-transparent hover:bg-slate-50"
                         />
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap">
-                        <input 
-                          type="number" 
+                        <Input
+                          type="number"
                           min="0"
                           step="0.01"
                           required
-                          value={item.unitPrice} 
+                          value={item.unitPrice}
                           onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                          className="border-transparent hover:bg-slate-50"
                         />
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">
                         {formatNumber(item.quantity * item.unitPrice)} {currencySymbol}
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button 
-                          type="button" 
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => removeItem(item.id)}
                           disabled={formData.items.length === 1}
-                          className={`text-slate-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 ${formData.items.length === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                          aria-label="Supprimer"
                         >
                           <Trash2 size={18} />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -1181,14 +1126,16 @@ const InvoiceForm: React.FC = () => {
               </table>
             </div>
 
-            <button 
-              type="button" 
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={addItem}
-              className="mt-4 inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              className="mt-4 shadow-sm"
             >
-              <Plus size={16} className="mr-2" />
+              <Plus size={16} />
               {t('invoice.addItem')}
-            </button>
+            </Button>
           </div>
 
           {/* Totaux */}
@@ -1203,25 +1150,24 @@ const InvoiceForm: React.FC = () => {
 
           {/* Actions */}
           <div className="pt-6 border-t border-slate-200 flex justify-end">
-            <button
+            <Button
               type="submit"
-              className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              size="pill"
+              className="py-4 h-auto shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
-              <FileText className="-ml-1 mr-3 h-5 w-5" />
+              <FileText className="h-5 w-5" />
               {t('invoice.previewBtn')}
-            </button>
+            </Button>
           </div>
 
         </form>
       )}
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => {
           setIsAuthModalOpen(false);
           setAuthModalMessage(undefined);
-          // Ne pas effacer pendingAction ici pour permettre l'exécution après connexion
         }}
         initialMode="login"
         customMessage={authModalMessage}

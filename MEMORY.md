@@ -10,20 +10,20 @@
 - **Email** : Resend edge function v8 (invoice/quote/reminder)
 - **UI** : shadcn/ui en cours — primitives (`components/ui/`) + `lib/utils.ts` (cn)
 
-## Refactor shadcn/ui — EN COURS
+## Refactor shadcn/ui — COMPLET (hors Admin/Blog)
 ### Migré
 - Setup : Radix, CVA, clsx, tailwind-merge, tailwindcss-animate, react-hook-form, sonner
 - Primitives : Button, Card, Dialog, Sheet, Input, Label, Badge, Textarea, Skeleton, Toaster
-- `AuthModal` (Dialog + react-hook-form + zod + FieldText)
-- `Contact` (Input, Textarea, Label, Button)
-- `Pricing` (Button)
-- `Navbar` + `Sidebar` + `SidebarTopBar` (Button ghost/icon/outline/default)
-- `App.tsx` (Toaster mount)
+- Chrome : `AuthModal`, `Navbar`, `Sidebar`, `SidebarTopBar`, `App.tsx` (Toaster mount)
+- Marketing : `Contact` (form complet), `Pricing` (Button)
+- Forms : `InvoiceForm` (1200+ l), `QuoteForm` (1200+ l), `Settings` (760+ l) — tous inputs/textarea/label/buttons migrés, selects laissés en raw (pas de Select primitive)
+- Dashboard : `Dashboard`, `HomeDashboard` — action buttons ghost icon, modals convertis en Radix Dialog
+- Sélecteurs : `ClientSelector`, `CompanySelector` (+ fix bug `region.name` → `t(region.nameKey)`)
+- End-to-end testé via chrome-devtools : landing → InvoiceForm (fill) → Preview → **Generate PDF** → success screen ✓
 
-### À migrer (session dédiée, risqué)
-- `InvoiceForm` (1232 l), `QuoteForm` (1207 l) — formulaires complexes avec validation, PDF
-- `Settings` (761 l), `Dashboard` (698 l), `HomeDashboard` (646 l), `Admin` (23 KB)
-- `ClientSelector`, `CompanySelector`, `BlogPost`, `BlogList`
+### Non migré (non-critique)
+- `Admin` + `components/admin/*` — backoffice, rare usage
+- `BlogList`, `BlogPost` — contenu SEO-rendu, pas de form
 
 ## Commits recents (session 2026-04-08)
 - `647daf2` feat: add "mark as sent" action for draft invoices

@@ -12,6 +12,15 @@ import { getInvoices, getQuotes, updateInvoiceStatus } from '../services/history
 import { SavedInvoice, SavedQuote } from '../types';
 import { CURRENCIES } from '../constants';
 import { supabase } from '../lib/supabase';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from './ui/dialog';
 
 type RecentDoc = {
   type: 'invoice' | 'quote';
@@ -42,7 +51,6 @@ const HomeDashboard: React.FC = () => {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal state
   const [modal, setModal] = useState<{ type: 'markPaid' | 'markSent' | 'reminder'; doc: RecentDoc } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -54,7 +62,6 @@ const HomeDashboard: React.FC = () => {
     }
   }, [user]);
 
-  // Auto-dismiss success message
   useEffect(() => {
     if (actionSuccess) {
       const timer = setTimeout(() => setActionSuccess(null), 3000);
@@ -83,7 +90,6 @@ const HomeDashboard: React.FC = () => {
   const formatCurrency = (amount: number) =>
     amount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-  // Mark invoice as paid
   const handleMarkPaid = async () => {
     if (!modal || modal.type !== 'markPaid') return;
     setActionLoading(true);
@@ -96,7 +102,6 @@ const HomeDashboard: React.FC = () => {
       return;
     }
 
-    // Update local state
     setInvoices((prev) =>
       prev.map((inv) => (inv.id === modal.doc.id ? { ...inv, status: 'paid' } : inv))
     );
@@ -105,7 +110,6 @@ const HomeDashboard: React.FC = () => {
     setActionSuccess(t('homeDashboard.markedPaidSuccess'));
   };
 
-  // Mark invoice as sent
   const handleMarkSent = async () => {
     if (!modal || modal.type !== 'markSent') return;
     setActionLoading(true);
@@ -126,7 +130,6 @@ const HomeDashboard: React.FC = () => {
     setActionSuccess(t('homeDashboard.markedSentSuccess'));
   };
 
-  // Send reminder email
   const handleSendReminder = async () => {
     if (!modal || modal.type !== 'reminder' || !supabase) return;
     setActionLoading(true);
@@ -167,7 +170,6 @@ const HomeDashboard: React.FC = () => {
     }
   };
 
-  // KPI calculations
   const kpis = useMemo(() => {
     const paidInvoices = invoices.filter((i) => i.status === 'paid');
     const pendingInvoices = invoices.filter((i) => i.status === 'sent');
@@ -197,7 +199,6 @@ const HomeDashboard: React.FC = () => {
     };
   }, [invoices, quotes]);
 
-  // Recent documents
   const recentDocs = useMemo<RecentDoc[]>(() => {
     const all: RecentDoc[] = [
       ...invoices.map((i) => ({
@@ -259,6 +260,11 @@ const HomeDashboard: React.FC = () => {
 
   const firstName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
+  const closeModal = () => {
+    setModal(null);
+    setActionError(null);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Success toast */}
@@ -269,7 +275,6 @@ const HomeDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Welcome */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
           {t('homeDashboard.welcome')}{firstName ? `, ${firstName}` : ''}
@@ -280,6 +285,7 @@ const HomeDashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <button
+          type="button"
           onClick={() => navigate(path('/create'))}
           className="flex items-center gap-4 p-5 bg-primary-900 text-white rounded-2xl hover:bg-primary-800 transition-colors group"
         >
@@ -293,6 +299,7 @@ const HomeDashboard: React.FC = () => {
           <ArrowRight className="w-5 h-5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
         <button
+          type="button"
           onClick={() => navigate(path('/quote'))}
           className="flex items-center gap-4 p-5 bg-white border-2 border-slate-200 rounded-2xl hover:border-primary-300 hover:bg-primary-50/30 transition-colors group"
         >
@@ -343,13 +350,15 @@ const HomeDashboard: React.FC = () => {
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-900">{t('homeDashboard.recentDocuments')}</h2>
-          <button
+          <Button
+            variant="link"
+            size="sm"
             onClick={() => navigate(path('/dashboard'))}
-            className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+            className="text-primary-600 hover:text-primary-700"
           >
             {t('homeDashboard.viewAll')}
             <ArrowRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {recentDocs.length === 0 ? (
@@ -406,36 +415,40 @@ const HomeDashboard: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Action buttons for draft invoices */}
                   {isInvoiceDraft && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => { e.stopPropagation(); setModal({ type: 'markSent', doc }); }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         title={t('homeDashboard.markAsSent')}
                       >
-                        <Send className="w-4.5 h-4.5" />
-                      </button>
+                        <Send className="w-[18px] h-[18px]" />
+                      </Button>
                     </div>
                   )}
 
-                  {/* Action buttons for sent invoices */}
                   {isInvoiceSent && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => { e.stopPropagation(); setModal({ type: 'markPaid', doc }); }}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        className="text-green-600 hover:bg-green-50 hover:text-green-700"
                         title={t('homeDashboard.markAsPaid')}
                       >
-                        <CreditCard className="w-4.5 h-4.5" />
-                      </button>
-                      <button
+                        <CreditCard className="w-[18px] h-[18px]" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => { e.stopPropagation(); setModal({ type: 'reminder', doc }); }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                         title={t('homeDashboard.sendReminder')}
                       >
-                        <RefreshCw className="w-4.5 h-4.5" />
-                      </button>
+                        <RefreshCw className="w-[18px] h-[18px]" />
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -445,183 +458,161 @@ const HomeDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Confirmation Modal */}
-      {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setActionError(null); }} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-[scaleIn_0.2s_ease]">
-            <button
-              onClick={() => { setModal(null); setActionError(null); }}
-              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {modal.type === 'markSent' ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+      {/* Confirmation Modal via Radix Dialog */}
+      <Dialog open={!!modal} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent className="max-w-md">
+          {modal?.type === 'markSent' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-100 rounded-xl">
                     <Send className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsSentTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.doc.number}</p>
+                    <DialogTitle>{t('homeDashboard.markAsSentTitle')}</DialogTitle>
+                    <DialogDescription>{modal.doc.number}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-blue-600">
-                      {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
-                    </span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsSentConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleMarkSent}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {t('homeDashboard.confirmSent')}
-                  </button>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-blue-600">
+                    {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
+                  </span>
                 </div>
-              </>
-            ) : modal.type === 'markPaid' ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.markAsSentConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleMarkSent} disabled={actionLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('homeDashboard.confirmSent')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modal?.type === 'markPaid' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-green-100 rounded-xl">
                     <CreditCard className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.markAsPaidTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.doc.number}</p>
+                    <DialogTitle>{t('homeDashboard.markAsPaidTitle')}</DialogTitle>
+                    <DialogDescription>{modal.doc.number}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-green-600">
-                      {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
-                    <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.markAsPaidConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleMarkPaid}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    {t('homeDashboard.confirmPaid')}
-                  </button>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-green-600">
+                    {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
+                  </span>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                  <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.markAsPaidConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleMarkPaid} disabled={actionLoading} className="flex-1 bg-green-600 hover:bg-green-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {t('homeDashboard.confirmPaid')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {modal?.type === 'reminder' && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-100 rounded-xl">
                     <RefreshCw className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{t('homeDashboard.sendReminderTitle')}</h3>
-                    <p className="text-sm text-slate-500">{modal.doc.number}</p>
+                    <DialogTitle>{t('homeDashboard.sendReminderTitle')}</DialogTitle>
+                    <DialogDescription>{modal.doc.number}</DialogDescription>
                   </div>
                 </div>
+              </DialogHeader>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-5">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.client')}</span>
-                    <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">Email</span>
-                    <span className="text-slate-700">{modal.doc.clientEmail}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-slate-500">{t('homeDashboard.amount')}</span>
-                    <span className="font-bold text-blue-600">
-                      {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">{t('homeDashboard.date')}</span>
-                    <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
-                  </div>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.client')}</span>
+                  <span className="font-medium text-slate-900">{modal.doc.clientName}</span>
                 </div>
-
-                <p className="text-sm text-slate-600 mb-5">{t('homeDashboard.reminderConfirm')}</p>
-
-                {actionError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setModal(null); setActionError(null); }}
-                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
-                  >
-                    {t('homeDashboard.cancel')}
-                  </button>
-                  <button
-                    onClick={handleSendReminder}
-                    disabled={actionLoading}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {t('homeDashboard.confirmReminder')}
-                  </button>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">Email</span>
+                  <span className="text-slate-700">{modal.doc.clientEmail}</span>
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-500">{t('homeDashboard.amount')}</span>
+                  <span className="font-bold text-blue-600">
+                    {modal.doc.total.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 2 })} {getCurrencySymbol(modal.doc.currency)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">{t('homeDashboard.date')}</span>
+                  <span className="text-slate-700">{formatDate(modal.doc.date)}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-600">{t('homeDashboard.reminderConfirm')}</p>
+
+              {actionError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{actionError}</div>
+              )}
+
+              <DialogFooter className="gap-3 sm:gap-3">
+                <Button variant="outline" onClick={closeModal} className="flex-1">
+                  {t('homeDashboard.cancel')}
+                </Button>
+                <Button onClick={handleSendReminder} disabled={actionLoading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('homeDashboard.confirmReminder')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// KPI Card
 interface KpiCardProps {
   label: string;
   value: string;

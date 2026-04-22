@@ -4,6 +4,10 @@ import { getClients, createClient, deleteClient, MappedClient } from '../service
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { FISCAL_REGIONS } from '../constants';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 interface ClientSelectorProps {
   onSelectClient: (client: {
@@ -22,6 +26,7 @@ interface ClientSelectorProps {
 
 const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, currentClientEmail }) => {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [clients, setClients] = useState<MappedClient[]>([]);
@@ -45,14 +50,12 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Charger les clients au montage
   useEffect(() => {
     if (user) {
       loadClients();
     }
   }, [user]);
 
-  // Filtrer les clients selon la recherche
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredClients(clients);
@@ -69,7 +72,6 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
     }
   }, [searchQuery, clients]);
 
-  // Fermer le dropdown quand on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -133,10 +135,8 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
     }
 
     if (data) {
-      // Ajouter le nouveau client à la liste
       setClients(prev => [data, ...prev]);
 
-      // Sélectionner automatiquement le nouveau client
       onSelectClient({
         clientName: data.name,
         clientEmail: data.email,
@@ -149,7 +149,6 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
         stat: data.stat,
       });
 
-      // Réinitialiser le formulaire
       setNewClient({ name: '', email: '', address: '', phone: '', fiscalRegion: 'NONE', siret: '', vatNumber: '', nif: '', stat: '' });
       setShowNewClientForm(false);
       setIsOpen(false);
@@ -159,7 +158,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
   };
 
   const handleDeleteClient = async (e: React.MouseEvent, clientId: string) => {
-    e.stopPropagation(); // Empêcher la sélection du client
+    e.stopPropagation();
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) return;
 
     const { error } = await deleteClient(clientId);
@@ -167,20 +166,19 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
       alert('Erreur lors de la suppression: ' + error);
       return;
     }
-    // Retirer le client de la liste
     setClients(prev => prev.filter(c => c.id !== clientId));
   };
 
-  // Si l'utilisateur n'est pas connecté, ne pas afficher le sélecteur
   if (!user) {
     return null;
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bouton d'ouverture */}
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={() => {
           setIsOpen(!isOpen);
           setShowNewClientForm(false);
@@ -188,33 +186,28 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
             setTimeout(() => inputRef.current?.focus(), 100);
           }
         }}
-        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors"
+        className="text-primary-700 bg-primary-50 border-primary-200 hover:bg-primary-100 hover:text-primary-800"
       >
         <User size={16} />
         Carnet de clients
-      </button>
+      </Button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute z-50 mt-2 w-[calc(100vw-2rem)] sm:w-96 right-0 sm:right-auto bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
           {!showNewClientForm ? (
             <>
-              {/* Barre de recherche */}
               <div className="p-3 border-b border-slate-100">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Rechercher un client..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                </div>
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un client..."
+                  startIcon={<Search />}
+                  className="bg-slate-50"
+                />
               </div>
 
-              {/* Liste des clients */}
               <div className="max-h-64 overflow-y-auto">
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
@@ -258,7 +251,6 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
                                 {client.companyName}
                               </p>
                             )}
-                            {/* Afficher les infos fiscales si disponibles */}
                             {client.fiscalRegion && client.fiscalRegion !== 'NONE' && (
                               <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
                                 <FileText className="w-3 h-3" />
@@ -270,118 +262,102 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
                             )}
                           </div>
                         </button>
-                        {/* Bouton supprimer */}
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => handleDeleteClient(e, client.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full"
                           title="Supprimer ce client"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Bouton nouveau client */}
               <div className="p-3 border-t border-slate-100 bg-slate-50">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setShowNewClientForm(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-700 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
+                  className="w-full text-primary-700 border-primary-200 bg-white hover:bg-primary-50"
                 >
                   <Plus size={16} />
                   Nouveau client
-                </button>
+                </Button>
               </div>
             </>
           ) : (
-            /* Formulaire nouveau client - using div instead of form to avoid nested forms */
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-slate-900">Nouveau client</h3>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowNewClientForm(false)}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                  className="h-8 w-8 text-slate-400 hover:text-slate-600"
                 >
                   <X size={18} />
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Nom *
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={newClient.name}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="Nom du client"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Nom *</Label>
+                  <Input
+                    type="text"
+                    value={newClient.name}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, name: e.target.value }))}
+                    startIcon={<User />}
+                    placeholder="Nom du client"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Email *
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="email"
-                      value={newClient.email}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="email@client.com"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Email *</Label>
+                  <Input
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                    startIcon={<Mail />}
+                    placeholder="email@client.com"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Adresse
-                  </label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Adresse</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <textarea
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Textarea
                       value={newClient.address}
                       onChange={(e) => setNewClient(prev => ({ ...prev, address: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="pl-9"
                       placeholder="Adresse complète"
                       rows={2}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Téléphone
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="tel"
-                      value={newClient.phone}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder="06 12 34 56 78"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Téléphone</Label>
+                  <Input
+                    type="tel"
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, phone: e.target.value }))}
+                    startIcon={<Phone />}
+                    placeholder="06 12 34 56 78"
+                  />
                 </div>
 
-                {/* Région fiscale */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    <FileText className="w-3 h-3 inline mr-1" />
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600 flex items-center">
+                    <FileText className="w-3 h-3 mr-1" />
                     Type de client
-                  </label>
+                  </Label>
                   <select
                     value={newClient.fiscalRegion}
                     onChange={(e) => setNewClient(prev => ({ ...prev, fiscalRegion: e.target.value }))}
@@ -389,59 +365,57 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
                   >
                     {FISCAL_REGIONS.map(region => (
                       <option key={region.code} value={region.code}>
-                        {region.name}
+                        {t(region.nameKey)}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Champs Europe */}
                 {newClient.fiscalRegion === 'EU' && (
                   <div className="grid grid-cols-2 gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">SIRET</label>
-                      <input
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">SIRET</Label>
+                      <Input
                         type="text"
                         value={newClient.siret}
                         onChange={(e) => setNewClient(prev => ({ ...prev, siret: e.target.value }))}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="14 chiffres"
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">N° TVA</label>
-                      <input
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">N° TVA</Label>
+                      <Input
                         type="text"
                         value={newClient.vatNumber}
                         onChange={(e) => setNewClient(prev => ({ ...prev, vatNumber: e.target.value }))}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="FR..."
+                        className="h-8 text-sm"
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Champs Madagascar */}
                 {newClient.fiscalRegion === 'MG' && (
                   <div className="grid grid-cols-2 gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">NIF</label>
-                      <input
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">NIF</Label>
+                      <Input
                         type="text"
                         value={newClient.nif}
                         onChange={(e) => setNewClient(prev => ({ ...prev, nif: e.target.value }))}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Numéro NIF"
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">STAT</label>
-                      <input
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-600">STAT</Label>
+                      <Input
                         type="text"
                         value={newClient.stat}
                         onChange={(e) => setNewClient(prev => ({ ...prev, stat: e.target.value }))}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Numéro STAT"
+                        className="h-8 text-sm"
                       />
                     </div>
                   </div>
@@ -449,18 +423,19 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
               </div>
 
               <div className="flex gap-3 mt-5 pt-4 border-t border-slate-100">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setShowNewClientForm(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                  className="flex-1"
                 >
                   Annuler
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleCreateClient}
                   disabled={savingClient || !newClient.name || !newClient.email}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-900 rounded-lg hover:bg-primary-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex-1"
                 >
                   {savingClient ? (
                     <Loader2 className="animate-spin w-4 h-4" />
@@ -470,7 +445,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
                       Ajouter le client
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           )}

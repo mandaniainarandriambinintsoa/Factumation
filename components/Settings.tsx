@@ -7,6 +7,10 @@ import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import SEOHead from './SEOHead';
 import { getCompanies, createCompany, updateCompany, deleteCompany, setDefaultCompany, MappedCompany } from '../services/companyService';
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 const Settings: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -147,7 +151,6 @@ const Settings: React.FC = () => {
     setSuccess(false);
 
     if (editingCompany) {
-      // Update existing company
       const { data, error } = await updateCompany(editingCompany.id, {
         name: formData.name,
         address: formData.address || null,
@@ -178,7 +181,6 @@ const Settings: React.FC = () => {
         setTimeout(() => setSuccess(false), 3000);
       }
     } else {
-      // Create new company
       const { data, error } = await createCompany({
         name: formData.name,
         address: formData.address || null,
@@ -249,8 +251,7 @@ const Settings: React.FC = () => {
     }
   };
 
-  const inputClass = "block w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-3 px-4 bg-white border transition-shadow";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
+  const selectClass = "block w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-3 px-4 bg-white border transition-shadow";
 
   if (authLoading || loading) {
     return (
@@ -280,7 +281,6 @@ const Settings: React.FC = () => {
         </p>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
           <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
@@ -288,7 +288,6 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      {/* Success Message */}
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start animate-fade-in">
           <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
@@ -302,28 +301,30 @@ const Settings: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900">{t('settings.companiesTitle')}</h2>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleStartNew}
-                className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                className="text-primary-600 hover:bg-primary-50 hover:text-primary-700"
                 title={t('settings.addCompany')}
               >
                 <Plus size={20} />
-              </button>
+              </Button>
             </div>
 
             {companies.length === 0 && !showNewCompanyForm ? (
               <div className="p-8 text-center">
                 <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-slate-500 mb-4">{t('settings.noCompanies')}</p>
-                <button
+                <Button
                   type="button"
                   onClick={handleStartNew}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-900 text-white rounded-lg hover:bg-primary-800 transition-colors"
+                  className="gap-2"
                 >
                   <Plus size={16} />
                   {t('settings.addCompany')}
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -352,26 +353,30 @@ const Settings: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         {!company.isDefault && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleSetDefault(company.id);
                             }}
-                            className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded transition-colors"
+                            className="h-8 w-8 text-slate-400 hover:text-amber-500 hover:bg-amber-50"
                             title={t('settings.setDefault')}
                           >
                             <Star size={16} />
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(company.id);
                           }}
                           disabled={deletingId === company.id}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
                           title={t('settings.delete')}
                         >
                           {deletingId === company.id ? (
@@ -379,7 +384,7 @@ const Settings: React.FC = () => {
                           ) : (
                             <Trash2 size={16} />
                           )}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -393,7 +398,6 @@ const Settings: React.FC = () => {
         <div className="lg:col-span-2">
           {(editingCompany || showNewCompanyForm) ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Header du formulaire */}
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
@@ -409,84 +413,86 @@ const Settings: React.FC = () => {
                       </>
                     )}
                   </h2>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleCancelEdit}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="text-slate-400 hover:text-slate-600"
                   >
                     <X size={20} />
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="space-y-5">
-                  <div>
-                    <label className={labelClass}>{t('settings.companyName')} *</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name">{t('settings.companyName')} *</Label>
+                    <Input
+                      id="name"
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="Ex: Ma Société SAS"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>{t('settings.address')}</label>
-                    <textarea
+                  <div className="space-y-1.5">
+                    <Label htmlFor="address">{t('settings.address')}</Label>
+                    <Textarea
+                      id="address"
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
                       rows={3}
-                      className={inputClass}
-                      placeholder="123 Rue de l'Innovation&#10;75001 Paris&#10;France"
+                      placeholder={`123 Rue de l'Innovation\n75001 Paris\nFrance`}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className={labelClass}>
-                        <Mail className="w-4 h-4 inline mr-1.5" />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="flex items-center">
+                        <Mail className="w-4 h-4 mr-1.5" />
                         {t('settings.emailLabel')}
-                      </label>
-                      <input
+                      </Label>
+                      <Input
+                        id="email"
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder="contact@masociete.com"
                       />
                     </div>
 
-                    <div>
-                      <label className={labelClass}>
-                        <Phone className="w-4 h-4 inline mr-1.5" />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="phone" className="flex items-center">
+                        <Phone className="w-4 h-4 mr-1.5" />
                         {t('settings.phoneLabel')}
-                      </label>
-                      <input
+                      </Label>
+                      <Input
+                        id="phone"
                         type="tel"
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder="01 23 45 67 89"
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>
-                      <Image className="w-4 h-4 inline mr-1.5" />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="logoUrl" className="flex items-center">
+                      <Image className="w-4 h-4 mr-1.5" />
                       {t('settings.logoUrl')}
-                    </label>
-                    <input
+                    </Label>
+                    <Input
+                      id="logoUrl"
                       type="url"
                       name="logoUrl"
                       value={formData.logoUrl}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="https://example.com/logo.png"
                     />
                     {formData.logoUrl && (
@@ -513,14 +519,13 @@ const Settings: React.FC = () => {
                   {t('settings.bankInfo')}
                 </h3>
 
-                {/* Sélecteur de région fiscale */}
-                <div className="mb-6">
-                  <label className={labelClass}>{t('settings.fiscalRegion')}</label>
+                <div className="mb-6 space-y-1.5">
+                  <Label>{t('settings.fiscalRegion')}</Label>
                   <select
                     name="fiscalRegion"
                     value={formData.fiscalRegion}
                     onChange={handleInputChange}
-                    className={inputClass}
+                    className={selectClass}
                   >
                     {FISCAL_REGIONS.map(region => (
                       <option key={region.code} value={region.code}>
@@ -530,28 +535,27 @@ const Settings: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Champs fiscaux conditionnels selon la région */}
                 {formData.fiscalRegion === 'EU' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div>
-                      <label className={labelClass}>{t('constants.siret')}</label>
-                      <input
+                    <div className="space-y-1.5">
+                      <Label htmlFor="siret">{t('constants.siret')}</Label>
+                      <Input
+                        id="siret"
                         type="text"
                         name="siret"
                         value={formData.siret}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder={t('constants.siretPlaceholder')}
                       />
                     </div>
-                    <div>
-                      <label className={labelClass}>{t('constants.tvaNumber')}</label>
-                      <input
+                    <div className="space-y-1.5">
+                      <Label htmlFor="vatNumber">{t('constants.tvaNumber')}</Label>
+                      <Input
+                        id="vatNumber"
                         type="text"
                         name="vatNumber"
                         value={formData.vatNumber}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder={t('constants.tvaPlaceholder')}
                       />
                     </div>
@@ -560,53 +564,52 @@ const Settings: React.FC = () => {
 
                 {formData.fiscalRegion === 'MG' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div>
-                      <label className={labelClass}>{t('constants.nif')}</label>
-                      <input
+                    <div className="space-y-1.5">
+                      <Label htmlFor="nif">{t('constants.nif')}</Label>
+                      <Input
+                        id="nif"
                         type="text"
                         name="nif"
                         value={formData.nif}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder={t('constants.nifPlaceholder')}
                       />
                     </div>
-                    <div>
-                      <label className={labelClass}>{t('constants.stat')}</label>
-                      <input
+                    <div className="space-y-1.5">
+                      <Label htmlFor="stat">{t('constants.stat')}</Label>
+                      <Input
+                        id="stat"
                         type="text"
                         name="stat"
                         value={formData.stat}
                         onChange={handleInputChange}
-                        className={inputClass}
                         placeholder={t('constants.statPlaceholder')}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Informations bancaires */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className={labelClass}>{t('settings.iban')}</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <Label htmlFor="iban">{t('settings.iban')}</Label>
+                    <Input
+                      id="iban"
                       type="text"
                       name="iban"
                       value={formData.iban}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="FR76 1234 5678 9012 3456 7890 123"
                     />
                   </div>
 
-                  <div>
-                    <label className={labelClass}>{t('settings.bic')}</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bic">{t('settings.bic')}</Label>
+                    <Input
+                      id="bic"
                       type="text"
                       name="bic"
                       value={formData.bic}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="BNPAFRPP"
                     />
                   </div>
@@ -621,13 +624,13 @@ const Settings: React.FC = () => {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className={labelClass}>{t('settings.defaultCurrency')}</label>
+                  <div className="space-y-1.5">
+                    <Label>{t('settings.defaultCurrency')}</Label>
                     <select
                       name="defaultCurrency"
                       value={formData.defaultCurrency}
                       onChange={handleInputChange}
-                      className={inputClass}
+                      className={selectClass}
                     >
                       {CURRENCIES.map(c => (
                         <option key={c.code} value={c.code}>
@@ -637,13 +640,13 @@ const Settings: React.FC = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>{t('settings.defaultPayment')}</label>
+                  <div className="space-y-1.5">
+                    <Label>{t('settings.defaultPayment')}</Label>
                     <select
                       name="defaultPaymentMethod"
                       value={formData.defaultPaymentMethod}
                       onChange={handleInputChange}
-                      className={inputClass}
+                      className={selectClass}
                     >
                       {PAYMENT_METHODS.map(m => (
                         <option key={m.code} value={m.code}>{t(m.labelKey)}</option>
@@ -651,14 +654,14 @@ const Settings: React.FC = () => {
                     </select>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>{t('settings.invoicePrefix')}</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invoicePrefix">{t('settings.invoicePrefix')}</Label>
+                    <Input
+                      id="invoicePrefix"
                       type="text"
                       name="invoicePrefix"
                       value={formData.invoicePrefix}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="INV"
                       maxLength={10}
                     />
@@ -667,14 +670,14 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
 
-                  <div>
-                    <label className={labelClass}>{t('settings.quotePrefix')}</label>
-                    <input
+                  <div className="space-y-1.5">
+                    <Label htmlFor="quotePrefix">{t('settings.quotePrefix')}</Label>
+                    <Input
+                      id="quotePrefix"
                       type="text"
                       name="quotePrefix"
                       value={formData.quotePrefix}
                       onChange={handleInputChange}
-                      className={inputClass}
                       placeholder="DEV"
                       maxLength={10}
                     />
@@ -684,7 +687,6 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Checkbox par défaut */}
                 <div className="mt-5 pt-5 border-t border-slate-100">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -705,32 +707,34 @@ const Settings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bouton de sauvegarde */}
               <div className="flex justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="pill"
                   onClick={handleCancelEdit}
-                  className="px-6 py-3 text-slate-600 font-medium rounded-full hover:bg-slate-100 transition-colors"
+                  className="text-slate-600 hover:bg-slate-100"
                 >
                   {t('settings.cancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  size="pill"
                   disabled={saving}
-                  className="inline-flex items-center px-6 py-3 bg-primary-900 text-white font-semibold rounded-full hover:bg-primary-800 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="font-semibold shadow-lg hover:shadow-xl"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                      <Loader2 className="animate-spin h-5 w-5" />
                       {t('settings.saving')}
                     </>
                   ) : (
                     <>
-                      <Save className="-ml-1 mr-2 h-5 w-5" />
+                      <Save className="h-5 w-5" />
                       {editingCompany ? t('settings.save') : t('settings.addCompany')}
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           ) : (
@@ -742,14 +746,15 @@ const Settings: React.FC = () => {
               <p className="text-slate-500 mb-6">
                 {t('settings.selectCompanyDesc')}
               </p>
-              <button
+              <Button
                 type="button"
+                size="pill"
                 onClick={handleStartNew}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-900 text-white font-semibold rounded-full hover:bg-primary-800 transition-colors"
+                className="font-semibold"
               >
                 <Plus size={20} />
                 {t('settings.newCompany')}
-              </button>
+              </Button>
             </div>
           )}
         </div>

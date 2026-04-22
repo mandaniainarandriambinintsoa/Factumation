@@ -3,6 +3,10 @@ import { Search, Plus, Building2, Mail, Phone, MapPin, X, Check, Loader2, Star }
 import { getCompanies, createCompany, MappedCompany } from '../services/companyService';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 interface CompanySelectorProps {
   onSelectCompany: (company: {
@@ -15,7 +19,6 @@ interface CompanySelectorProps {
     paymentMethod?: string;
     invoicePrefix?: string;
     quotePrefix?: string;
-    // Informations fiscales
     fiscalRegion?: string;
     siret?: string;
     vatNumber?: string;
@@ -46,14 +49,12 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Charger les sociétés au montage
   useEffect(() => {
     if (user) {
       loadCompanies();
     }
   }, [user]);
 
-  // Filtrer les sociétés selon la recherche
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCompanies(companies);
@@ -70,7 +71,6 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
     }
   }, [searchQuery, companies]);
 
-  // Fermer le dropdown quand on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -104,7 +104,6 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
       paymentMethod: company.defaultPaymentMethod,
       invoicePrefix: company.invoicePrefix,
       quotePrefix: company.quotePrefix,
-      // Informations fiscales
       fiscalRegion: company.fiscalRegion,
       siret: company.siret,
       vatNumber: company.vatNumber,
@@ -126,7 +125,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
       address: newCompany.address || null,
       phone: newCompany.phone || null,
       siret: newCompany.siret || null,
-      isDefault: companies.length === 0, // Première société = par défaut
+      isDefault: companies.length === 0,
     });
 
     if (error) {
@@ -137,10 +136,8 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
     }
 
     if (data) {
-      // Ajouter la nouvelle société à la liste
       setCompanies(prev => [data, ...prev]);
 
-      // Sélectionner automatiquement la nouvelle société
       onSelectCompany({
         companyName: data.name,
         companyEmail: data.email || '',
@@ -151,7 +148,6 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
         paymentMethod: data.defaultPaymentMethod,
         invoicePrefix: data.invoicePrefix,
         quotePrefix: data.quotePrefix,
-        // Informations fiscales
         fiscalRegion: data.fiscalRegion,
         siret: data.siret,
         vatNumber: data.vatNumber,
@@ -159,7 +155,6 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
         stat: data.stat,
       });
 
-      // Réinitialiser le formulaire
       setNewCompany({ name: '', email: '', address: '', phone: '', siret: '' });
       setShowNewCompanyForm(false);
       setIsOpen(false);
@@ -168,16 +163,16 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
     setSavingCompany(false);
   };
 
-  // Si l'utilisateur n'est pas connecté, ne pas afficher le sélecteur
   if (!user) {
     return null;
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bouton d'ouverture */}
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={() => {
           setIsOpen(!isOpen);
           setShowNewCompanyForm(false);
@@ -185,33 +180,28 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
             setTimeout(() => inputRef.current?.focus(), 100);
           }
         }}
-        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+        className="text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800"
       >
         <Building2 size={16} />
         Mes sociétés
-      </button>
+      </Button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute z-50 mt-2 w-[calc(100vw-2rem)] sm:w-96 right-0 sm:right-auto bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in">
           {!showNewCompanyForm ? (
             <>
-              {/* Barre de recherche */}
               <div className="p-3 border-b border-slate-100">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Rechercher une société..."
-                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
-                </div>
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher une société..."
+                  startIcon={<Search />}
+                  className="bg-slate-50"
+                />
               </div>
 
-              {/* Liste des sociétés */}
               <div className="max-h-64 overflow-y-auto">
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
@@ -266,75 +256,64 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
                 )}
               </div>
 
-              {/* Bouton nouvelle société */}
               <div className="p-3 border-t border-slate-100 bg-slate-50">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setShowNewCompanyForm(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-emerald-700 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors"
+                  className="w-full text-emerald-700 border-emerald-200 bg-white hover:bg-emerald-50"
                 >
                   <Plus size={16} />
                   Nouvelle société
-                </button>
+                </Button>
               </div>
             </>
           ) : (
-            /* Formulaire nouvelle société - using div instead of form to avoid nested forms */
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-slate-900">Nouvelle société</h3>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowNewCompanyForm(false)}
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                  className="h-8 w-8 text-slate-400 hover:text-slate-600"
                 >
                   <X size={18} />
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Nom de la société *
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={newCompany.name}
-                      onChange={(e) => setNewCompany(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      placeholder="Ma Société SARL"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Nom de la société *</Label>
+                  <Input
+                    type="text"
+                    value={newCompany.name}
+                    onChange={(e) => setNewCompany(prev => ({ ...prev, name: e.target.value }))}
+                    startIcon={<Building2 />}
+                    placeholder="Ma Société SARL"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="email"
-                      value={newCompany.email}
-                      onChange={(e) => setNewCompany(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      placeholder="contact@masociete.fr"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Email</Label>
+                  <Input
+                    type="email"
+                    value={newCompany.email}
+                    onChange={(e) => setNewCompany(prev => ({ ...prev, email: e.target.value }))}
+                    startIcon={<Mail />}
+                    placeholder="contact@masociete.fr"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Adresse
-                  </label>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Adresse</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <textarea
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Textarea
                       value={newCompany.address}
                       onChange={(e) => setNewCompany(prev => ({ ...prev, address: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="pl-9"
                       placeholder="Adresse complète"
                       rows={2}
                     />
@@ -342,31 +321,23 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                      Téléphone
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="tel"
-                        value={newCompany.phone}
-                        onChange={(e) => setNewCompany(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        placeholder="01 23 45 67 89"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-600">Téléphone</Label>
+                    <Input
+                      type="tel"
+                      value={newCompany.phone}
+                      onChange={(e) => setNewCompany(prev => ({ ...prev, phone: e.target.value }))}
+                      startIcon={<Phone />}
+                      placeholder="01 23 45 67 89"
+                    />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                      SIRET
-                    </label>
-                    <input
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-600">SIRET</Label>
+                    <Input
                       type="text"
                       value={newCompany.siret}
                       onChange={(e) => setNewCompany(prev => ({ ...prev, siret: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="123 456 789 00012"
                     />
                   </div>
@@ -374,18 +345,19 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
               </div>
 
               <div className="flex gap-3 mt-5 pt-4 border-t border-slate-100">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setShowNewCompanyForm(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                  className="flex-1"
                 >
                   Annuler
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleCreateCompany}
                   disabled={savingCompany || !newCompany.name}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                 >
                   {savingCompany ? (
                     <Loader2 className="animate-spin w-4 h-4" />
@@ -395,7 +367,7 @@ const CompanySelector: React.FC<CompanySelectorProps> = ({ onSelectCompany, curr
                       Créer la société
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           )}
