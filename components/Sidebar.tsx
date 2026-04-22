@@ -9,6 +9,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import { isAdmin } from '../services/adminService';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Button } from './ui/button';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -74,12 +75,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
           <span className="font-bold text-lg text-primary-900 tracking-tight">Factumation</span>
         </Link>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="xl:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="xl:hidden h-8 w-8 text-slate-400 hover:text-slate-600"
+          aria-label="Fermer"
         >
           <X size={20} />
-        </button>
+        </Button>
       </div>
 
       {/* Primary nav */}
@@ -158,13 +162,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
               </div>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={handleSignOut}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors w-full mt-1"
+              className="w-full justify-start gap-3 px-4 py-2.5 h-auto text-red-600 hover:bg-red-50 hover:text-red-700 mt-1"
             >
               <LogOut size={18} />
               {t('nav.logout')}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -174,19 +179,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Desktop sidebar - always visible on xl+ */}
-      <aside className="hidden xl:flex xl:flex-col xl:fixed xl:inset-y-0 xl:left-0 xl:w-64 bg-white border-r border-slate-200 z-40">
+      <aside className="hidden xl:flex xl:flex-col xl:fixed xl:inset-y-0 xl:left-0 xl:w-64 bg-white border-r border-slate-200 z-30">
         {navContent}
       </aside>
 
-      {/* Mobile/tablet sidebar - slide-out overlay (below xl) */}
+      {/* Mobile/tablet sidebar - slide-out overlay (below xl)
+          z-[490] backdrop + z-[500] drawer → reste au-dessus de la bottom nav (z-[400]) */}
       <div
-        className={`fixed inset-0 bg-black/40 z-40 xl:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/40 z-[490] xl:hidden transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 w-72 bg-white z-50 xl:hidden shadow-xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-72 bg-white z-[500] xl:hidden shadow-xl transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

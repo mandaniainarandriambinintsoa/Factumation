@@ -3,6 +3,10 @@ import { Mail, Phone, MapPin, Send, CheckCircle2, Loader2, AlertCircle } from 'l
 import { DEFAULT_CONTACT_WEBHOOK_URL } from '../constants';
 import { useI18n } from '../contexts/I18nContext';
 import SEOHead from './SEOHead';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
 
 interface ContactFormData {
   name: string;
@@ -66,9 +70,6 @@ const Contact: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const inputClass = "w-full rounded-lg border-slate-300 border px-4 py-3 focus:border-primary-500 focus:ring-primary-500 transition-shadow outline-none";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-2";
 
   return (
     <div className="bg-slate-50 min-h-screen py-12 md:py-20">
@@ -135,12 +136,13 @@ const Contact: React.FC = () => {
                   <p className="text-slate-600 max-w-md mx-auto mb-8">
                     {t('contact.successDesc')}
                   </p>
-                  <button
+                  <Button
+                    variant="link"
                     onClick={() => setStatus('idle')}
-                    className="text-primary-600 font-medium hover:text-primary-800 underline underline-offset-4"
+                    className="underline underline-offset-4"
                   >
                     {t('contact.sendAnother')}
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
@@ -156,85 +158,77 @@ const Contact: React.FC = () => {
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="name" className={labelClass}>{t('contact.fullName')}</label>
-                      <input
+                    <div className="space-y-2">
+                      <Label htmlFor="name">{t('contact.fullName')}</Label>
+                      <Input
                         type="text"
                         id="name"
                         name="name"
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className={inputClass}
                         placeholder={t('contact.namePlaceholder')}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="email" className={labelClass}>{t('contact.email')}</label>
-                      <input
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t('contact.email')}</Label>
+                      <Input
                         type="email"
                         id="email"
                         name="email"
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className={inputClass}
                         placeholder={t('contact.emailPlaceholder')}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label htmlFor="subject" className={labelClass}>{t('contact.subject')}</label>
-                    <input
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">{t('contact.subject')}</Label>
+                    <Input
                       type="text"
                       id="subject"
                       name="subject"
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className={inputClass}
                       placeholder={t('contact.subjectPlaceholder')}
                     />
                   </div>
 
-                  <div>
-                    <label htmlFor="message" className={labelClass}>{t('contact.message')}</label>
-                    <textarea
+                  <div className="space-y-2">
+                    <Label htmlFor="message">{t('contact.message')}</Label>
+                    <Textarea
                       id="message"
                       name="message"
                       rows={5}
                       required
                       value={formData.message}
                       onChange={handleChange}
-                      className={inputClass}
                       placeholder={t('contact.messagePlaceholder')}
-                    ></textarea>
+                    />
                   </div>
 
                   <div className="pt-4">
-                    <button
+                    <Button
                       type="submit"
+                      size="pill"
                       disabled={loading}
-                      className={`
-                        w-full md:w-auto inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-primary-900
-                        shadow-md hover:bg-primary-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
-                        ${loading ? 'opacity-75 cursor-wait' : ''}
-                      `}
+                      className="shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                          <Loader2 className="animate-spin h-5 w-5" />
                           {t('contact.sending')}
                         </>
                       ) : (
                         <>
-                          <Send className="-ml-1 mr-2 h-5 w-5" />
+                          <Send className="h-5 w-5" />
                           {t('contact.send')}
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}

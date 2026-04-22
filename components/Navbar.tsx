@@ -7,6 +7,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import AuthModal from './AuthModal';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Button } from './ui/button';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -121,9 +122,10 @@ const Navbar: React.FC = () => {
                 <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-200">
                   {user ? (
                     <div className="relative">
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"
+                        className="gap-2 px-3 h-auto py-2"
                       >
                         {user.avatarUrl ? (
                           <img
@@ -140,7 +142,7 @@ const Navbar: React.FC = () => {
                           {user.name || user.email.split('@')[0]}
                         </span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                      </Button>
 
                       {isUserMenuOpen && (
                         <>
@@ -177,8 +179,9 @@ const Navbar: React.FC = () => {
                             )}
                             <hr className="my-1 border-slate-100" />
                             <button
+                              type="button"
                               onClick={handleSignOut}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
                             >
                               <LogOut className="w-4 h-4" />
                               {t('nav.logout')}
@@ -189,18 +192,19 @@ const Navbar: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={openLoginModal}
-                        className="text-sm font-medium text-slate-600 hover:text-primary-900 transition-colors"
+                        className="text-slate-600 hover:text-primary-900"
                       >
                         {t('nav.login')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={openRegisterModal}
-                        className="text-sm font-medium px-4 py-2 bg-primary-900 text-white rounded-full hover:bg-primary-800 transition-colors"
+                        className="rounded-full"
                       >
                         {t('nav.register')}
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
@@ -210,12 +214,15 @@ const Navbar: React.FC = () => {
             {/* Mobile Menu Button */}
             <div className="lg:hidden flex items-center gap-2">
               <LanguageSwitcher />
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={toggleMenu}
-                className="text-slate-600 hover:text-primary-900 focus:outline-none p-2"
+                className="text-slate-600 hover:text-primary-900"
+                aria-label="Menu"
               >
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -322,18 +329,19 @@ const Navbar: React.FC = () => {
                     </>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <button
+                      <Button
+                        variant="outline"
                         onClick={openLoginModal}
-                        className="w-full px-4 py-3 text-center font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50"
+                        className="w-full h-12"
                       >
                         {t('nav.login')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={openRegisterModal}
-                        className="w-full px-4 py-3 text-center font-medium text-white bg-primary-900 rounded-lg hover:bg-primary-800"
+                        className="w-full h-12"
                       >
                         {t('nav.register')}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

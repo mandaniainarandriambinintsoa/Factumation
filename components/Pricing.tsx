@@ -6,6 +6,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { PLANS } from '../lib/plans';
 import { createCheckoutSession } from '../services/subscriptionService';
 import AuthModal from './AuthModal';
+import { Button } from './ui/button';
 
 const Pricing: React.FC = () => {
   const { user } = useAuth();
@@ -157,31 +158,27 @@ const Pricing: React.FC = () => {
                 </ul>
 
                 {plan.id === 'free' ? (
-                  <div className={`w-full py-3 text-center rounded-lg font-medium ${
-                    isCurrent
-                      ? 'bg-slate-100 text-slate-500'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}>
+                  <div className="w-full py-3 text-center rounded-lg font-medium bg-slate-100 text-slate-500">
                     {isCurrent ? t('pricing.currentPlan') : t('pricing.freePlan')}
                   </div>
                 ) : (
-                  <button
+                  <Button
                     onClick={() => handleUpgrade(plan.id as 'pro' | 'business')}
                     disabled={isCurrent || loadingPlan !== null}
-                    className={`w-full py-3 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                    className={`w-full h-12 ${
                       plan.popular
-                        ? 'bg-primary-600 text-white hover:bg-primary-700'
-                        : 'bg-slate-900 text-white hover:bg-slate-800'
+                        ? 'bg-primary-600 hover:bg-primary-700'
+                        : 'bg-slate-900 hover:bg-slate-800'
                     }`}
                   >
                     {loadingPlan === plan.id ? (
-                      <Loader2 size={20} className="animate-spin mx-auto" />
+                      <Loader2 size={20} className="animate-spin" />
                     ) : isCurrent ? (
                       t('pricing.currentPlan')
                     ) : (
                       t('pricing.upgrade')
                     )}
-                  </button>
+                  </Button>
                 )}
               </div>
             );

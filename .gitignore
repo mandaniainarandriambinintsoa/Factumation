@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+.agents/
+.claude/
+.env
+nul
+supabase/.temp/
+Capture.PNG

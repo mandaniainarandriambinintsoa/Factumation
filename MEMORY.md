@@ -1,44 +1,63 @@
 # MEMORY — Factupro (factumation.vercel.app)
 
-## Derniere MAJ : 2026-02-25
+## Derniere MAJ : 2026-04-22
 
-## GSC — Metriques cles (28 derniers jours : 28/01 → 24/02/2026)
-- **Clics** : 1
-- **Impressions** : 4
-- **CTR moyen** : 25%
-- **Position moyenne** : 5.8
-- **Top pays** : France (1 clic), Madagascar (2 impressions, position 1)
-- **Devices** : 100% Desktop, 0% Mobile
-- **Sitemap** : 17 URLs (20 dans sitemap), 0 erreurs
-- **Indexation** : Seule la racine `/` indexee. 17/17 pages lang-prefixed inconnues de Google
-- **Score sante SEO** : 3/10
+## Etat actuel
+- **Build** : OK, deploy auto Vercel
+- **Auth** : Google OAuth + email
+- **Dashboard** : HomeDashboard (KPIs) pour users connectes, Hero (LP) pour visiteurs
+- **Invoice flow** : draft → sent (email ou manuel) → paid (avec relance email)
+- **Email** : Resend edge function v8 (invoice/quote/reminder)
+- **UI** : shadcn/ui en cours — primitives (`components/ui/`) + `lib/utils.ts` (cn)
 
-## Fix mobile (2026-02-25) — FAIT
-- **Probleme** : Tailwind CSS charge via CDN (`cdn.tailwindcss.com`) = dev-only, Googlebot ne l'execute pas → page sans style pour mobile-first indexing
-- **Solution** :
-  - Installe `tailwindcss`, `postcss`, `autoprefixer` en devDependencies
-  - Cree `tailwind.config.js`, `postcss.config.js`, `index.css` (directives @tailwind)
-  - Import `index.css` dans `index.tsx`
-  - Supprime le CDN script, la config inline et le preconnect CDN de `index.html`
-  - CSS compile au build : 36KB dans `dist/assets/index-*.css`
-- **Fichiers modifies** : `index.html`, `index.tsx`, `package.json`
-- **Fichiers crees** : `tailwind.config.js`, `postcss.config.js`, `index.css`
+## Refactor shadcn/ui — EN COURS
+### Migré
+- Setup : Radix, CVA, clsx, tailwind-merge, tailwindcss-animate, react-hook-form, sonner
+- Primitives : Button, Card, Dialog, Sheet, Input, Label, Badge, Textarea, Skeleton, Toaster
+- `AuthModal` (Dialog + react-hook-form + zod + FieldText)
+- `Contact` (Input, Textarea, Label, Button)
+- `Pricing` (Button)
+- `Navbar` + `Sidebar` + `SidebarTopBar` (Button ghost/icon/outline/default)
+- `App.tsx` (Toaster mount)
 
-## Fix indexation (2026-02-25) — FAIT
-- **Probleme** : 17/17 pages du sitemap jamais crawlees (toutes "Unknown to Google")
-- **Cause** : Redirect JS-only `/` → `/fr`, Googlebot ne suit pas toujours
-- **Solution** :
-  - Ajoute `<noscript><meta http-equiv="refresh" content="0; url=/fr">` dans root index.html
-  - Ajoute liens `<a>` noscript vers `/fr` et `/en` pour Googlebot
-  - MAJ lastmod du sitemap a 2026-02-25
-  - Re-soumission du sitemap via GSC API (status: Pending processing)
-- **Fichiers modifies** : `index.html`, `public/sitemap.xml`
+### À migrer (session dédiée, risqué)
+- `InvoiceForm` (1232 l), `QuoteForm` (1207 l) — formulaires complexes avec validation, PDF
+- `Settings` (761 l), `Dashboard` (698 l), `HomeDashboard` (646 l), `Admin` (23 KB)
+- `ClientSelector`, `CompanySelector`, `BlogPost`, `BlogList`
 
-## Actions SEO (priorite)
-1. [x] Fix mobile : Tailwind CDN → build-time CSS
-2. [x] Forcer indexation : noscript redirect + re-soumission sitemap
-3. [ ] Deployer sur Vercel (push les changements)
-4. [ ] Creer contenu SEO cible en francais (facturation, devis)
-5. [ ] Enrichir schema.org (Organization, Product, BreadcrumbList)
-6. [ ] Obtenir backlinks (site trop recent)
-7. [ ] Optimiser title/meta pour requetes FR (position 10.5 en France)
+## Commits recents (session 2026-04-08)
+- `647daf2` feat: add "mark as sent" action for draft invoices
+- `7d73c1f` fix: proper invoice/quote status flow (draft → sent → paid)
+- `b584261` feat: add mark-as-paid and send-reminder actions on dashboard invoices
+- `eb2c1a1` feat: show dashboard with KPIs instead of landing page for logged-in users
+- `21f0a75` fix: remove user info from desktop top bar (already in sidebar)
+- `e841c40` feat: sidebar navigation for logged-in users
+
+## UX Flow — Facture
+| Etape | Action | Status DB | KPI |
+|-------|--------|-----------|-----|
+| 1 | Sauvegarder | `draft` | Comptee dans total |
+| 2a | Envoyer par email | `sent` | + En attente |
+| 2b | Marquer envoyee (manuel) | `sent` | + En attente |
+| 3 | Marquer payee | `paid` | + Chiffre d'affaires |
+| — | Relancer (email) | reste `sent` | Email relance envoye |
+
+## Stripe Integration — EN COURS
+- Plans : Free / Pro (9.99€) / Business (19.99€)
+- DB : Table `subscriptions`, RLS, auto-create on signup
+- Edge Functions creees, PAS toutes deployees
+- **TODO** : secrets, webhook config, feature gating, billing Settings
+
+## SEO / GEO
+- Pre-rendering : 17 fichiers HTML statiques
+- GEO Score : 28/100 (mars 2026, avant fixes)
+- llms.txt + AI crawler rules
+- **TODO** : expand blog 1500+ mots, author bios, brand profiles, custom domain
+
+## E-E-A-T — TODO
+1. [CRITICAL] Privacy policy + terms
+2. [CRITICAL] Contact info reel
+3. [CRITICAL] Custom domain
+4. [HIGH] Blog articles 1200-2000 mots + sources externes
+5. [HIGH] Author identity + bio
+6. [MEDIUM] Internal links, images, case studies

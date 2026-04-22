@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import LanguageSwitcher from './LanguageSwitcher';
+import { Button } from './ui/button';
 
 interface SidebarTopBarProps {
   onMenuToggle: () => void;
@@ -20,12 +21,15 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         {/* Left: hamburger + logo (mobile/tablet only) */}
         <div className="flex items-center gap-3 xl:hidden">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onMenuToggle}
-            className="p-2 rounded-lg text-slate-600 hover:text-primary-900 hover:bg-slate-100 transition-colors"
+            className="h-10 w-10 text-slate-600 hover:text-primary-900"
+            aria-label="Menu"
           >
             <Menu size={22} />
-          </button>
+          </Button>
           <Link to={path('/')} className="flex items-center gap-2">
             <div className="bg-primary-900 text-white p-1.5 rounded-lg">
               <FileText size={18} />

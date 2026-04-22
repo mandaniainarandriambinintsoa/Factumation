@@ -8,7 +8,9 @@ import { I18nProvider } from './contexts/I18nContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import SidebarTopBar from './components/SidebarTopBar';
+import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
+import { Toaster } from './components/ui/toaster';
 
 // Lazy load des pages pour le code splitting
 const Hero = lazy(() => import('./components/Hero'));
@@ -64,7 +66,7 @@ const LangLayout: React.FC = () => {
     );
   }
 
-  // Logged-in: sidebar layout (fixed on xl+, slide-out below)
+  // Logged-in: sidebar layout (fixed on xl+, slide-out below) + bottom nav on mobile
   if (user) {
     return (
       <I18nProvider>
@@ -72,11 +74,12 @@ const LangLayout: React.FC = () => {
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <div className="xl:pl-64 flex flex-col min-h-screen">
             <SidebarTopBar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-            <main className="flex-grow">
+            <main className="flex-grow pb-20 xl:pb-0">
               <AppRoutes isLoggedIn />
             </main>
             <Footer />
           </div>
+          <BottomNav />
         </div>
       </I18nProvider>
     );
@@ -114,6 +117,7 @@ const App: React.FC = () => {
             <Route path="*" element={<LangRedirect />} />
           </Routes>
         </BrowserRouter>
+        <Toaster />
       </SubscriptionProvider>
     </AuthProvider>
   );
