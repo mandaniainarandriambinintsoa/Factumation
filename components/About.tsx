@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Workflow, Database, Zap, Shield, FileText, ArrowRight, Users, Building2, History, Mail, LogIn } from 'lucide-react';
+import { Zap, Shield, FileText, ArrowRight, Users, Building2, History, Mail, LogIn } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import SEOHead from './SEOHead';
@@ -124,48 +124,6 @@ const About: React.FC = () => {
             <p className="text-slate-500 text-sm">
               {t('about.quickLogin')}
             </p>
-          </div>
-        </div>
-
-        {/* Tech Stack */}
-        <div className="mb-24">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900">{t('about.techStackTitle')}</h2>
-            <p className="mt-4 text-slate-500">{t('about.techStackSubtitle')}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Sparkles,
-                title: t('about.claudeCode'),
-                description: t('about.claudeCodeDesc'),
-                color: "text-purple-600",
-                bg: "bg-purple-50"
-              },
-              {
-                icon: Database,
-                title: t('about.supabase'),
-                description: t('about.supabaseDesc'),
-                color: "text-green-600",
-                bg: "bg-green-50"
-              },
-              {
-                icon: Workflow,
-                title: t('about.n8nBrevo'),
-                description: t('about.n8nBrevoDesc'),
-                color: "text-pink-600",
-                bg: "bg-pink-50"
-              }
-            ].map((tech, idx) => (
-              <div key={idx} className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300 text-center">
-                <div className={`w-16 h-16 mx-auto ${tech.bg} rounded-full flex items-center justify-center mb-6`}>
-                  <tech.icon className={`w-8 h-8 ${tech.color}`} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{tech.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{tech.description}</p>
-              </div>
-            ))}
           </div>
         </div>
 
