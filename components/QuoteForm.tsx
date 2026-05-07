@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn, Lock, Crown } from 'lucide-react';
+import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, Lock, Crown } from 'lucide-react';
 import { QuoteData, LineItem, FiscalInfo } from '../types';
 
 const loadHtml2Pdf = () => import('html2pdf.js').then(m => m.default);
@@ -468,37 +468,43 @@ const QuoteForm: React.FC = () => {
     setSavingToHistory(true);
 
     try {
-      let pdfBase64 = lastGeneratedPdfBase64;
+      const element = quoteRef.current;
+      const originalPadding = element.style.padding;
+      element.style.padding = '24px';
 
-      if (!pdfBase64) {
-        const element = quoteRef.current;
-        const originalPadding = element.style.padding;
-        element.style.padding = '24px';
+      const filename = `Devis-${formData.quoteNumber}.pdf`;
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
 
-        const opt = {
-          margin: [5, 5, 5, 5],
-          filename: `Devis-${formData.quoteNumber}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
-          jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
+
+      element.style.padding = originalPadding;
+
+      const downloadUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+
+      const pdfBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
         };
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
 
-        const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
-
-        element.style.padding = originalPadding;
-
-        pdfBase64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64 = (reader.result as string).split(',')[1];
-            resolve(base64);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(pdfBlob);
-        });
-
-        setLastGeneratedPdfBase64(pdfBase64);
-      }
+      setLastGeneratedPdfBase64(pdfBase64);
 
       const result = await saveQuote(formData, pdfBase64);
 
@@ -756,40 +762,47 @@ const QuoteForm: React.FC = () => {
               {t('invoice.edit')}
             </Button>
 
-            <Button
-              variant="outline"
-              size="pill"
-              onClick={handleGeneratePdf}
-              disabled={loading || savingToHistory}
-              className="min-w-[160px] font-bold shadow-sm hover:shadow-md"
-            >
-              <Download className="h-5 w-5" />
-              {t('invoice.generatePdf')}
-            </Button>
-
-            <Button
-              size="pill"
-              onClick={handleSaveToHistory}
-              disabled={loading || savingToHistory}
-              className="min-w-[200px] font-bold border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:shadow-md shadow-sm"
-            >
-              {savingToHistory ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5" />
-                  {t('invoice.saving')}
-                </>
-              ) : user ? (
-                <>
-                  <Save className="h-5 w-5" />
-                  {t('invoice.save')}
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-5 w-5" />
-                  {t('invoice.login')}
-                </>
-              )}
-            </Button>
+            {user ? (
+              <div className="flex flex-col items-center">
+                <Button
+                  size="pill"
+                  onClick={handleSaveToHistory}
+                  disabled={loading || savingToHistory}
+                  className="min-w-[220px] font-bold border border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:shadow-md shadow-sm"
+                >
+                  {savingToHistory ? (
+                    <>
+                      <Loader2 className="animate-spin h-5 w-5" />
+                      {t('invoice.saving')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-5 w-5" />
+                      {t('invoice.save')}
+                    </>
+                  )}
+                </Button>
+                <span className="text-xs text-slate-400 mt-2 font-medium italic text-center max-w-[260px]">
+                  {t('invoice.saveHint')}
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="pill"
+                  onClick={handleGeneratePdf}
+                  disabled={loading || savingToHistory}
+                  className="min-w-[220px] font-bold shadow-sm hover:shadow-md"
+                >
+                  <Download className="h-5 w-5" />
+                  {t('invoice.generatePdf')}
+                </Button>
+                <span className="text-xs text-amber-600 mt-2 font-medium text-center max-w-[260px]">
+                  {t('invoice.downloadOnlyHint')}
+                </span>
+              </div>
+            )}
 
             <div className="flex flex-col items-center">
               <div className="relative">

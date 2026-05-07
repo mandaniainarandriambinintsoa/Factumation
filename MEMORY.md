@@ -1,6 +1,17 @@
 # MEMORY — Factupro (factumation.vercel.app)
 
-## Derniere MAJ : 2026-04-22
+## Derniere MAJ : 2026-05-07
+
+## Session 2026-05-07 — UX fix preview buttons
+- Probleme : le bouton "Generer PDF" telechargeait sans sauvegarder en DB → friction (PDF sur disque mais pas dans l'app).
+- Fix : fusion en 1 bouton conditionnel sur `user`.
+  - Connecte : "Enregistrer" → save DB + download PDF (handleSaveToHistory enrichi avec download via Blob URL).
+  - Non connecte : "Telecharger PDF" seul (handleGeneratePdf inchange) + hint "Connectez-vous pour conserver".
+- Hints visibles sous chaque bouton pour clarifier les 2 modes.
+- Mise a jour i18n FR/EN : `invoice.save` → "Enregistrer", `generatePdf` → "Telecharger le PDF", + nouvelles cles `saveHint`, `downloadOnlyHint`. Success messages reecrits.
+- Applique sur InvoiceForm.tsx ET QuoteForm.tsx.
+- Cleanup : import `LogIn` retire (plus utilise).
+
 
 ## Etat actuel
 - **Build** : OK, deploy auto Vercel
