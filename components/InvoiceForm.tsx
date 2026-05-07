@@ -49,6 +49,7 @@ const getInitialFormData = (): InvoiceData => ({
   dueDate: '',
   currency: 'EUR',
   paymentMethod: 'bank_transfer',
+  taxRate: 0,
   items: [
     { id: Date.now().toString(), name: '', quantity: 1, unitPrice: 0 }
   ]
@@ -235,6 +236,14 @@ const InvoiceForm: React.FC = () => {
 
   const calculateTotal = () => {
     return formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  };
+
+  const calculateTaxAmount = () => {
+    return calculateTotal() * ((formData.taxRate ?? 0) / 100);
+  };
+
+  const calculateNet = () => {
+    return calculateTotal() - calculateTaxAmount();
   };
 
   const formatNumber = (num: number): string => {
@@ -675,13 +684,16 @@ const InvoiceForm: React.FC = () => {
                     <span>{t('invoice.subtotal')}</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
-                  <div className="flex justify-between gap-1 py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4 whitespace-nowrap">
-                    <span>{t('invoice.vat')}</span>
-                    <span>0.00 {currencySymbol}</span>
-                  </div>
+                  {(formData.taxRate ?? 0) > 0 && (
+                    <div className="flex justify-between gap-1 py-2 text-slate-600 whitespace-nowrap">
+                      <span>{t('invoice.tax')} ({formData.taxRate}%)</span>
+                      <span>− {formatNumber(calculateTaxAmount())} {currencySymbol}</span>
+                    </div>
+                  )}
+                  <div className="border-b border-slate-100 mb-4"></div>
                   <div className="flex justify-between gap-1 items-center text-xl font-bold text-primary-900 whitespace-nowrap">
                     <span>{t('invoice.totalDue')}</span>
-                    <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
+                    <span>{formatNumber(calculateNet())} {currencySymbol}</span>
                   </div>
                 </div>
               </div>
@@ -959,6 +971,20 @@ const InvoiceForm: React.FC = () => {
                   ))}
                 </select>
               </div>
+              <div className="space-y-1.5">
+                <Label>{t('invoice.taxRate')}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  name="taxRate"
+                  value={formData.taxRate ?? 0}
+                  onChange={(e) => setFormData(prev => ({ ...prev, taxRate: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+                <p className="text-xs text-slate-400">{t('invoice.taxRateHint')}</p>
+              </div>
             </div>
           </div>
 
@@ -1049,10 +1075,20 @@ const InvoiceForm: React.FC = () => {
 
           {/* Totaux */}
           <div className="border-t border-slate-200 pt-6 flex justify-end">
-            <div className="w-full md:w-1/3 space-y-3">
-               <div className="flex justify-between items-center text-lg font-bold text-primary-900">
-                 <span>{t('invoice.totalDue')}</span>
+            <div className="w-full md:w-1/3 space-y-2">
+               <div className="flex justify-between items-center text-sm text-slate-600">
+                 <span>{t('invoice.subtotal')}</span>
                  <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
+               </div>
+               {(formData.taxRate ?? 0) > 0 && (
+                 <div className="flex justify-between items-center text-sm text-slate-600">
+                   <span>{t('invoice.tax')} ({formData.taxRate}%)</span>
+                   <span>− {formatNumber(calculateTaxAmount())} {currencySymbol}</span>
+                 </div>
+               )}
+               <div className="flex justify-between items-center text-lg font-bold text-primary-900 pt-2 border-t border-slate-100">
+                 <span>{t('invoice.totalDue')}</span>
+                 <span>{formatNumber(calculateNet())} {currencySymbol}</span>
                </div>
             </div>
           </div>

@@ -36,6 +36,7 @@ export interface InvoiceData {
   dueDate?: string;
   currency: string;
   paymentMethod?: string;
+  taxRate?: number;
 
   // Items
   items: LineItem[];
@@ -63,6 +64,7 @@ export interface QuoteData {
   validityDate: string;
   currency: string;
   paymentMethod?: string;
+  taxRate?: number;
 
   // Items
   items: LineItem[];
@@ -105,6 +107,7 @@ export interface SavedInvoice {
   clientPhone?: string;
   items: LineItem[];
   total: number;
+  taxRate?: number;
   currency: string;
   paymentMethod?: string;
   status: InvoiceStatus;
@@ -131,6 +134,7 @@ export interface SavedQuote {
   clientPhone?: string;
   items: LineItem[];
   total: number;
+  taxRate?: number;
   currency: string;
   paymentMethod?: string;
   status: QuoteStatus;
