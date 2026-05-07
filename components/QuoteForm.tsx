@@ -5,12 +5,8 @@ import { QuoteData, LineItem, FiscalInfo } from '../types';
 const loadHtml2Pdf = () => import('html2pdf.js').then(m => m.default);
 import { CURRENCIES, PAYMENT_METHODS, FISCAL_REGIONS } from '../constants';
 import { sendQuoteEmail, isEmailConfigured } from '../services/emailService';
-import { sendQuoteWithPdfToWebhook } from '../services/quoteService';
 import { saveQuote } from '../services/historyService';
 import { getDefaultCompany } from '../services/companyService';
-import { DEFAULT_QUOTE_WEBHOOK_URL } from '../constants';
-
-const ADMIN_EMAIL = 'mandaniaina.randriambinintsoa@gmail.com';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -74,15 +70,12 @@ const QuoteForm: React.FC = () => {
   const [savingToHistory, setSavingToHistory] = useState(false);
   const [lastGeneratedPdfBase64, setLastGeneratedPdfBase64] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [webhookLoading, setWebhookLoading] = useState(false);
 
   const [formData, setFormData] = useState<QuoteData>(getInitialFormData());
 
   const { user } = useAuth();
   const { t, locale } = useI18n();
   const { canCreateQuote, isPro, plan, usage, refresh: refreshSubscription } = useSubscription();
-
-  const isAdmin = user?.email === ADMIN_EMAIL;
 
   const quoteRef = useRef<HTMLDivElement>(null);
 
@@ -398,58 +391,6 @@ const QuoteForm: React.FC = () => {
     }
   };
 
-  const handleSendViaWebhook = async () => {
-    if (!quoteRef.current || !isAdmin) return;
-
-    setWebhookLoading(true);
-    setEmailError(null);
-
-    try {
-      const element = quoteRef.current;
-      const originalPadding = element.style.padding;
-      element.style.padding = '24px';
-
-      const opt = {
-        margin: [5, 5, 5, 5],
-        filename: `Devis-${formData.quoteNumber}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
-      };
-
-      const pdfBlob = await (await loadHtml2Pdf())().set(opt).from(element).outputPdf('blob');
-
-      element.style.padding = originalPadding;
-
-      const pdfBase64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(pdfBlob);
-      });
-
-      await sendQuoteWithPdfToWebhook(formData, pdfBase64, DEFAULT_QUOTE_WEBHOOK_URL);
-
-      setSuccessAction('email');
-      setSuccess(true);
-
-      setFormData(getInitialFormData());
-      setIsPreviewMode(false);
-      setTimeout(() => {
-        setSuccess(false);
-        setSuccessAction(null);
-      }, 5000);
-    } catch (error) {
-      console.error("Erreur lors de l'envoi via webhook:", error);
-      setEmailError('Erreur lors de l\'envoi via n8n');
-    } finally {
-      setWebhookLoading(false);
-    }
-  };
-
   const handleEdit = () => {
     setIsPreviewMode(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -749,7 +690,7 @@ const QuoteForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row justify-center items-center gap-4 mb-12 flex-wrap">
+          <div className="flex flex-col lg:flex-row justify-center items-start gap-4 mb-12">
 
             <Button
               variant="outline"
@@ -809,7 +750,7 @@ const QuoteForm: React.FC = () => {
                 <Button
                   size="pill"
                   onClick={handleSendEmail}
-                  disabled={loading || savingToHistory || webhookLoading || !isPro}
+                  disabled={loading || savingToHistory || !isPro}
                   className={`min-w-[200px] font-bold transition-all duration-300 ${
                     isPro
                       ? 'shadow-lg hover:shadow-xl hover:-translate-y-1'
@@ -849,30 +790,6 @@ const QuoteForm: React.FC = () => {
                 <span className="text-xs text-red-500 mt-2 font-medium bg-red-50 px-3 py-1 rounded-full">{emailError}</span>
               )}
             </div>
-
-            {isAdmin && (
-              <div className="flex flex-col items-center">
-                <Button
-                  size="pill"
-                  onClick={handleSendViaWebhook}
-                  disabled={loading || savingToHistory || webhookLoading}
-                  className="min-w-[200px] font-bold border-2 border-amber-500 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:shadow-xl hover:-translate-y-1 shadow-lg transition-all duration-300"
-                >
-                  {webhookLoading ? (
-                    <>
-                      <Loader2 className="animate-spin h-5 w-5" />
-                      {t('invoice.sendingN8n')}
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-5 w-5" />
-                      {t('invoice.sendViaGmail')}
-                    </>
-                  )}
-                </Button>
-                <span className="text-xs text-amber-600 mt-2 font-medium italic">{t('invoice.webhookN8n')}</span>
-              </div>
-            )}
 
           </div>
         </div>

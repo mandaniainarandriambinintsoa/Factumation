@@ -1,10 +1,4 @@
 
-// URL du Webhook (à configurer ou remplacer par votre endpoint réel)
-export const DEFAULT_WEBHOOK_URL = "https://n8n-godn.onrender.com/webhook/facture";
-
-// URL du Webhook pour les devis
-export const DEFAULT_QUOTE_WEBHOOK_URL = "https://n8n-godn.onrender.com/webhook/devis";
-
 // URL du Webhook pour le formulaire de contact
 export const DEFAULT_CONTACT_WEBHOOK_URL = "https://n8n-godn.onrender.com/webhook/contact";
 
