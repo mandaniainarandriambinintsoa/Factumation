@@ -52,6 +52,7 @@ export const saveInvoice = async (
       tax_rate: invoiceData.taxRate ?? 0,
       currency: invoiceData.currency,
       payment_method: invoiceData.paymentMethod || null,
+      notes: invoiceData.notes?.trim() || null,
       pdf_base64: pdfBase64 || null,
       status,
     })
@@ -106,6 +107,7 @@ export const saveQuote = async (
       tax_rate: quoteData.taxRate ?? 0,
       currency: quoteData.currency,
       payment_method: quoteData.paymentMethod || null,
+      notes: quoteData.notes?.trim() || null,
       pdf_base64: pdfBase64 || null,
       status,
     })

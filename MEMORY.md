@@ -1,6 +1,27 @@
 # MEMORY — Factupro (factumation.vercel.app)
 
-## Derniere MAJ : 2026-05-07
+## Derniere MAJ : 2026-05-13
+
+## Session 2026-05-13 — Notes facture/devis
+- Colonne `notes TEXT` deja presente en DB sur `invoices` + `quotes` (et reflectee dans database.types.ts + SavedInvoice/SavedQuote). Wiring formulaires + persistance manquaient.
+- Types : `notes?: string` ajoute a `InvoiceData` + `QuoteData`.
+- i18n : 3 cles ajoutees sous `invoice.*` (FR + EN) reutilisees par les deux forms : `notes`, `notesPlaceholder`, `notesHint`.
+- Forms : section "Notes" (Textarea rows=4) inseree entre Totaux et Actions dans InvoiceForm + QuoteForm.
+- Preview : bloc Notes affiche en bas du document (sous Totals/Payment, border-t pt-6) conditionnel sur `formData.notes?.trim()`. `whitespace-pre-line` pour preserver les sauts de ligne.
+- Persistance : `notes: data.notes?.trim() || null` ajoute dans `saveInvoice` + `saveQuote` (historyService.ts). Mapper db→front lit deja `notes`.
+- tsc OK (erreurs preexistantes Html2PdfOptions/Deno non liees).
+
+## Session 2026-05-07 — Tax deductible (%)
+- Migration Supabase : colonne `tax_rate NUMERIC(5,2) DEFAULT 0 CHECK (0-100)` sur `invoices` + `quotes`.
+- Types : `taxRate?: number` sur InvoiceData, QuoteData, SavedInvoice, SavedQuote. database.types.ts regenere.
+- UI : champ "Taxe (%)" dans Details (Invoice + Quote), avec hint. Resume affiche Sous-total / Taxe (X%) / Total a payer (= net) si > 0.
+- Calcul : `total` en DB reste le sous-total (preserve KPIs dashboard), net calcule a la volee `subtotal * (1 - taxRate/100)`.
+- Commit `7bf3662`, deploy Vercel OK.
+
+## Session 2026-05-07 — Cleanup n8n + lockfile + zod
+- Bouton "Envoyer via Gmail" (admin webhook n8n) supprime de InvoiceForm + QuoteForm. Cleanup en cascade : services invoiceService.ts/quoteService.ts supprimes, constants DEFAULT_WEBHOOK_URL/DEFAULT_QUOTE_WEBHOOK_URL supprimees, i18n keys retirees.
+- 3 boutons preview alignes sur 1 ligne (flex-wrap retire).
+- Switch lockfile npm -> pnpm pour Vercel (commit `b19cff4`), bump `zod ^3.25.0` pour @hookform/resolvers v5 compat (commit `7fc731e`).
 
 ## Session 2026-05-07 — UX fix preview buttons
 - Probleme : le bouton "Generer PDF" telechargeait sans sauvegarder en DB → friction (PDF sur disque mais pas dans l'app).

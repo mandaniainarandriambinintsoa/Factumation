@@ -37,6 +37,7 @@ export interface InvoiceData {
   currency: string;
   paymentMethod?: string;
   taxRate?: number;
+  notes?: string;
 
   // Items
   items: LineItem[];
@@ -65,6 +66,7 @@ export interface QuoteData {
   currency: string;
   paymentMethod?: string;
   taxRate?: number;
+  notes?: string;
 
   // Items
   items: LineItem[];

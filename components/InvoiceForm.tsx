@@ -50,6 +50,7 @@ const getInitialFormData = (): InvoiceData => ({
   currency: 'EUR',
   paymentMethod: 'bank_transfer',
   taxRate: 0,
+  notes: '',
   items: [
     { id: Date.now().toString(), name: '', quantity: 1, unitPrice: 0 }
   ]
@@ -698,6 +699,14 @@ const InvoiceForm: React.FC = () => {
                 </div>
               </div>
 
+              {/* Notes */}
+              {formData.notes?.trim() && (
+                <div className="mt-10 pt-6 border-t border-slate-200">
+                  <h4 className="text-sm font-bold text-slate-900 mb-2">{t('invoice.notes')}</h4>
+                  <p className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">{formData.notes}</p>
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -1090,6 +1099,21 @@ const InvoiceForm: React.FC = () => {
                  <span>{t('invoice.totalDue')}</span>
                  <span>{formatNumber(calculateNet())} {currencySymbol}</span>
                </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="pt-4">
+            <h3 className={sectionTitleClass}>{t('invoice.notes')}</h3>
+            <div className="space-y-1.5">
+              <Textarea
+                name="notes"
+                rows={4}
+                value={formData.notes || ''}
+                onChange={handleInputChange}
+                placeholder={t('invoice.notesPlaceholder')}
+              />
+              <p className="text-xs text-slate-400">{t('invoice.notesHint')}</p>
             </div>
           </div>
 
