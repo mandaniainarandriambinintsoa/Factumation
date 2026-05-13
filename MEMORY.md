@@ -2,6 +2,21 @@
 
 ## Derniere MAJ : 2026-05-13
 
+## Session 2026-05-13 — Admin dashboard : subs + broadcast email
+- Migration `20260513_subscription_admin_overrides.sql` : ajoute `source` (stripe|manual), `manual_expires_at`, `admin_notes` sur `subscriptions`. Index partiel sur source=manual.
+- Edge function `admin` enrichie (4 nouvelles actions) :
+  - `list-users-with-subs` : join users + subscriptions, retourne plan/status/source/dates.
+  - `update-subscription` : POST { userId, plan?, status?, manualExpiresAt?, adminNotes? } → upsert avec source='manual'. Ne touche pas Stripe.
+  - `broadcast-email` : POST { userIds[], subject, html, fromName?, replyTo? } → 1 envoi par destinataire via Resend (anti-BCC), throttle 600ms, max 500 destinataires/batch.
+  - `stats` enrichi : `paidSubscriptions` (plan!=free + status=active).
+- `adminService.ts` : nouveaux types `AdminUserWithSub`, `SubscriptionPlan/Status/Source`, fonctions `getUsersWithSubs`, `updateUserSubscription`, `broadcastEmail`. `callAdminFunction` refait pour supporter GET et POST avec body.
+- `AdminUserList.tsx` refonte : colonnes Plan / Statut / Source / Expire / Inscrit, checkboxes sélection multi (header tout sélectionner), bouton "Envoyer email" visible si >0 sélection, modal `EditSubscriptionModal` (plan, status, expires, notes), modal `BroadcastEmailModal` (subject + HTML libre, preview, warning RGPD, résultat sent/failed).
+- `database.types.ts` mis à jour à la main (3 nouvelles colonnes subscriptions).
+- **ATTENTION déploiement** :
+  1. Appliquer la migration SQL via Supabase dashboard ou `supabase db push`.
+  2. Redéployer la edge function `admin` (`supabase functions deploy admin`).
+  3. Vérifier `RESEND_API_KEY` sur le projet Supabase (déjà config pour send-email).
+
 ## Session 2026-05-13 — Notes facture/devis
 - Colonne `notes TEXT` deja presente en DB sur `invoices` + `quotes` (et reflectee dans database.types.ts + SavedInvoice/SavedQuote). Wiring formulaires + persistance manquaient.
 - Types : `notes?: string` ajoute a `InvoiceData` + `QuoteData`.

@@ -8,6 +8,7 @@ export interface AdminStats {
   totalQuotes: number;
   totalBlogPosts: number;
   publishedBlogPosts: number;
+  paidSubscriptions?: number;
 }
 
 export interface AdminUser {
@@ -20,33 +21,64 @@ export interface AdminUser {
   lastSignIn: string | null;
 }
 
+export type SubscriptionPlan = 'free' | 'pro' | 'business';
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete';
+export type SubscriptionSource = 'stripe' | 'manual';
+
+export interface AdminUserWithSub extends AdminUser {
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  source: SubscriptionSource;
+  currentPeriodEnd: string | null;
+  manualExpiresAt: string | null;
+  adminNotes: string | null;
+  hasStripeCustomer: boolean;
+  cancelAtPeriodEnd: boolean;
+}
+
+export interface SubscriptionUpdatePayload {
+  plan?: SubscriptionPlan;
+  status?: SubscriptionStatus;
+  manualExpiresAt?: string | null;
+  adminNotes?: string | null;
+}
+
+export interface BroadcastResult {
+  sent: number;
+  failed: number;
+  total: number;
+  failures: { email: string; error: string }[];
+}
+
 export function isAdmin(email: string | undefined): boolean {
   return email === ADMIN_EMAIL;
 }
 
-async function callAdminFunction(action: string, params?: Record<string, string>): Promise<any> {
+async function callAdminFunction(
+  action: string,
+  options: {
+    method?: 'GET' | 'POST';
+    queryParams?: Record<string, string>;
+    body?: unknown;
+  } = {}
+): Promise<any> {
   if (!supabase) throw new Error('Supabase not configured');
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
-  const searchParams = new URLSearchParams({ action, ...params });
-
-  const { data, error } = await supabase.functions.invoke('admin', {
-    body: null,
-    headers: {},
-    method: 'GET',
-  });
-
-  // Fallback: use fetch directly for GET with query params
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const searchParams = new URLSearchParams({ action, ...(options.queryParams || {}) });
+
   const response = await fetch(
     `${supabaseUrl}/functions/v1/admin?${searchParams.toString()}`,
     {
+      method: options.method || 'GET',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
       },
+      body: options.body ? JSON.stringify(options.body) : undefined,
     }
   );
 
@@ -64,7 +96,37 @@ export async function getAdminStats(): Promise<AdminStats> {
 
 export async function getUsers(page = 1, perPage = 20): Promise<{ users: AdminUser[]; total: number }> {
   return callAdminFunction('list-users', {
-    page: page.toString(),
-    perPage: perPage.toString(),
+    queryParams: { page: page.toString(), perPage: perPage.toString() },
+  });
+}
+
+export async function getUsersWithSubs(
+  page = 1,
+  perPage = 20
+): Promise<{ users: AdminUserWithSub[]; total: number }> {
+  return callAdminFunction('list-users-with-subs', {
+    queryParams: { page: page.toString(), perPage: perPage.toString() },
+  });
+}
+
+export async function updateUserSubscription(
+  userId: string,
+  payload: SubscriptionUpdatePayload
+): Promise<{ subscription: unknown }> {
+  return callAdminFunction('update-subscription', {
+    method: 'POST',
+    body: { userId, ...payload },
+  });
+}
+
+export async function broadcastEmail(
+  userIds: string[],
+  subject: string,
+  html: string,
+  options: { fromName?: string; replyTo?: string } = {}
+): Promise<BroadcastResult> {
+  return callAdminFunction('broadcast-email', {
+    method: 'POST',
+    body: { userIds, subject, html, ...options },
   });
 }

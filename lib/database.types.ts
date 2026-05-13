@@ -358,12 +358,15 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          admin_notes: string | null
           cancel_at_period_end: boolean | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          manual_expires_at: string | null
           plan: string
+          source: string
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -372,12 +375,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          manual_expires_at?: string | null
           plan?: string
+          source?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -386,12 +392,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          manual_expires_at?: string | null
           plan?: string
+          source?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
