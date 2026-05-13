@@ -7,6 +7,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Whitelist d'origins autorisés pour le return_url Stripe (évite l'open redirect)
+const ALLOWED_ORIGINS = [
+  'https://factumation.vercel.app',
+  'http://localhost:5173',
+];
+const DEFAULT_ORIGIN = 'https://factumation.vercel.app';
+
+function safeOrigin(req: Request): string {
+  const reqOrigin = req.headers.get('origin') ?? '';
+  return ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : DEFAULT_ORIGIN;
+}
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -50,7 +62,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const origin = req.headers.get('origin') || 'https://factumation.vercel.app';
+    const origin = safeOrigin(req);
 
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,

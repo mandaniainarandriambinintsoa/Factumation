@@ -72,39 +72,28 @@
 - `Admin` + `components/admin/*` — backoffice, rare usage
 - `BlogList`, `BlogPost` — contenu SEO-rendu, pas de form
 
-## Commits recents (session 2026-04-08)
-- `647daf2` feat: add "mark as sent" action for draft invoices
-- `7d73c1f` fix: proper invoice/quote status flow (draft → sent → paid)
-- `b584261` feat: add mark-as-paid and send-reminder actions on dashboard invoices
-- `eb2c1a1` feat: show dashboard with KPIs instead of landing page for logged-in users
-- `21f0a75` fix: remove user info from desktop top bar (already in sidebar)
-- `e841c40` feat: sidebar navigation for logged-in users
+## Commits recents
+- `10a5bdf` feat(admin): subscription overrides + bulk email broadcast
+- `bec0184` feat(invoice/quote): add notes field shown at bottom of document
+- `7bf3662` feat(invoice/quote): add deductible tax rate (%)
+- `eacce2f` fix(ux): merge generate PDF + save into one context-aware button
+- `647daf2` feat: add "mark as sent" action for draft invoices (avril)
+- `7d73c1f` fix: proper invoice/quote status flow (avril)
 
 ## UX Flow — Facture
 | Etape | Action | Status DB | KPI |
 |-------|--------|-----------|-----|
 | 1 | Sauvegarder | `draft` | Comptee dans total |
-| 2a | Envoyer par email | `sent` | + En attente |
-| 2b | Marquer envoyee (manuel) | `sent` | + En attente |
+| 2a | Envoyer par email / 2b. Marquer envoyee | `sent` | + En attente |
 | 3 | Marquer payee | `paid` | + Chiffre d'affaires |
 | — | Relancer (email) | reste `sent` | Email relance envoye |
 
 ## Stripe Integration — EN COURS
-- Plans : Free / Pro (9.99€) / Business (19.99€)
-- DB : Table `subscriptions`, RLS, auto-create on signup
-- Edge Functions creees, PAS toutes deployees
-- **TODO** : secrets, webhook config, feature gating, billing Settings
+- Plans : Free / Pro (9.99€) / Business (19.99€). Edge functions deployees.
+- Override admin manuel disponible (source='manual', cf session 2026-05-13).
+- **TODO** : feature gating UI, billing settings, webhook must respect source='manual'.
 
-## SEO / GEO
-- Pre-rendering : 17 fichiers HTML statiques
-- GEO Score : 28/100 (mars 2026, avant fixes)
-- llms.txt + AI crawler rules
-- **TODO** : expand blog 1500+ mots, author bios, brand profiles, custom domain
-
-## E-E-A-T — TODO
-1. [CRITICAL] Privacy policy + terms
-2. [CRITICAL] Contact info reel
-3. [CRITICAL] Custom domain
-4. [HIGH] Blog articles 1200-2000 mots + sources externes
-5. [HIGH] Author identity + bio
-6. [MEDIUM] Internal links, images, case studies
+## SEO / GEO / E-E-A-T — TODO
+- GEO Score 28/100 (mars 2026). llms.txt + AI crawler OK.
+- [CRITICAL] Privacy policy + terms, contact reel, custom domain.
+- [HIGH] Blog 1200-2000 mots + sources, author identity.

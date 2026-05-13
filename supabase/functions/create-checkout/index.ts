@@ -7,6 +7,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Whitelist d'origins autorisés pour les redirects Stripe (évite l'open redirect)
+const ALLOWED_ORIGINS = [
+  'https://factumation.vercel.app',
+  'http://localhost:5173',
+];
+const DEFAULT_ORIGIN = 'https://factumation.vercel.app';
+
+function safeOrigin(req: Request): string {
+  const reqOrigin = req.headers.get('origin') ?? '';
+  return ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : DEFAULT_ORIGIN;
+}
+
 const PRICE_IDS: Record<string, string> = {
   pro: Deno.env.get('STRIPE_PRICE_PRO') || '',
   business: Deno.env.get('STRIPE_PRICE_BUSINESS') || '',
@@ -77,8 +89,7 @@ serve(async (req: Request) => {
         }, { onConflict: 'user_id' });
     }
 
-    // Determine the origin for redirect URLs
-    const origin = req.headers.get('origin') || 'https://factumation.vercel.app';
+    const origin = safeOrigin(req);
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({

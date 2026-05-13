@@ -6,6 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Echappe les caractères HTML pour les données user-controlled (clientName, companyName, etc.)
+// Empêche l'injection de balises malveillantes dans les emails envoyés via Resend.
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+};
+const escapeHtml = (s: unknown): string =>
+  String(s ?? '').replace(/[&<>"']/g, c => HTML_ESCAPES[c]);
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -71,30 +79,42 @@ serve(async (req: Request) => {
       currency: data.currency || 'EUR',
     }).format(total);
 
+    // Versions échappées des données user-controlled (XSS prevention dans les emails)
+    const safe = {
+      documentNumber: escapeHtml(data.documentNumber),
+      documentDate: escapeHtml(data.documentDate),
+      dueDate: data.dueDate ? escapeHtml(data.dueDate) : '',
+      validityDate: data.validityDate ? escapeHtml(data.validityDate) : '',
+      clientName: escapeHtml(data.clientName),
+      companyName: escapeHtml(data.companyName),
+      companyPhone: data.companyPhone ? escapeHtml(data.companyPhone) : '',
+      companyEmail: escapeHtml(data.companyEmail),
+    };
+
     let subject: string;
     let html: string;
 
     if (isReminder) {
-      subject = `Relance : Facture ${data.documentNumber} - ${data.companyName}`;
+      subject = `Relance : Facture ${safe.documentNumber} - ${safe.companyName}`;
       html = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
           <div style="background: #dc2626; padding: 24px; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 20px;">Relance — Facture ${data.documentNumber}</h1>
+            <h1 style="color: white; margin: 0; font-size: 20px;">Relance — Facture ${safe.documentNumber}</h1>
           </div>
           <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-            <p>Bonjour <strong>${data.clientName}</strong>,</p>
-            <p>Nous nous permettons de vous relancer concernant la facture <strong>${data.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>, qui reste à ce jour impayée.</p>
+            <p>Bonjour <strong>${safe.clientName}</strong>,</p>
+            <p>Nous nous permettons de vous relancer concernant la facture <strong>${safe.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>, qui reste à ce jour impayée.</p>
 
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
               <tr style="background: #f3f4f6;">
                 <td style="padding: 8px 12px; font-weight: 600;">N° Facture</td>
-                <td style="padding: 8px 12px;">${data.documentNumber}</td>
+                <td style="padding: 8px 12px;">${safe.documentNumber}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 12px; font-weight: 600;">Date</td>
-                <td style="padding: 8px 12px;">${data.documentDate}</td>
+                <td style="padding: 8px 12px;">${safe.documentDate}</td>
               </tr>
-              ${data.dueDate ? `<tr style="background: #f3f4f6;"><td style="padding: 8px 12px; font-weight: 600;">Échéance</td><td style="padding: 8px 12px; color: #dc2626; font-weight: 600;">${data.dueDate}</td></tr>` : ''}
+              ${safe.dueDate ? `<tr style="background: #f3f4f6;"><td style="padding: 8px 12px; font-weight: 600;">Échéance</td><td style="padding: 8px 12px; color: #dc2626; font-weight: 600;">${safe.dueDate}</td></tr>` : ''}
               <tr style="background: #fef2f2;">
                 <td style="padding: 8px 12px; font-weight: 600;">Montant dû</td>
                 <td style="padding: 8px 12px; font-weight: 700; color: #dc2626;">${formattedTotal}</td>
@@ -107,30 +127,30 @@ serve(async (req: Request) => {
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              ${data.companyName}${data.companyPhone ? ` | ${data.companyPhone}` : ''} | ${data.companyEmail}<br/>
+              ${safe.companyName}${safe.companyPhone ? ` | ${safe.companyPhone}` : ''} | ${safe.companyEmail}<br/>
               Envoyé via <a href="https://factumation.vercel.app" style="color: #2563eb;">Factumation</a>
             </p>
           </div>
         </div>
       `;
     } else {
-      subject = `${docLabel} ${data.documentNumber} - ${data.companyName}`;
+      subject = `${docLabel} ${safe.documentNumber} - ${safe.companyName}`;
       html = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
           <div style="background: #2563eb; padding: 24px; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 20px;">${docLabel} ${data.documentNumber}</h1>
+            <h1 style="color: white; margin: 0; font-size: 20px;">${docLabel} ${safe.documentNumber}</h1>
           </div>
           <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-            <p>Bonjour <strong>${data.clientName}</strong>,</p>
-            <p>Veuillez trouver ci-joint ${isInvoice ? 'la facture' : 'le devis'} <strong>${data.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>.</p>
+            <p>Bonjour <strong>${safe.clientName}</strong>,</p>
+            <p>Veuillez trouver ci-joint ${isInvoice ? 'la facture' : 'le devis'} <strong>${safe.documentNumber}</strong> d'un montant de <strong>${formattedTotal}</strong>.</p>
 
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
               <tr style="background: #f3f4f6;">
                 <td style="padding: 8px 12px; font-weight: 600;">Date</td>
-                <td style="padding: 8px 12px;">${data.documentDate}</td>
+                <td style="padding: 8px 12px;">${safe.documentDate}</td>
               </tr>
-              ${data.dueDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Echéance</td><td style="padding: 8px 12px;">${data.dueDate}</td></tr>` : ''}
-              ${data.validityDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Validité</td><td style="padding: 8px 12px;">${data.validityDate}</td></tr>` : ''}
+              ${safe.dueDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Echéance</td><td style="padding: 8px 12px;">${safe.dueDate}</td></tr>` : ''}
+              ${safe.validityDate ? `<tr><td style="padding: 8px 12px; font-weight: 600;">Validité</td><td style="padding: 8px 12px;">${safe.validityDate}</td></tr>` : ''}
               <tr style="background: #f3f4f6;">
                 <td style="padding: 8px 12px; font-weight: 600;">Montant total</td>
                 <td style="padding: 8px 12px; font-weight: 700; color: #2563eb;">${formattedTotal}</td>
@@ -141,7 +161,7 @@ serve(async (req: Request) => {
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              ${data.companyName}${data.companyPhone ? ` | ${data.companyPhone}` : ''} | ${data.companyEmail}<br/>
+              ${safe.companyName}${safe.companyPhone ? ` | ${safe.companyPhone}` : ''} | ${safe.companyEmail}<br/>
               Envoyé via <a href="https://factumation.vercel.app" style="color: #2563eb;">Factumation</a>
             </p>
           </div>
@@ -157,7 +177,9 @@ serve(async (req: Request) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${data.companyName} <onboarding@resend.dev>`,
+        // Nettoie le from name (header RFC) : retire les caractères qui pourraient
+        // casser le parsing ou permettre une injection (CRLF, chevrons, guillemets).
+        from: `${String(data.companyName ?? 'Factumation').replace(/[<>"\r\n]/g, '').trim().slice(0, 80) || 'Factumation'} <onboarding@resend.dev>`,
         to: [data.clientEmail],
         reply_to: data.companyEmail,
         subject,
