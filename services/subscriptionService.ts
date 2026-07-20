@@ -46,6 +46,21 @@ export async function createCheckoutSession(plan: 'pro' | 'business'): Promise<{
   return { url: data.url };
 }
 
+export async function createPapiCheckoutSession(plan: 'pro' | 'business'): Promise<{ url: string; reference: string } | { error: string }> {
+  if (!supabase) return { error: 'Supabase non configuré' };
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Non authentifié' };
+
+  const { data, error } = await supabase.functions.invoke('create-papi-checkout', {
+    body: { plan },
+  });
+
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { url: data.url, reference: data.reference };
+}
+
 export async function createPortalSession(): Promise<{ url: string } | { error: string }> {
   if (!supabase) return { error: 'Supabase non configuré' };
 

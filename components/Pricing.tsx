@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Check, X, Loader2, Crown, Zap, Building2 } from 'lucide-react';
+import { Check, X, Loader2, Crown, Zap, Building2, Smartphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useI18n } from '../contexts/I18nContext';
 import { PLANS } from '../lib/plans';
-import { createCheckoutSession } from '../services/subscriptionService';
+import { createCheckoutSession, createPapiCheckoutSession } from '../services/subscriptionService';
 import AuthModal from './AuthModal';
 import { Button } from './ui/button';
 
@@ -23,6 +23,23 @@ const Pricing: React.FC = () => {
 
     setLoadingPlan(planId);
     const result = await createCheckoutSession(planId);
+
+    if ('url' in result) {
+      window.location.href = result.url;
+    } else {
+      alert(result.error);
+    }
+    setLoadingPlan(null);
+  };
+
+  const handlePapiUpgrade = async (planId: 'pro' | 'business') => {
+    if (!user) {
+      setAuthModal(true);
+      return;
+    }
+
+    setLoadingPlan(`papi-${planId}`);
+    const result = await createPapiCheckoutSession(planId);
 
     if ('url' in result) {
       window.location.href = result.url;
@@ -162,23 +179,41 @@ const Pricing: React.FC = () => {
                     {isCurrent ? t('pricing.currentPlan') : t('pricing.freePlan')}
                   </div>
                 ) : (
-                  <Button
-                    onClick={() => handleUpgrade(plan.id as 'pro' | 'business')}
-                    disabled={isCurrent || loadingPlan !== null}
-                    className={`w-full h-12 ${
-                      plan.popular
-                        ? 'bg-primary-600 hover:bg-primary-700'
-                        : 'bg-slate-900 hover:bg-slate-800'
-                    }`}
-                  >
-                    {loadingPlan === plan.id ? (
-                      <Loader2 size={20} className="animate-spin" />
-                    ) : isCurrent ? (
-                      t('pricing.currentPlan')
-                    ) : (
-                      t('pricing.upgrade')
-                    )}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button
+                      onClick={() => handleUpgrade(plan.id as 'pro' | 'business')}
+                      disabled={isCurrent || loadingPlan !== null}
+                      className={`w-full h-12 ${
+                        plan.popular
+                          ? 'bg-primary-600 hover:bg-primary-700'
+                          : 'bg-slate-900 hover:bg-slate-800'
+                      }`}
+                    >
+                      {loadingPlan === plan.id ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : isCurrent ? (
+                        t('pricing.currentPlan')
+                      ) : (
+                        t('pricing.upgrade')
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handlePapiUpgrade(plan.id as 'pro' | 'business')}
+                      disabled={isCurrent || loadingPlan !== null}
+                      className="w-full h-11 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                    >
+                      {loadingPlan === `papi-${plan.id}` ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Smartphone size={18} />
+                          Mobile Money / Papi
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             );
