@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useI18n } from '../contexts/I18nContext';
 import { PLANS } from '../lib/plans';
-import { createCheckoutSession, createPapiCheckoutSession } from '../services/subscriptionService';
+import { createPapiCheckoutSession } from '../services/subscriptionService';
 import AuthModal from './AuthModal';
 import { Button } from './ui/button';
 
@@ -14,23 +14,6 @@ const Pricing: React.FC = () => {
   const { t } = useI18n();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [authModal, setAuthModal] = useState(false);
-
-  const handleUpgrade = async (planId: 'pro' | 'business') => {
-    if (!user) {
-      setAuthModal(true);
-      return;
-    }
-
-    setLoadingPlan(planId);
-    const result = await createCheckoutSession(planId);
-
-    if ('url' in result) {
-      window.location.href = result.url;
-    } else {
-      alert(result.error);
-    }
-    setLoadingPlan(null);
-  };
 
   const handlePapiUpgrade = async (planId: 'pro' | 'business') => {
     if (!user) {
@@ -180,23 +163,14 @@ const Pricing: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <Button
-                      onClick={() => handleUpgrade(plan.id as 'pro' | 'business')}
-                      disabled={isCurrent || loadingPlan !== null}
-                      className={`w-full h-12 ${
-                        plan.popular
-                          ? 'bg-primary-600 hover:bg-primary-700'
-                          : 'bg-slate-900 hover:bg-slate-800'
-                      }`}
-                    >
-                      {loadingPlan === plan.id ? (
-                        <Loader2 size={20} className="animate-spin" />
-                      ) : isCurrent ? (
-                        t('pricing.currentPlan')
-                      ) : (
-                        t('pricing.upgrade')
-                      )}
-                    </Button>
+                    {isCurrent && (
+                      <Button
+                        disabled
+                        className="w-full h-12 bg-slate-500 hover:bg-slate-500"
+                      >
+                        {t('pricing.currentPlan')}
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="outline"
