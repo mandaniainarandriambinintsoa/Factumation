@@ -14,6 +14,12 @@ function addOneMonth(date: Date) {
   return next;
 }
 
+function planRank(plan: string | null | undefined) {
+  if (plan === 'business') return 2;
+  if (plan === 'pro') return 1;
+  return 0;
+}
+
 serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
@@ -65,6 +71,23 @@ serve(async (req: Request) => {
 
     if (normalizedStatus === 'SUCCESS') {
       const now = new Date();
+
+      const { data: existingSubscription } = await adminClient
+        .from('subscriptions')
+        .select('plan, status, source')
+        .eq('user_id', payment.user_id)
+        .single();
+
+      const hasProtectedAccess = existingSubscription?.status === 'active'
+        && (
+          existingSubscription.source === 'manual'
+          || planRank(existingSubscription.plan) > planRank(payment.plan)
+        );
+
+      if (hasProtectedAccess) {
+        return json({ received: true, subscriptionUpdated: false });
+      }
+
       await adminClient
         .from('subscriptions')
         .upsert({

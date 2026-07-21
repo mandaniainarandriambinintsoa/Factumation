@@ -1,0 +1,7 @@
+project_id = "dzombacjycmrahnrdsnc"
+
+[functions.create-papi-checkout]
+verify_jwt = true
+
+[functions.papi-webhook]
+verify_jwt = false
