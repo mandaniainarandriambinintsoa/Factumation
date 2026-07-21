@@ -21,6 +21,10 @@ function planRank(plan: string | null | undefined) {
 }
 
 serve(async (req: Request) => {
+  if (req.method === 'GET' || req.method === 'OPTIONS') {
+    return json({ ok: true });
+  }
+
   if (req.method !== 'POST') {
     return json({ error: 'Method not allowed' }, 405);
   }
@@ -31,7 +35,12 @@ serve(async (req: Request) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload = await req.json();
-    const paymentReference = String(payload.paymentReference || '');
+    const paymentReference = String(
+      payload.paymentReference
+      || payload.merchantPaymentReference
+      || payload.reference
+      || '',
+    );
     const notificationToken = String(payload.notificationToken || '');
     const paymentStatus = String(payload.paymentStatus || 'PENDING');
 
