@@ -83,7 +83,7 @@ serve(async (req: Request) => {
 
       const { data: existingSubscription } = await adminClient
         .from('subscriptions')
-        .select('plan, status, source')
+        .select('plan, status, source, current_period_end')
         .eq('user_id', payment.user_id)
         .single();
 
@@ -97,6 +97,13 @@ serve(async (req: Request) => {
         return json({ received: true, subscriptionUpdated: false });
       }
 
+      const existingPeriodEnd = existingSubscription?.current_period_end
+        ? new Date(existingSubscription.current_period_end)
+        : null;
+      const periodStart = existingPeriodEnd && existingPeriodEnd > now
+        ? existingPeriodEnd
+        : now;
+
       await adminClient
         .from('subscriptions')
         .upsert({
@@ -104,8 +111,8 @@ serve(async (req: Request) => {
           plan: payment.plan,
           status: 'active',
           source: 'papi',
-          current_period_start: now.toISOString(),
-          current_period_end: addOneMonth(now).toISOString(),
+          current_period_start: periodStart.toISOString(),
+          current_period_end: addOneMonth(periodStart).toISOString(),
           cancel_at_period_end: false,
           admin_notes: `Papi payment ${payment.reference}`,
           updated_at: now.toISOString(),
