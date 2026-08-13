@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import { getInvoices, getQuotes, updateInvoiceStatus } from '../services/historyService';
+import { getDefaultCompany } from '../services/companyService';
+import { convertCurrency, ExchangeRateTable, getExchangeRates } from '../services/exchangeRateService';
 import { SavedInvoice, SavedQuote } from '../types';
 import { CURRENCIES } from '../constants';
 import { supabase } from '../lib/supabase';
@@ -49,6 +51,10 @@ const HomeDashboard: React.FC = () => {
 
   const [invoices, setInvoices] = useState<SavedInvoice[]>([]);
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
+  const [reportingCurrency, setReportingCurrency] = useState('EUR');
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRateTable | null>(null);
+  const [exchangeRateError, setExchangeRateError] = useState(false);
+  const [currencyChanging, setCurrencyChanging] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [modal, setModal] = useState<{ type: 'markPaid' | 'markSent' | 'reminder'; doc: RecentDoc } | null>(null);
@@ -71,10 +77,86 @@ const HomeDashboard: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const [inv, qt] = await Promise.all([getInvoices(), getQuotes()]);
+    setExchangeRateError(false);
+    const [inv, qt, company] = await Promise.all([getInvoices(), getQuotes(), getDefaultCompany()]);
     if (inv.data) setInvoices(inv.data);
     if (qt.data) setQuotes(qt.data);
+
+    const loadedInvoices = inv.data || [];
+    const currencyCounts: Record<string, number> = {};
+    loadedInvoices.forEach((invoice) => {
+      currencyCounts[invoice.currency] = (currencyCounts[invoice.currency] || 0) + 1;
+    });
+    const fallbackCurrency = Object.entries(currencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'EUR';
+    const savedCurrency = user
+      ? window.localStorage.getItem(`factumation-dashboard-currency:${user.id}`)?.toUpperCase()
+      : null;
+    const preferredCurrency = savedCurrency
+      && CURRENCIES.some((currency) => currency.code === savedCurrency)
+      ? savedCurrency
+      : company.data?.defaultCurrency || fallbackCurrency;
+    const targetCurrency = preferredCurrency.toUpperCase();
+    setReportingCurrency(targetCurrency);
+
+    const currencies = [...new Set([...loadedInvoices.map((invoice) => invoice.currency.toUpperCase()), targetCurrency])];
+    const requiresConversion = currencies.some((currency) => currency !== targetCurrency);
+    if (!requiresConversion) {
+      setExchangeRates({
+        baseCurrency: 'EUR',
+        rates: { EUR: 1 },
+        date: new Date().toISOString().slice(0, 10),
+        fetchedAt: Date.now(),
+      });
+    } else {
+      try {
+        setExchangeRates(await getExchangeRates(currencies));
+      } catch (error) {
+        console.error('Unable to load exchange rates:', error);
+        setExchangeRates(null);
+        setExchangeRateError(true);
+      }
+    }
     setLoading(false);
+  };
+
+  const selectReportingCurrency = async (targetCurrency: string) => {
+    const normalizedTarget = targetCurrency.toUpperCase();
+    if (normalizedTarget === reportingCurrency) return;
+
+    setCurrencyChanging(true);
+    setExchangeRateError(false);
+
+    const requiredCurrencies = [
+      ...new Set([...invoices.map((invoice) => invoice.currency.toUpperCase()), normalizedTarget]),
+    ];
+    const requiresConversion = requiredCurrencies.some((currency) => currency !== normalizedTarget);
+    const currentRatesAreEnough = exchangeRates
+      && requiredCurrencies.every(
+        (currency) => currency === 'EUR' || Number.isFinite(exchangeRates.rates[currency]),
+      );
+
+    try {
+      if (requiresConversion && !currentRatesAreEnough) {
+        setExchangeRates(await getExchangeRates(requiredCurrencies));
+      } else if (!exchangeRates) {
+        setExchangeRates({
+          baseCurrency: 'EUR',
+          rates: { EUR: 1 },
+          date: new Date().toISOString().slice(0, 10),
+          fetchedAt: Date.now(),
+        });
+      }
+
+      setReportingCurrency(normalizedTarget);
+      if (user) {
+        window.localStorage.setItem(`factumation-dashboard-currency:${user.id}`, normalizedTarget);
+      }
+    } catch (error) {
+      console.error('Unable to change reporting currency:', error);
+      setExchangeRateError(true);
+    } finally {
+      setCurrencyChanging(false);
+    }
   };
 
   const getCurrencySymbol = (code: string) =>
@@ -87,8 +169,11 @@ const HomeDashboard: React.FC = () => {
       year: 'numeric',
     });
 
-  const formatCurrency = (amount: number) =>
-    amount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const formatCurrency = (amount: number, currency: string) =>
+    amount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: currency === 'MGA' ? 0 : 2,
+    });
 
   const handleMarkPaid = async () => {
     if (!modal || modal.type !== 'markPaid') return;
@@ -175,16 +260,21 @@ const HomeDashboard: React.FC = () => {
     const pendingInvoices = invoices.filter((i) => i.status === 'sent');
     const draftInvoices = invoices.filter((i) => i.status === 'draft');
 
-    const totalRevenue = paidInvoices.reduce((sum, i) => sum + i.total, 0);
-    const pendingAmount = pendingInvoices.reduce((sum, i) => sum + i.total, 0);
+    const canCalculateAmounts = exchangeRates !== null;
+    const totalRevenue = canCalculateAmounts
+      ? paidInvoices.reduce(
+          (sum, invoice) => sum + convertCurrency(invoice.total, invoice.currency, reportingCurrency, exchangeRates),
+          0,
+        )
+      : null;
+    const pendingAmount = canCalculateAmounts
+      ? pendingInvoices.reduce(
+          (sum, invoice) => sum + convertCurrency(invoice.total, invoice.currency, reportingCurrency, exchangeRates),
+          0,
+        )
+      : null;
 
     const acceptedQuotes = quotes.filter((q) => q.status === 'accepted');
-
-    const currencyCounts: Record<string, number> = {};
-    invoices.forEach((i) => {
-      currencyCounts[i.currency] = (currencyCounts[i.currency] || 0) + 1;
-    });
-    const primaryCurrency = Object.entries(currencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'EUR';
 
     return {
       totalRevenue,
@@ -195,9 +285,9 @@ const HomeDashboard: React.FC = () => {
       draftCount: draftInvoices.length,
       totalQuotes: quotes.length,
       acceptedCount: acceptedQuotes.length,
-      primaryCurrency: getCurrencySymbol(primaryCurrency),
+      reportingCurrency,
     };
-  }, [invoices, quotes]);
+  }, [invoices, quotes, exchangeRates, reportingCurrency]);
 
   const recentDocs = useMemo<RecentDoc[]>(() => {
     const all: RecentDoc[] = [
@@ -315,20 +405,64 @@ const HomeDashboard: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-slate-500">
+          {t('homeDashboard.reportingCurrencyDescription')}
+        </p>
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <span>{t('homeDashboard.reportingCurrency')}</span>
+          <span className="relative">
+            <select
+              value={reportingCurrency}
+              onChange={(event) => void selectReportingCurrency(event.target.value)}
+              disabled={currencyChanging}
+              aria-label={t('homeDashboard.reportingCurrency')}
+              className="min-w-32 appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-9 font-semibold text-slate-900 shadow-sm outline-none transition hover:border-primary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 disabled:cursor-wait disabled:opacity-60"
+            >
+              {CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.code} · {currency.symbol}
+                </option>
+              ))}
+            </select>
+            {currencyChanging ? (
+              <Loader2 className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary-600" />
+            ) : (
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              >
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+              </svg>
+            )}
+          </span>
+        </label>
+      </div>
+      {exchangeRateError && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {t('homeDashboard.exchangeRateError')}
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <KpiCard
           label={t('homeDashboard.kpiRevenue')}
-          value={`${formatCurrency(kpis.totalRevenue)} ${kpis.primaryCurrency}`}
+          value={kpis.totalRevenue === null
+            ? '—'
+            : `${formatCurrency(kpis.totalRevenue, kpis.reportingCurrency)} ${getCurrencySymbol(kpis.reportingCurrency)}`}
           icon={TrendingUp}
           color="text-green-600 bg-green-50"
-          sub={t('homeDashboard.kpiPaid').replace('{count}', String(kpis.paidCount))}
+          sub={`${t('homeDashboard.kpiPaid').replace('{count}', String(kpis.paidCount))} · ${t('homeDashboard.convertedTo').replace('{currency}', kpis.reportingCurrency)}`}
         />
         <KpiCard
           label={t('homeDashboard.kpiPending')}
-          value={`${formatCurrency(kpis.pendingAmount)} ${kpis.primaryCurrency}`}
+          value={kpis.pendingAmount === null
+            ? '—'
+            : `${formatCurrency(kpis.pendingAmount, kpis.reportingCurrency)} ${getCurrencySymbol(kpis.reportingCurrency)}`}
           icon={Clock}
           color="text-blue-600 bg-blue-50"
-          sub={t('homeDashboard.kpiAwaitingPayment').replace('{count}', String(kpis.pendingCount))}
+          sub={`${t('homeDashboard.kpiAwaitingPayment').replace('{count}', String(kpis.pendingCount))} · ${t('homeDashboard.convertedTo').replace('{currency}', kpis.reportingCurrency)}`}
         />
         <KpiCard
           label={t('homeDashboard.kpiInvoices')}
