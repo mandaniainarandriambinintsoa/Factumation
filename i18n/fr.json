@@ -139,6 +139,7 @@
     "reportingCurrency": "Devise d’affichage",
     "reportingCurrencyDescription": "Tous les montants sont convertis dans la devise sélectionnée.",
     "exchangeRateError": "Les taux de change sont indisponibles. Les montants multi-devises ne sont pas additionnés afin d’éviter un total incorrect.",
+    "retryExchangeRates": "Réessayer",
     "recentDocuments": "Documents récents",
     "viewAll": "Voir tout",
     "noDocuments": "Aucun document",

@@ -1,4 +1,4 @@
-const API_URL = 'https://api.frankfurter.dev/v2/rates';
+const DIRECT_API_URL = 'https://api.frankfurter.dev/v2/rates';
 const PIVOT_CURRENCY = 'EUR';
 const CACHE_KEY = 'factumation-exchange-rates-v1';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -9,6 +9,12 @@ type ApiRate = {
   base: string;
   quote: string;
   rate: number;
+};
+
+type ProxyResponse = {
+  baseCurrency: typeof PIVOT_CURRENCY;
+  rates: Record<string, number>;
+  date: string;
 };
 
 export type ExchangeRateTable = {
@@ -82,30 +88,41 @@ export const getExchangeRates = async (currencies: string[]): Promise<ExchangeRa
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const query = new URLSearchParams({
-      base: PIVOT_CURRENCY,
-      quotes: quotes.join(','),
-    });
-    const response = await fetch(`${API_URL}?${query}`, { signal: controller.signal });
+    const query = new URLSearchParams({ currencies: normalizedCurrencies.join(',') });
+    let response = await fetch(`/api/exchange-rates?${query}`, { signal: controller.signal });
+
+    // Keeps local Vite development usable without running the Vercel functions runtime.
+    if (!response.ok) {
+      const directQuery = new URLSearchParams({
+        base: PIVOT_CURRENCY,
+        quotes: quotes.join(','),
+      });
+      response = await fetch(`${DIRECT_API_URL}?${directQuery}`, { signal: controller.signal });
+    }
 
     if (!response.ok) {
       throw new Error(`Exchange rate API returned ${response.status}`);
     }
 
-    const apiRates = await response.json() as ApiRate[];
-    const rates = apiRates.reduce<Record<string, number>>(
-      (result, item) => {
-        const quote = normalizeCurrency(item.quote);
-        if (Number.isFinite(item.rate) && item.rate > 0) result[quote] = item.rate;
-        return result;
-      },
-      { [PIVOT_CURRENCY]: 1 },
-    );
+    const responseBody = await response.json() as ApiRate[] | ProxyResponse;
+    const isProxyResponse = !Array.isArray(responseBody);
+    const rates = isProxyResponse
+      ? responseBody.rates
+      : responseBody.reduce<Record<string, number>>(
+          (result, item) => {
+            const quote = normalizeCurrency(item.quote);
+            if (Number.isFinite(item.rate) && item.rate > 0) result[quote] = item.rate;
+            return result;
+          },
+          { [PIVOT_CURRENCY]: 1 },
+        );
 
     const table: ExchangeRateTable = {
       baseCurrency: PIVOT_CURRENCY,
       rates,
-      date: apiRates.map((item) => item.date).sort().at(-1) || new Date().toISOString().slice(0, 10),
+      date: isProxyResponse
+        ? responseBody.date
+        : responseBody.map((item) => item.date).sort().at(-1) || new Date().toISOString().slice(0, 10),
       fetchedAt: Date.now(),
     };
 

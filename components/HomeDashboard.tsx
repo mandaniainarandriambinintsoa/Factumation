@@ -159,6 +159,22 @@ const HomeDashboard: React.FC = () => {
     }
   };
 
+  const retryExchangeRates = async () => {
+    setCurrencyChanging(true);
+    setExchangeRateError(false);
+    try {
+      const currencies = [
+        ...new Set([...invoices.map((invoice) => invoice.currency.toUpperCase()), reportingCurrency]),
+      ];
+      setExchangeRates(await getExchangeRates(currencies));
+    } catch (error) {
+      console.error('Unable to retry exchange rates:', error);
+      setExchangeRateError(true);
+    } finally {
+      setCurrencyChanging(false);
+    }
+  };
+
   const getCurrencySymbol = (code: string) =>
     CURRENCIES.find((c) => c.code === code)?.symbol || code;
 
@@ -441,8 +457,17 @@ const HomeDashboard: React.FC = () => {
         </label>
       </div>
       {exchangeRateError && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          {t('homeDashboard.exchangeRateError')}
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
+          <span>{t('homeDashboard.exchangeRateError')}</span>
+          <button
+            type="button"
+            onClick={() => void retryExchangeRates()}
+            disabled={currencyChanging}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold text-amber-900 transition hover:bg-amber-100 disabled:cursor-wait disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${currencyChanging ? 'animate-spin' : ''}`} />
+            {t('homeDashboard.retryExchangeRates')}
+          </button>
         </div>
       )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
