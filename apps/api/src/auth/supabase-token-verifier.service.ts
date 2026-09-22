@@ -7,7 +7,7 @@ import type { Environment } from '../config/environment.js';
 import type { AuthPrincipal } from './auth-principal.js';
 
 const claimsSchema = z.object({
-  sub: z.uuid(),
+  sub: z.string().uuid(),
   role: z.string().min(1),
   email: z.email().optional(),
   phone: z.string().min(1).optional(),
