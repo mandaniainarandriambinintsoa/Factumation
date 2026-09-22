@@ -1,0 +1,31 @@
+FROM node:22-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS builder
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @factumation/contracts build \
+  && pnpm --filter @factumation/domain build \
+  && pnpm --filter @factumation/api build \
+  && pnpm --filter @factumation/api --prod deploy /opt/factumation-api
+
+FROM node:22-alpine AS runner
+
+ENV NODE_ENV=production
+WORKDIR /app
+
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 --ingroup nodejs factumation
+
+COPY --from=builder --chown=factumation:nodejs /opt/factumation-api ./
+
+USER factumation
+EXPOSE 3001
+
+CMD ["node", "dist/main.js"]
