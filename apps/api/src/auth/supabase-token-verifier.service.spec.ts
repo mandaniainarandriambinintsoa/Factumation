@@ -41,9 +41,14 @@ describe('SupabaseTokenVerifier', () => {
   async function createJwt(overrides?: {
     audience?: string;
     expiresAt?: string;
+    phone?: string;
     tokenIssuer?: string;
   }): Promise<string> {
-    return new SignJWT({ role: 'authenticated', email: 'user@example.com' })
+    return new SignJWT({
+      role: 'authenticated',
+      email: 'user@example.com',
+      ...(overrides?.phone !== undefined ? { phone: overrides.phone } : {}),
+    })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key' })
       .setSubject(subject)
       .setIssuer(overrides?.tokenIssuer ?? issuer)
@@ -69,6 +74,17 @@ describe('SupabaseTokenVerifier', () => {
     const verifier = new SupabaseTokenVerifier(createConfig());
 
     await expect(verifier.verify(await createJwt())).resolves.toEqual({
+      id: subject,
+      role: 'authenticated',
+      email: 'user@example.com',
+    });
+  });
+
+  it('accepts Supabase email users with an empty phone claim', async () => {
+    mockJwks();
+    const verifier = new SupabaseTokenVerifier(createConfig());
+
+    await expect(verifier.verify(await createJwt({ phone: '' }))).resolves.toEqual({
       id: subject,
       role: 'authenticated',
       email: 'user@example.com',

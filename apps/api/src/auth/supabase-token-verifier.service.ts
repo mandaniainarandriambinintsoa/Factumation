@@ -10,7 +10,7 @@ const claimsSchema = z.object({
   sub: z.string().uuid(),
   role: z.string().min(1),
   email: z.string().email().optional(),
-  phone: z.string().min(1).optional(),
+  phone: z.string().optional(),
   session_id: z.string().min(1).optional(),
 });
 
