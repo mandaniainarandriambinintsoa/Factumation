@@ -8,7 +8,11 @@ import { z } from 'zod';
 import type { Environment } from '../config/environment.js';
 import type { AuthPrincipal } from './auth-principal.js';
 
-const KEY_PATTERN = /^fak_live_([a-zA-Z0-9]{12})\.([a-zA-Z0-9_-]{32,128})$/;
+const KEY_PATTERN = /^fak_live_([a-zA-Z0-9_-]{12})\.([a-zA-Z0-9_-]{32,128})$/;
+
+export function extractApiKeyPrefix(rawKey: string): string | undefined {
+  return KEY_PATTERN.exec(rawKey)?.[1];
+}
 const resultSchema = z
   .array(
     z.object({
@@ -31,13 +35,12 @@ export class ApiKeyAuthenticator {
   constructor(@Inject(ConfigService) private readonly config: ConfigService<Environment, true>) {}
 
   async verify(rawKey: string): Promise<ApiKeyAuthentication> {
-    const match = KEY_PATTERN.exec(rawKey);
+    const prefix = extractApiKeyPrefix(rawKey);
     const serviceRoleToken = this.config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true });
     const pepper = this.config.get('API_KEY_PEPPER', { infer: true });
-    if (!match || !serviceRoleToken || !pepper)
+    if (!prefix || !serviceRoleToken || !pepper)
       throw new UnauthorizedException('The API key is invalid.');
 
-    const prefix = match[1]!;
     const hash = createHmac('sha256', pepper).update(rawKey).digest('hex');
     const client = createClient(
       this.config.get('SUPABASE_URL', { infer: true }),

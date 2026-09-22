@@ -25,7 +25,7 @@ describe('ApiKeysService', () => {
       allowedCompanyIds: [],
     });
 
-    expect(result.apiKey).toMatch(/^fak_live_[A-Za-z0-9]{12}\.[A-Za-z0-9_-]{43}$/);
+    expect(result.apiKey).toMatch(/^fak_live_[A-Za-z0-9_-]{12}\.[A-Za-z0-9_-]{43}$/);
     const values = create.mock.calls[0]?.[1] as { p_secret_hash: string; p_prefix: string };
     expect(values.p_secret_hash).toBe(
       createHmac('sha256', pepper).update(result.apiKey).digest('hex'),
