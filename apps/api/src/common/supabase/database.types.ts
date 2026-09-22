@@ -61,6 +61,10 @@ export type Database = {
       mark_invoice_sent: { Args: { p_invoice_id: string }; Returns: string };
       mark_invoice_paid: { Args: { p_invoice_id: string }; Returns: string };
       mark_quote_sent: { Args: { p_quote_id: string }; Returns: string };
+      get_dashboard_summary: {
+        Args: Record<never, never>;
+        Returns: unknown;
+      };
       create_api_credential: {
         Args: {
           p_name: string;
