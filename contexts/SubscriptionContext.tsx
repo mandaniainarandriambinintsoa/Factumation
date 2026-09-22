@@ -53,9 +53,10 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Listen for realtime subscription changes
   useEffect(() => {
-    if (!supabase || !user) return;
+    const client = supabase;
+    if (!client || !user) return;
 
-    const channel = supabase
+    const channel = client
       .channel('subscription-changes')
       .on(
         'postgres_changes',
@@ -72,7 +73,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void client.removeChannel(channel);
     };
   }, [user, refresh]);
 

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { InvoiceData, QuoteData, SavedInvoice, SavedQuote, LineItem } from '../types';
 import { Tables } from '../lib/database.types';
+import { getLegacyPersistedTotal } from '../utils/documentCalculations';
 
 // Database row types
 type DbInvoice = Tables<'invoices'>;
@@ -9,11 +10,6 @@ type DbQuote = Tables<'quotes'>;
 // Status types
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'cancelled';
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
-
-// Helper to calculate total
-const calculateTotal = (items: LineItem[]): number => {
-  return items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
-};
 
 // Save invoice to history
 export const saveInvoice = async (
@@ -48,7 +44,7 @@ export const saveInvoice = async (
       client_email: invoiceData.clientEmail,
       client_phone: invoiceData.clientPhone || null,
       items: invoiceData.items,
-      total: calculateTotal(invoiceData.items),
+      total: getLegacyPersistedTotal(invoiceData.items),
       tax_rate: invoiceData.taxRate ?? 0,
       currency: invoiceData.currency,
       payment_method: invoiceData.paymentMethod || null,
@@ -103,7 +99,7 @@ export const saveQuote = async (
       client_email: quoteData.clientEmail,
       client_phone: quoteData.clientPhone || null,
       items: quoteData.items,
-      total: calculateTotal(quoteData.items),
+      total: getLegacyPersistedTotal(quoteData.items),
       tax_rate: quoteData.taxRate ?? 0,
       currency: quoteData.currency,
       payment_method: quoteData.paymentMethod || null,

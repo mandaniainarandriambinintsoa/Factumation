@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   FACTUMATION CREATIVE DESIGN SYSTEM
+   Based on frontend-design and brand-guidelines skills
+   ============================================ */
+
+/* Typography - Distinctive fonts (avoiding Inter, Arial, Roboto) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   BRAND COLORS - Warm, Professional Palette
+   ============================================ */
+:root {
+  /* Core Brand Colors */
+  --brand-dark: #141413;
+  --brand-light: #faf9f5;
+  --brand-cream: #f5f3ed;
+  --brand-sand: #e8e6dc;
+
+  /* Primary - Deep Navy (Professional) */
+  --primary-50: #f0f4f8;
+  --primary-100: #d9e4f0;
+  --primary-200: #b3c9e1;
+  --primary-300: #8caed2;
+  --primary-400: #6693c3;
+  --primary-500: #4078b4;
+  --primary-600: #335f90;
+  --primary-700: #26476c;
+  --primary-800: #1a2f48;
+  --primary-900: #0d1724;
+  --primary-950: #060b12;
+
+  /* Accent - Warm Copper/Terracotta */
+  --accent-orange: #d97757;
+  --accent-orange-light: #e89a7f;
+  --accent-orange-dark: #b85c3f;
+
+  /* Secondary Accents */
+  --accent-blue: #6a9bcc;
+  --accent-green: #788c5d;
+  --accent-gold: #c4a35a;
+
+  /* Neutrals */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
+
+  /* Semantic */
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+}
+
+/* ============================================
+   TYPOGRAPHY CLASSES
+   ============================================ */
+.font-heading {
+  font-family: 'Poppins', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+/* ============================================
+   ANIMATION UTILITIES
+   ============================================ */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+/* ============================================
+   TEXTURE OVERLAYS
+   ============================================ */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.grain-overlay {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3Oeli0teleLeXJAQE");
+  animation: grain 8s steps(10) infinite;
+}

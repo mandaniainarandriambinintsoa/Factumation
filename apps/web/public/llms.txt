@@ -1,0 +1,15 @@
+# Factumation
+
+> Application de facturation et de devis pour indépendants et petites entreprises en France, à Madagascar et en Afrique francophone.
+
+## Pages principales
+
+- /fr : présentation de Factumation
+- /fr/pricing : offres et limites des plans
+- /fr/about : mission et fonctionnalités
+- /fr/blog : guides pratiques sur la facturation
+- /fr/contact : contact de l’équipe
+
+## Produit
+
+Factumation permet de gérer des entreprises et clients, puis de créer, émettre, télécharger et envoyer des factures et devis. Les calculs métier sont vérifiés côté serveur. Les espaces de gestion nécessitent une authentification et ne doivent pas être indexés.

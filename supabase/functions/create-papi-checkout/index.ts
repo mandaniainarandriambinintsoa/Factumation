@@ -9,6 +9,7 @@ const corsHeaders = {
 const ALLOWED_ORIGINS = [
   'https://factumation.vercel.app',
   'http://localhost:5173',
+  'http://localhost:3000',
 ];
 const DEFAULT_ORIGIN = 'https://factumation.vercel.app';
 const PAPI_PAYMENT_LINKS_URL = 'https://app.papi.mg/dashboard/api/payment-links';
@@ -59,17 +60,27 @@ serve(async (req: Request) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await anonClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await anonClient.auth.getUser();
 
     if (authError || !user) {
       return json({ error: 'Unauthorized' }, 401);
     }
 
-    const { plan, provider, payerPhone } = await req.json() as {
+    const {
+      plan,
+      provider,
+      payerPhone,
+      locale: requestedLocale,
+    } = (await req.json()) as {
       plan?: Plan;
       provider?: Provider;
       payerPhone?: string;
+      locale?: string;
     };
+    const locale = requestedLocale === 'en' ? 'en' : 'fr';
 
     if (!plan || !PLAN_AMOUNTS[plan]) {
       return json({ error: 'Invalid plan' }, 400);
@@ -90,15 +101,17 @@ serve(async (req: Request) => {
       clientName: user.email || 'Client Factumation',
       reference,
       description: `Factumation ${plan} - 1 mois`,
-      successUrl: `${origin}/fr/settings?papi=success&reference=${reference}`,
-      failureUrl: `${origin}/fr/settings?papi=failed&reference=${reference}`,
+      successUrl: `${origin}/${locale}/settings?papi=success&reference=${reference}`,
+      failureUrl: `${origin}/${locale}/settings?papi=failed&reference=${reference}`,
       notificationUrl: `${supabaseUrl}/functions/v1/papi-webhook`,
       validDuration: Number(Deno.env.get('PAPI_VALID_DURATION_MINUTES') || '60'),
       ...(selectedProvider ? { provider: selectedProvider } : {}),
       ...(user.email ? { payerEmail: user.email } : {}),
       ...(payerPhone ? { payerPhone } : {}),
       isTestMode: Deno.env.get('PAPI_TEST_MODE') === 'true',
-      ...(Deno.env.get('PAPI_TEST_MODE') === 'true' ? { testReason: 'Test integration Factumation' } : {}),
+      ...(Deno.env.get('PAPI_TEST_MODE') === 'true'
+        ? { testReason: 'Test integration Factumation' }
+        : {}),
     };
 
     const papiResponse = await fetch(Deno.env.get('PAPI_BASE_URL') || PAPI_PAYMENT_LINKS_URL, {
@@ -112,25 +125,26 @@ serve(async (req: Request) => {
     const papiResult = await papiResponse.json().catch(() => null);
 
     if (!papiResponse.ok || !papiResult?.data?.paymentLink) {
-      return json({
-        error: papiResult?.error?.message || 'Impossible de creer le lien de paiement Papi',
-        details: papiResult?.error || papiResult,
-      }, 502);
+      return json(
+        {
+          error: papiResult?.error?.message || 'Impossible de creer le lien de paiement Papi',
+          details: papiResult?.error || papiResult,
+        },
+        502,
+      );
     }
 
-    const { error: insertError } = await adminClient
-      .from('papi_payments')
-      .insert({
-        user_id: user.id,
-        plan,
-        amount,
-        provider: selectedProvider || null,
-        reference,
-        payment_link: papiResult.data.paymentLink,
-        notification_token: papiResult.data.notificationToken || null,
-        status: 'PENDING',
-        papi_payload: papiResult.data,
-      });
+    const { error: insertError } = await adminClient.from('papi_payments').insert({
+      user_id: user.id,
+      plan,
+      amount,
+      provider: selectedProvider || null,
+      reference,
+      payment_link: papiResult.data.paymentLink,
+      notification_token: papiResult.data.notificationToken || null,
+      status: 'PENDING',
+      papi_payload: papiResult.data,
+    });
 
     if (insertError) {
       return json({ error: insertError.message }, 500);

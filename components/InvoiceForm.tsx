@@ -19,6 +19,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { calculateLegacyDocumentAmounts } from '../utils/documentCalculations';
+import { createLegacyDocumentNumber } from '../utils/documentNumber';
 
 const getInitialFormData = (): InvoiceData => ({
   companyName: '',
@@ -44,7 +46,7 @@ const getInitialFormData = (): InvoiceData => ({
     siret: '',
     tvaNumber: ''
   },
-  invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+  invoiceNumber: createLegacyDocumentNumber('INV'),
   invoiceDate: new Date().toISOString().split('T')[0],
   dueDate: '',
   currency: 'EUR',
@@ -90,7 +92,7 @@ const InvoiceForm: React.FC = () => {
             logoUrl: prev.logoUrl || data.logoUrl || '',
             currency: data.defaultCurrency || prev.currency,
             paymentMethod: data.defaultPaymentMethod || prev.paymentMethod,
-            invoiceNumber: `${data.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+            invoiceNumber: createLegacyDocumentNumber(data.invoicePrefix || 'INV'),
             fiscalInfo: {
               region: data.fiscalRegion || 'NONE',
               siret: data.siret || '',
@@ -171,7 +173,7 @@ const InvoiceForm: React.FC = () => {
       logoUrl: company.logoUrl || prev.logoUrl,
       currency: company.currency || prev.currency,
       paymentMethod: company.paymentMethod || prev.paymentMethod,
-      invoiceNumber: `${company.invoicePrefix || 'INV'}-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      invoiceNumber: createLegacyDocumentNumber(company.invoicePrefix || 'INV'),
       fiscalInfo: {
         region: company.fiscalRegion || 'NONE',
         siret: company.siret || '',
@@ -236,15 +238,15 @@ const InvoiceForm: React.FC = () => {
   };
 
   const calculateTotal = () => {
-    return formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+    return calculateLegacyDocumentAmounts(formData.items).subtotal;
   };
 
   const calculateTaxAmount = () => {
-    return calculateTotal() * ((formData.taxRate ?? 0) / 100);
+    return calculateLegacyDocumentAmounts(formData.items, formData.taxRate ?? 0).deduction;
   };
 
   const calculateNet = () => {
-    return calculateTotal() - calculateTaxAmount();
+    return calculateLegacyDocumentAmounts(formData.items, formData.taxRate ?? 0).amountDue;
   };
 
   const formatNumber = (num: number): string => {
@@ -290,7 +292,7 @@ const InvoiceForm: React.FC = () => {
       element.style.padding = '24px';
 
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [5, 5, 5, 5] as [number, number, number, number],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
@@ -345,7 +347,7 @@ const InvoiceForm: React.FC = () => {
       element.style.padding = '24px';
 
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [5, 5, 5, 5] as [number, number, number, number],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },
@@ -416,7 +418,7 @@ const InvoiceForm: React.FC = () => {
 
       const filename = `Facture-${formData.invoiceNumber}.pdf`;
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [5, 5, 5, 5] as [number, number, number, number],
         filename,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1400 },

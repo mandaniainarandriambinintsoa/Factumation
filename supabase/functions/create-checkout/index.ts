@@ -11,10 +11,14 @@ const corsHeaders = {
 const ALLOWED_ORIGINS = [
   'https://factumation.vercel.app',
   'http://localhost:5173',
+  'http://localhost:3000',
 ];
 const DEFAULT_ORIGIN = 'https://factumation.vercel.app';
 
 function safeOrigin(req: Request): string {
+  const configuredOrigin = Deno.env.get('PUBLIC_SITE_URL');
+  if (configuredOrigin) return configuredOrigin.replace(/\/$/, '');
+
   const reqOrigin = req.headers.get('origin') ?? '';
   return ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : DEFAULT_ORIGIN;
 }
@@ -43,7 +47,10 @@ serve(async (req: Request) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await anonClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await anonClient.auth.getUser();
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -52,7 +59,8 @@ serve(async (req: Request) => {
       });
     }
 
-    const { plan } = await req.json();
+    const { plan, locale: requestedLocale } = await req.json();
+    const locale = requestedLocale === 'en' ? 'en' : 'fr';
 
     if (!plan || !PRICE_IDS[plan]) {
       return new Response(JSON.stringify({ error: 'Invalid plan' }), {
@@ -79,14 +87,15 @@ serve(async (req: Request) => {
       customerId = customer.id;
 
       // Upsert subscription record with customer ID
-      await adminClient
-        .from('subscriptions')
-        .upsert({
+      await adminClient.from('subscriptions').upsert(
+        {
           user_id: user.id,
           stripe_customer_id: customerId,
           plan: 'free',
           status: 'active',
-        }, { onConflict: 'user_id' });
+        },
+        { onConflict: 'user_id' },
+      );
     }
 
     const origin = safeOrigin(req);
@@ -97,8 +106,8 @@ serve(async (req: Request) => {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
-      success_url: `${origin}/fr/settings?checkout=success`,
-      cancel_url: `${origin}/fr/settings?checkout=canceled`,
+      success_url: `${origin}/${locale}/settings?checkout=success`,
+      cancel_url: `${origin}/${locale}/settings?checkout=canceled`,
       metadata: { userId: user.id, plan },
     });
 

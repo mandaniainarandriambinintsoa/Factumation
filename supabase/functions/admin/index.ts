@@ -18,6 +18,12 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
+const hasTotal = (value: unknown): value is { total: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'total' in value &&
+  typeof value.total === 'number';
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -34,7 +40,10 @@ serve(async (req: Request) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await anonClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await anonClient.auth.getUser();
 
     if (authError || !user || user.email !== ADMIN_EMAIL) {
       return json({ error: 'Unauthorized' }, 403);
@@ -79,7 +88,9 @@ serve(async (req: Request) => {
       const userIds = usersData.users.map((u: any) => u.id);
       const { data: subs, error: subsError } = await adminClient
         .from('subscriptions')
-        .select('user_id, plan, status, source, current_period_end, manual_expires_at, admin_notes, stripe_customer_id, cancel_at_period_end')
+        .select(
+          'user_id, plan, status, source, current_period_end, manual_expires_at, admin_notes, stripe_customer_id, cancel_at_period_end',
+        )
         .in('user_id', userIds);
 
       if (subsError) throw subsError;
@@ -244,7 +255,13 @@ serve(async (req: Request) => {
 
     // ---------- GET: stats ----------
     if (action === 'stats' && req.method === 'GET') {
-      const { data: usersData } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 1 });
+      const { data: usersData, error: usersError } = await adminClient.auth.admin.listUsers({
+        page: 1,
+        perPage: 1,
+      });
+      if (usersError) throw usersError;
+      const listedUserCount = usersData.users.length;
+      const totalUsers = hasTotal(usersData) ? usersData.total : listedUserCount;
 
       const [
         { count: invoiceCount },
@@ -256,12 +273,19 @@ serve(async (req: Request) => {
         adminClient.from('invoices').select('*', { count: 'exact', head: true }),
         adminClient.from('quotes').select('*', { count: 'exact', head: true }),
         adminClient.from('blog_posts').select('*', { count: 'exact', head: true }),
-        adminClient.from('blog_posts').select('*', { count: 'exact', head: true }).eq('published', true),
-        adminClient.from('subscriptions').select('*', { count: 'exact', head: true }).neq('plan', 'free').eq('status', 'active'),
+        adminClient
+          .from('blog_posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true),
+        adminClient
+          .from('subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .neq('plan', 'free')
+          .eq('status', 'active'),
       ]);
 
       return json({
-        totalUsers: usersData?.users?.length || 0,
+        totalUsers,
         totalInvoices: invoiceCount || 0,
         totalQuotes: quoteCount || 0,
         totalBlogPosts: blogCount || 0,

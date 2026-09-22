@@ -29,12 +29,16 @@ CREATE INDEX IF NOT EXISTS idx_papi_payments_status ON papi_payments(status);
 
 ALTER TABLE papi_payments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own papi payments" ON papi_payments;
 CREATE POLICY "Users can view own papi payments"
   ON papi_payments FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Service role full access on papi payments" ON papi_payments;
 CREATE POLICY "Service role full access on papi payments"
   ON papi_payments FOR ALL
+  TO service_role
   USING (auth.role() = 'service_role');
 
 COMMENT ON TABLE papi_payments IS

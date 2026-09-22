@@ -53,7 +53,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const { type, data, pdfBase64 } = await req.json();
+    const { type, data, pdfBase64, deliveryKey } = await req.json();
 
     if (!type || !data) {
       return new Response(JSON.stringify({ error: 'Missing required fields: type, data' }), {
@@ -69,11 +69,12 @@ serve(async (req: Request) => {
     const filename = `${docLabel}-${data.documentNumber}.pdf`;
 
     // Calculate total
-    const total = data.items.reduce(
+    const calculatedTotal = data.items.reduce(
       (sum: number, item: { quantity: number; unitPrice: number }) =>
         sum + item.quantity * item.unitPrice,
       0
     );
+    const total = Number.isFinite(Number(data.amountDue)) ? Number(data.amountDue) : calculatedTotal;
     const formattedTotal = new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: data.currency || 'EUR',
@@ -175,6 +176,9 @@ serve(async (req: Request) => {
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',
+        ...(typeof deliveryKey === 'string' && /^[A-Za-z0-9._:-]{8,128}$/.test(deliveryKey)
+          ? { 'Idempotency-Key': deliveryKey }
+          : {}),
       },
       body: JSON.stringify({
         // Nettoie le from name (header RFC) : retire les caractères qui pourraient

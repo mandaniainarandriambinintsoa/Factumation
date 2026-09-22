@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @factumation/domain build && pnpm --filter @factumation/api build",
+  "outputDirectory": "apps/api/dist",
+  "functions": {
+    "api/factumation.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/factumation" }]
+}

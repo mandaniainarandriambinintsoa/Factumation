@@ -11,10 +11,14 @@ const corsHeaders = {
 const ALLOWED_ORIGINS = [
   'https://factumation.vercel.app',
   'http://localhost:5173',
+  'http://localhost:3000',
 ];
 const DEFAULT_ORIGIN = 'https://factumation.vercel.app';
 
 function safeOrigin(req: Request): string {
+  const configuredOrigin = Deno.env.get('PUBLIC_SITE_URL');
+  if (configuredOrigin) return configuredOrigin.replace(/\/$/, '');
+
   const reqOrigin = req.headers.get('origin') ?? '';
   return ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : DEFAULT_ORIGIN;
 }
@@ -38,7 +42,10 @@ serve(async (req: Request) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await anonClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await anonClient.auth.getUser();
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -46,6 +53,9 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const { locale: requestedLocale } = await req.json().catch(() => ({ locale: 'fr' }));
+    const locale = requestedLocale === 'en' ? 'en' : 'fr';
 
     // Get customer ID
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -66,7 +76,7 @@ serve(async (req: Request) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: `${origin}/fr/settings`,
+      return_url: `${origin}/${locale}/settings`,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
