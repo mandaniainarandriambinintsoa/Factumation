@@ -14,6 +14,7 @@ const migrationFiles = [
   '20260924_document_delivery.sql',
   '20260925_private_document_storage.sql',
   '20260926_external_api_keys.sql',
+  '20260927_fix_document_status_constraints.sql',
 ];
 
 const baseline = `
@@ -88,7 +89,9 @@ CREATE TABLE public.invoices (
   company_phone text, logo_url text, client_name text NOT NULL, client_address text,
   client_email text NOT NULL, client_phone text, items jsonb NOT NULL,
   tax_rate numeric NOT NULL DEFAULT 0, total numeric NOT NULL, currency text NOT NULL,
-  payment_method text, status text DEFAULT 'draft', notes text, pdf_base64 text,
+  payment_method text, status text DEFAULT 'draft'
+    CHECK (status IN ('draft', 'sent', 'paid', 'cancelled')),
+  notes text, pdf_base64 text,
   created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now()
 );
 CREATE TABLE public.quotes (
@@ -98,7 +101,9 @@ CREATE TABLE public.quotes (
   company_phone text, logo_url text, client_name text NOT NULL, client_address text,
   client_email text NOT NULL, client_phone text, items jsonb NOT NULL,
   tax_rate numeric NOT NULL DEFAULT 0, total numeric NOT NULL, currency text NOT NULL,
-  payment_method text, status text DEFAULT 'draft', notes text, pdf_base64 text,
+  payment_method text, status text DEFAULT 'draft'
+    CHECK (status IN ('draft', 'sent', 'accepted', 'rejected', 'expired')),
+  notes text, pdf_base64 text,
   created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now()
 );
 
