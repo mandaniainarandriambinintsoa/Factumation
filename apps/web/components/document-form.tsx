@@ -268,7 +268,7 @@ export function DocumentForm({
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="h-full rounded-full bg-[var(--primary-600)] transition-all"
+              className="h-full rounded-full bg-[var(--primary-600)] transition-[width]"
               style={{ width: `${((step + 1) / 3) * 100}%` }}
             />
           </div>
