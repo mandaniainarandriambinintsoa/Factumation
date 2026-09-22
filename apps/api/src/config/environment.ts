@@ -11,7 +11,7 @@ const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
-  SUPABASE_URL: z.url().refine((url) => url.startsWith('https://'), {
+  SUPABASE_URL: z.string().url().refine((url) => url.startsWith('https://'), {
     message: 'SUPABASE_URL must use HTTPS',
   }),
   SUPABASE_ANON_KEY: z.string().min(20),
@@ -27,7 +27,7 @@ const environmentSchema = z.object({
   DEPENDENCY_TIMEOUT_MS: z.coerce.number().int().min(100).max(30_000).default(3000),
   THROTTLE_TTL_MS: z.coerce.number().int().min(1000).max(3_600_000).default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().min(1).max(10_000).default(120),
-  CONTACT_WEBHOOK_URL: z.url().optional(),
+  CONTACT_WEBHOOK_URL: z.string().url().optional(),
   CONTACT_WEBHOOK_SECRET: z.string().min(32).optional(),
 });
 

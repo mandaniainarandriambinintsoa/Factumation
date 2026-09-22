@@ -9,7 +9,7 @@ import type { AuthPrincipal } from './auth-principal.js';
 const claimsSchema = z.object({
   sub: z.string().uuid(),
   role: z.string().min(1),
-  email: z.email().optional(),
+  email: z.string().email().optional(),
   phone: z.string().min(1).optional(),
   session_id: z.string().min(1).optional(),
 });
