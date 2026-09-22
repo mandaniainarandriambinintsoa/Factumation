@@ -103,7 +103,9 @@ export function DocumentForm({
     return () => subscription.unsubscribe();
   }, [draftKey, initial, kind, saveLocal, watch]);
 
-  const calculation = useMemo(() => {
+  // react-hook-form may update nested item values without replacing the array
+  // reference. Calculate during render so totals always reflect the latest input.
+  const calculation = (() => {
     try {
       return calculateDocument({
         currency: values.currency,
@@ -114,7 +116,7 @@ export function DocumentForm({
     } catch {
       return null;
     }
-  }, [values.currency, values.items, values.taxMode, values.taxRate]);
+  })();
 
   async function saveDocument(data: DocumentFormValues): Promise<Invoice | Quote> {
     if (persistedDocument.current && !initial) return persistedDocument.current;
