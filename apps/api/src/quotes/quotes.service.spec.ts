@@ -105,6 +105,10 @@ describe('QuotesService', () => {
       }),
     );
     expect(quote.total).toBe('120.00');
+    expect(quote).toMatchObject({
+      companyName: 'Analytical Engines',
+      clientName: 'Ada Lovelace',
+    });
   });
 
   it('rejects a validity date before the quote date', async () => {

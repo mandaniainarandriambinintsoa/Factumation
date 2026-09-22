@@ -112,6 +112,10 @@ describe('InvoicesService', () => {
       }),
     );
     expect(invoice.amountDue).toBe('80.00');
+    expect(invoice).toMatchObject({
+      companyName: 'Analytical Engines',
+      clientName: 'Ada Lovelace',
+    });
   });
 
   it('rejects missing or unsafe idempotency keys before data access', async () => {

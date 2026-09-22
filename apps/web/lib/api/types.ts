@@ -19,6 +19,14 @@ export type Invoice = {
   number: string | null;
   companyId: string | null;
   clientId: string | null;
+  companyName: string;
+  companyAddress: string | null;
+  companyEmail: string;
+  companyPhone: string | null;
+  clientName: string;
+  clientAddress: string | null;
+  clientEmail: string;
+  clientPhone: string | null;
   items: DocumentLine[];
   currency: string;
   subtotal: string;

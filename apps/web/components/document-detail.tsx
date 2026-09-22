@@ -67,20 +67,28 @@ export function DocumentDetail({
             Émetteur
           </div>
           <p className="mt-4 font-semibold text-slate-900">
-            {company?.name ?? 'Entreprise non disponible'}
+            {company?.name ?? document.companyName}
           </p>
-          <p className="mt-1 text-sm text-slate-500">{company?.email ?? company?.address ?? '—'}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {company?.email ??
+              document.companyEmail ??
+              company?.address ??
+              document.companyAddress ??
+              '—'}
+          </p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
             <UserRound className="size-4 text-blue-600" />
             Client
           </div>
-          <p className="mt-4 font-semibold text-slate-900">
-            {client?.name ?? 'Client non disponible'}
-          </p>
+          <p className="mt-4 font-semibold text-slate-900">{client?.name ?? document.clientName}</p>
           <p className="mt-1 text-sm text-slate-500">
-            {client?.email ?? client?.companyName ?? '—'}
+            {client?.email ??
+              document.clientEmail ??
+              client?.companyName ??
+              document.clientAddress ??
+              '—'}
           </p>
         </article>
       </section>

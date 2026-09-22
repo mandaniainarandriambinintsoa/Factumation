@@ -138,6 +138,14 @@ export class QuoteResponseDto {
   @ApiPropertyOptional({ type: String, nullable: true }) number!: string | null;
   @ApiPropertyOptional({ type: String, format: 'uuid', nullable: true }) companyId!: string | null;
   @ApiPropertyOptional({ type: String, format: 'uuid', nullable: true }) clientId!: string | null;
+  @ApiProperty({ type: String }) companyName!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) companyAddress!: string | null;
+  @ApiProperty({ type: String, format: 'email' }) companyEmail!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) companyPhone!: string | null;
+  @ApiProperty({ type: String }) clientName!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) clientAddress!: string | null;
+  @ApiProperty({ type: String, format: 'email' }) clientEmail!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) clientPhone!: string | null;
   @ApiProperty({ type: [CalculatedDocumentLineResponseDto] })
   items!: CalculatedDocumentLineResponseDto[];
   @ApiProperty({ type: String }) currency!: string;

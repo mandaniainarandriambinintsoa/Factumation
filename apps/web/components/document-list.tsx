@@ -47,7 +47,7 @@ export function DocumentList({
               <p className="truncate font-semibold text-slate-900">
                 {item.number ?? item.draftReference ?? 'Brouillon'}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Créé le {formatDate(date, locale)}</p>
+              <p className="mt-1 truncate text-xs text-slate-500">{item.clientName}</p>
             </div>
             <div>
               <StatusBadge status={item.status} />
