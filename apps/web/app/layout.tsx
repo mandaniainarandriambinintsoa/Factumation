@@ -6,7 +6,7 @@ import { ServiceWorkerRegistration } from '@/components/service-worker-registrat
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.manda-ia.com'),
   title: { default: 'Factumation', template: '%s — Factumation' },
   description: 'Créez et pilotez vos factures et devis avec clarté.',
   manifest: '/manifest.webmanifest',

@@ -9,7 +9,7 @@ export function getPublicEnvironment(): PublicEnvironment {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.manda-ia.com';
   if (!supabaseUrl || !supabasePublishableKey || !apiUrl) {
     throw new Error(
       'NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, and NEXT_PUBLIC_API_URL are required.',
@@ -24,5 +24,5 @@ export function getPublicEnvironment(): PublicEnvironment {
 }
 
 export function getSiteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.vercel.app').replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://factumation.manda-ia.com').replace(/\/$/, '');
 }
