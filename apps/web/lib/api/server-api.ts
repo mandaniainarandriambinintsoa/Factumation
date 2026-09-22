@@ -40,5 +40,7 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
       body?.detail ?? 'The API request failed.',
     );
   }
-  return (await response.json()) as T;
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return (body ? JSON.parse(body) : null) as T;
 }
