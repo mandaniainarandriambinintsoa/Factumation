@@ -20,7 +20,7 @@ describe('validateEnvironment', () => {
     expect(environment.ENABLE_SWAGGER).toBe(false);
     expect(environment.THROTTLE_LIMIT).toBe(120);
     expect(environment.OPENROUTER_EXTRACTION_MODEL).toBe('google/gemini-2.5-flash-lite');
-    expect(environment.OPENROUTER_TRANSCRIPTION_MODEL).toBe('openai/whisper-large-v3-turbo');
+    expect(environment.OPENROUTER_TRANSCRIPTION_MODEL).toBe('openai/gpt-4o-mini-transcribe');
   });
 
   it('supports the legacy public variable names during migration', () => {

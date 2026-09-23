@@ -34,7 +34,7 @@ const environmentSchema = z.object({
   CONTACT_WEBHOOK_SECRET: z.string().min(32).optional(),
   OPENROUTER_API_KEY: z.string().min(20).optional(),
   OPENROUTER_EXTRACTION_MODEL: z.string().min(3).default('google/gemini-2.5-flash-lite'),
-  OPENROUTER_TRANSCRIPTION_MODEL: z.string().min(3).default('openai/whisper-large-v3-turbo'),
+  OPENROUTER_TRANSCRIPTION_MODEL: z.string().min(3).default('openai/gpt-4o-mini-transcribe'),
   OPENROUTER_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(60_000).default(55_000),
 });
 
