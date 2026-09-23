@@ -83,6 +83,25 @@ describe('OpenRouterGateway', () => {
     expect(fetchMock.mock.calls[0]?.[0]).toBe('https://openrouter.ai/api/v1/audio/transcriptions');
   });
 
+  it('normalizes safe numeric suffixes before validating the draft', async () => {
+    const responseDraft = {
+      ...draft,
+      taxRate: '20%',
+      items: [{ description: 'Conseil', quantity: '2', unitPrice: '125 EUR' }],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        Response.json({ choices: [{ message: { content: JSON.stringify(responseDraft) } }] }),
+      ),
+    );
+
+    const result = await gateway().extractText('Deux prestations de conseil.', 'invoice');
+
+    expect(result.taxRate).toBe('20');
+    expect(result.items[0]).toMatchObject({ quantity: '2', unitPrice: '125' });
+  });
+
   it('fails closed when the server key is absent', async () => {
     await expect(gateway(null).extractText('test', 'quote')).rejects.toBeInstanceOf(
       ServiceUnavailableException,

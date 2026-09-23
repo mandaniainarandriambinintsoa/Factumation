@@ -73,7 +73,6 @@ const DOCUMENT_JSON_SCHEMA = {
     notes: { type: ['string', 'null'] },
     items: {
       type: 'array',
-      maxItems: 100,
       items: {
         type: 'object',
         additionalProperties: false,
@@ -159,7 +158,8 @@ export class OpenRouterGateway {
       throw new BadGatewayException('La réponse du service d’analyse est invalide.');
     }
     try {
-      return documentImportDraftSchema.parse(JSON.parse(chat.data.choices[0].message.content));
+      const payload = JSON.parse(chat.data.choices[0].message.content) as unknown;
+      return documentImportDraftSchema.parse(normalizeNumericFields(payload));
     } catch {
       throw new BadGatewayException('Les informations extraites ne sont pas exploitables.');
     }
@@ -250,4 +250,34 @@ export class OpenRouterGateway {
       ? `Analyse ce document comme brouillon de ${expectedKind}. Extrais le client, les dates, la devise, les taxes, le paiement et chaque prestation.`
       : `Transforme ces instructions vocales en brouillon de ${expectedKind}. Extrais uniquement les informations explicitement dictées.`;
   }
+}
+
+function normalizeNumericFields(payload: unknown): unknown {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+
+  const draft = payload as Record<string, unknown>;
+  const items = Array.isArray(draft.items)
+    ? draft.items.map((item) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+        const line = item as Record<string, unknown>;
+        return {
+          ...line,
+          quantity: normalizeDecimal(line.quantity, false),
+          unitPrice: normalizeDecimal(line.unitPrice, true),
+        };
+      })
+    : draft.items;
+
+  return {
+    ...draft,
+    taxRate: normalizeDecimal(draft.taxRate, true),
+    items,
+  };
+}
+
+function normalizeDecimal(value: unknown, allowSuffix: boolean): unknown {
+  if (typeof value !== 'string') return value;
+  const suffix = allowSuffix ? '(?:%|EUR|USD|GBP|CAD|CHF|MGA|€|\\$|£|Ar)?' : '';
+  const match = value.trim().match(new RegExp(`^(\\d+(?:[.,]\\d{1,4})?)\\s*${suffix}$`, 'i'));
+  return match?.[1]?.replace(',', '.') ?? value;
 }
