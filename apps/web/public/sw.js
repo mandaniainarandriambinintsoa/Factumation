@@ -53,7 +53,8 @@ self.addEventListener('fetch', (event) => {
     request.headers.has('authorization');
   if (sensitive) {
     if (request.mode === 'navigate') {
-      event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+      const uncachedRequest = new Request(request, { cache: 'no-store' });
+      event.respondWith(fetch(uncachedRequest).catch(() => caches.match(OFFLINE_URL)));
     }
     return;
   }
