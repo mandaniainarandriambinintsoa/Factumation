@@ -2,6 +2,7 @@ import { ArrowLeft, Building2, CalendarDays, UserRound } from 'lucide-react';
 import Link from 'next/link';
 
 import type { Client, Company, Invoice, Quote } from '@/lib/api/types';
+import { paymentMethodLabel } from '@/lib/document-options';
 import { formatDate, formatMoney } from '@/lib/format';
 import { StatusBadge } from './status-badge';
 import { DocumentActions } from './document-actions';
@@ -113,7 +114,7 @@ export function DocumentDetail({
           </div>
           <div>
             <span className="block text-xs text-slate-500">Paiement</span>
-            {document.paymentMethod ?? '—'}
+            {document.paymentMethod ? paymentMethodLabel(document.paymentMethod) : '—'}
           </div>
         </div>
         <div className="overflow-x-auto">
