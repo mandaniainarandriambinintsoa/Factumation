@@ -20,6 +20,9 @@ const environment: Environment = {
   DEPENDENCY_TIMEOUT_MS: 1000,
   THROTTLE_TTL_MS: 60_000,
   THROTTLE_LIMIT: 120,
+  OPENROUTER_EXTRACTION_MODEL: 'google/gemini-2.5-flash-lite',
+  OPENROUTER_TRANSCRIPTION_MODEL: 'openai/whisper-large-v3-turbo',
+  OPENROUTER_TIMEOUT_MS: 55_000,
 };
 
 function createConfig(): ConfigService<Environment, true> {

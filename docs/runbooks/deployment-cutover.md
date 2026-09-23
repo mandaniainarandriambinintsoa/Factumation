@@ -51,6 +51,9 @@ Vercel doit autoriser les sources du workspace situées hors de chaque Root Dire
 - `ENABLE_SWAGGER=false`
 - `CONTACT_WEBHOOK_URL`
 - `CONTACT_WEBHOOK_SECRET` (secret partagé avec l'automatisation n8n)
+- `OPENROUTER_API_KEY` (secret serveur requis pour la capture photo et la dictée)
+- `OPENROUTER_EXTRACTION_MODEL` et `OPENROUTER_TRANSCRIPTION_MODEL`
+- `OPENROUTER_TIMEOUT_MS=55000`
 - limites et timeouts documentés dans `apps/api/.env.example`
 
 ### Variables Web

@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { calculateDocument } from '@factumation/domain';
+import type { DocumentImportResponse } from '@factumation/contracts';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ import { browserApiDownload, browserApiRequest, BrowserApiError } from '@/lib/ap
 import type { Client, Company, Invoice, Quote } from '@/lib/api/types';
 
 import { DocumentActionStep, type SubmissionAction } from './document-form/document-action-step';
+import { DocumentAiImport } from './document-form/document-ai-import';
 import { DocumentBillingStep } from './document-form/document-billing-step';
 import { DocumentClientStep } from './document-form/document-client-step';
 import { DocumentItemsStep } from './document-form/document-items-step';
@@ -63,12 +65,13 @@ export function DocumentForm({
     setValue,
     reset,
     trigger,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<DocumentFormValues>({
     resolver: zodResolver(documentFormSchema),
     defaultValues,
   });
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, replace } = useFieldArray({ control, name: 'items' });
   const values = watch();
 
   useEffect(() => {
@@ -216,6 +219,49 @@ export function DocumentForm({
     )();
   }
 
+  function applyImportedDocument(result: DocumentImportResponse): void {
+    const draft = result.draft;
+    const hasClientData = Object.values(draft.client).some(Boolean);
+    if (hasClientData) {
+      const matchingClient = draft.client.email
+        ? clients.find((client) => client.email.toLowerCase() === draft.client.email?.toLowerCase())
+        : undefined;
+      if (matchingClient) {
+        setValue('clientMode', 'existing', { shouldDirty: true });
+        setValue('clientId', matchingClient.id, { shouldDirty: true });
+      } else {
+        setValue('clientMode', 'new', { shouldDirty: true });
+        setValue('clientId', '', { shouldDirty: true });
+        setValue('clientName', draft.client.name ?? '', { shouldDirty: true });
+        setValue('clientCompanyName', draft.client.companyName ?? '', { shouldDirty: true });
+        setValue('clientEmail', draft.client.email ?? '', { shouldDirty: true });
+        setValue('clientPhone', draft.client.phone ?? '', { shouldDirty: true });
+        setValue('clientAddress', draft.client.address ?? '', { shouldDirty: true });
+        setValue('clientFiscalRegion', draft.client.fiscalRegion ?? 'NONE', { shouldDirty: true });
+        setValue('clientSiret', draft.client.siret ?? '', { shouldDirty: true });
+        setValue('clientVatNumber', draft.client.vatNumber ?? '', { shouldDirty: true });
+        setValue('clientNif', draft.client.nif ?? '', { shouldDirty: true });
+        setValue('clientStat', draft.client.stat ?? '', { shouldDirty: true });
+      }
+    }
+    if (draft.currency) setValue('currency', draft.currency, { shouldDirty: true });
+    if (draft.documentDate) setValue('documentDate', draft.documentDate, { shouldDirty: true });
+    if (draft.secondDate) setValue('secondDate', draft.secondDate, { shouldDirty: true });
+    if (draft.taxMode) {
+      setValue('taxMode', draft.taxMode, { shouldDirty: true });
+      setValue('taxRate', draft.taxMode === 'none' ? '0' : (draft.taxRate ?? '0'), {
+        shouldDirty: true,
+      });
+    }
+    if (draft.paymentMethod) {
+      setValue('paymentMethod', draft.paymentMethod, { shouldDirty: true });
+    }
+    if (draft.notes) setValue('notes', draft.notes, { shouldDirty: true });
+    if (draft.items.length) replace(draft.items);
+    clearErrors();
+    setStep(0);
+  }
+
   async function continueToNextStep(): Promise<void> {
     const valid =
       step === 0
@@ -268,6 +314,13 @@ export function DocumentForm({
         className="mt-8 space-y-5"
         noValidate
       >
+        {!initial ? (
+          <DocumentAiImport
+            kind={kind}
+            disabled={isSubmitting}
+            onImported={applyImportedDocument}
+          />
+        ) : null}
         <MobileProgress step={step} />
         {savedDraft ? (
           <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:flex-row sm:items-center sm:justify-between">

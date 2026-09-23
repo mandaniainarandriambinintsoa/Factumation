@@ -43,6 +43,30 @@ export async function browserApiRequest<T>(path: string, init?: RequestInit): Pr
   return (await response.json()) as T;
 }
 
+export async function browserApiFormRequest<T>(path: string, form: FormData): Promise<T> {
+  const supabase = createClient();
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new BrowserApiError(401, null, 'Votre session a expiré. Reconnectez-vous.');
+  const response = await fetch(`${getPublicEnvironment().apiUrl}${path}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      detail?: string;
+      message?: string;
+    } | null;
+    throw new BrowserApiError(
+      response.status,
+      response.headers.get('x-request-id'),
+      body?.detail ?? body?.message ?? 'L’analyse a échoué.',
+    );
+  }
+  return (await response.json()) as T;
+}
+
 export async function browserApiDownload(path: string): Promise<Blob> {
   const supabase = createClient();
   const { data } = await supabase.auth.getSession();

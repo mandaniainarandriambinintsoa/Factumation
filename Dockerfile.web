@@ -10,7 +10,8 @@ FROM base AS builder
 
 COPY . .
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @factumation/domain build \
+RUN pnpm --filter @factumation/contracts build \
+  && pnpm --filter @factumation/domain build \
   && pnpm --filter @factumation/web build
 
 FROM node:22-alpine AS runner

@@ -13,6 +13,7 @@ import { ClientsModule } from './clients/clients.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
 import { ContactModule } from './contact/contact.module.js';
 import { DashboardModule } from './dashboard/dashboard.module.js';
+import { DocumentImportsModule } from './document-imports/document-imports.module.js';
 import { type Environment, validateEnvironment } from './config/environment.js';
 import { HealthModule } from './health/health.module.js';
 import { InvoicesModule } from './invoices/invoices.module.js';
@@ -34,6 +35,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module.js';
     CompaniesModule,
     ContactModule,
     DashboardModule,
+    DocumentImportsModule,
     InvoicesModule,
     QuotesModule,
     SubscriptionsModule,

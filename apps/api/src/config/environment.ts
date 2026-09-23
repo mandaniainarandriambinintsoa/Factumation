@@ -11,9 +11,12 @@ const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
-  SUPABASE_URL: z.string().url().refine((url) => url.startsWith('https://'), {
-    message: 'SUPABASE_URL must use HTTPS',
-  }),
+  SUPABASE_URL: z
+    .string()
+    .url()
+    .refine((url) => url.startsWith('https://'), {
+      message: 'SUPABASE_URL must use HTTPS',
+    }),
   SUPABASE_ANON_KEY: z.string().min(20),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
   API_KEY_PEPPER: z.string().min(32).optional(),
@@ -29,6 +32,10 @@ const environmentSchema = z.object({
   THROTTLE_LIMIT: z.coerce.number().int().min(1).max(10_000).default(120),
   CONTACT_WEBHOOK_URL: z.string().url().optional(),
   CONTACT_WEBHOOK_SECRET: z.string().min(32).optional(),
+  OPENROUTER_API_KEY: z.string().min(20).optional(),
+  OPENROUTER_EXTRACTION_MODEL: z.string().min(3).default('google/gemini-2.5-flash-lite'),
+  OPENROUTER_TRANSCRIPTION_MODEL: z.string().min(3).default('openai/whisper-large-v3-turbo'),
+  OPENROUTER_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(60_000).default(55_000),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;
