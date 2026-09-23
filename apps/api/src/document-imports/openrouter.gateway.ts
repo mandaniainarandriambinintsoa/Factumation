@@ -182,10 +182,13 @@ export class OpenRouterGateway {
         signal: AbortSignal.timeout(this.config.get('OPENROUTER_TIMEOUT_MS', { infer: true })),
       });
       if (!response.ok) {
+        const upstreamError = await this.readUpstreamError(response);
         this.logger.warn('OpenRouter request failed', {
           path,
           status: response.status,
           requestId: response.headers.get('x-request-id'),
+          upstreamCode: upstreamError.code,
+          upstreamMessage: upstreamError.message,
         });
         if (response.status === 429) {
           throw new ServiceUnavailableException('Le service d’analyse est temporairement occupé.');
@@ -204,6 +207,24 @@ export class OpenRouterGateway {
         throw new GatewayTimeoutException('L’analyse a dépassé le délai autorisé.');
       }
       throw new ServiceUnavailableException('Le service d’analyse est momentanément indisponible.');
+    }
+  }
+
+  private async readUpstreamError(
+    response: Response,
+  ): Promise<{ code: string | number | null; message: string | null }> {
+    try {
+      const payload = (await response.json()) as {
+        error?: { code?: unknown; message?: unknown };
+      };
+      const code = payload.error?.code;
+      const message = payload.error?.message;
+      return {
+        code: typeof code === 'string' || typeof code === 'number' ? code : null,
+        message: typeof message === 'string' ? message.slice(0, 300) : null,
+      };
+    } catch {
+      return { code: null, message: null };
     }
   }
 
