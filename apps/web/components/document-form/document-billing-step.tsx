@@ -1,6 +1,8 @@
 import type { TaxMode } from '@factumation/domain';
 import type { FieldErrors, UseFormRegister, UseFormSetValue } from 'react-hook-form';
 
+import { DOCUMENT_CURRENCIES, PAYMENT_METHODS } from '@/lib/document-options';
+
 import type { DocumentFormValues } from './document-form-schema';
 import { Field, fieldClass } from './document-form-shared';
 
@@ -46,8 +48,10 @@ export function DocumentBillingStep({
       </Field>
       <Field label="Devise" error={errors.currency?.message}>
         <select {...register('currency')} className={fieldClass}>
-          {['EUR', 'USD', 'GBP', 'CAD', 'CHF', 'MGA'].map((currency) => (
-            <option key={currency}>{currency}</option>
+          {DOCUMENT_CURRENCIES.map((currency) => (
+            <option key={currency.code} value={currency.code}>
+              {currency.label}
+            </option>
           ))}
         </select>
       </Field>
@@ -75,11 +79,13 @@ export function DocumentBillingStep({
         />
       </Field>
       <Field label="Mode de paiement" error={errors.paymentMethod?.message}>
-        <input
-          {...register('paymentMethod')}
-          placeholder="Virement bancaire"
-          className={fieldClass}
-        />
+        <select {...register('paymentMethod')} className={fieldClass}>
+          {PAYMENT_METHODS.map((method) => (
+            <option key={method.value} value={method.value}>
+              {method.label}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field label="Notes" error={errors.notes?.message} wide>
         <textarea

@@ -1,6 +1,7 @@
 import type { FieldErrors, UseFormRegister, UseFormSetValue } from 'react-hook-form';
 
 import type { Client, Company, Invoice, Quote } from '@/lib/api/types';
+import { normalizePaymentMethod } from '@/lib/document-options';
 
 import type { DocumentFormValues } from './document-form-schema';
 import { Field, fieldClass, labelClass } from './document-form-shared';
@@ -48,7 +49,17 @@ export function DocumentClientStep({
             </span>
           </>
         ) : (
-          <select {...register('companyId')} className={fieldClass}>
+          <select
+            {...register('companyId', {
+              onChange: (event) => {
+                const company = companies.find((entry) => entry.id === event.target.value);
+                if (!company) return;
+                setValue('currency', company.defaultCurrency as DocumentFormValues['currency']);
+                setValue('paymentMethod', normalizePaymentMethod(company.defaultPaymentMethod));
+              },
+            })}
+            className={fieldClass}
+          >
             {companies.map((company) => (
               <option key={company.id} value={company.id}>
                 {company.name}

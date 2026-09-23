@@ -2,6 +2,7 @@ import type { SupportedCurrency } from '@factumation/domain';
 import { z } from 'zod';
 
 import type { Company, Invoice, Quote } from '@/lib/api/types';
+import { normalizePaymentMethod } from '@/lib/document-options';
 
 const decimal = /^(?:0|[1-9]\d{0,11})(?:\.\d{1,4})?$/;
 const optionalText = (maximum: number) => z.string().trim().max(maximum);
@@ -102,11 +103,14 @@ export function createDocumentDefaultValues(
   initial?: Invoice | Quote,
 ): DocumentFormValues {
   const initialClientMode = initial?.clientId ? 'existing' : initial ? 'snapshot' : 'existing';
+  const defaultCompany =
+    companies.find((company) => company.id === initial?.companyId) ??
+    companies.find((company) => company.isDefault) ??
+    companies[0];
   return {
     companyId:
       initial?.companyId ??
-      companies.find((company) => company.isDefault)?.id ??
-      companies[0]?.id ??
+      defaultCompany?.id ??
       '',
     clientMode: initialClientMode,
     clientId: initial?.clientId ?? '',
@@ -122,8 +126,7 @@ export function createDocumentDefaultValues(
     clientStat: '',
     currency:
       (initial?.currency as SupportedCurrency | undefined) ??
-      (companies.find((company) => company.isDefault)?.defaultCurrency as
-        SupportedCurrency | undefined) ??
+      (defaultCompany?.defaultCurrency as SupportedCurrency | undefined) ??
       'EUR',
     documentDate: initial
       ? 'invoiceDate' in initial
@@ -137,7 +140,9 @@ export function createDocumentDefaultValues(
       : inThirtyDays(),
     taxMode: initial?.taxMode ?? 'none',
     taxRate: initial?.taxRate ?? '0',
-    paymentMethod: initial?.paymentMethod ?? '',
+    paymentMethod: normalizePaymentMethod(
+      initial?.paymentMethod ?? defaultCompany?.defaultPaymentMethod,
+    ),
     notes: initial?.notes ?? '',
     items: initial?.items.map(({ description, quantity, unitPrice }) => ({
       description,

@@ -11,12 +11,14 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 import { browserApiDownload, browserApiRequest, BrowserApiError } from '@/lib/api/browser-api';
 import type { Client, Company, Invoice, Quote } from '@/lib/api/types';
+import { normalizePaymentMethod } from '@/lib/document-options';
 
 import { DocumentActionStep, type SubmissionAction } from './document-form/document-action-step';
 import { DocumentAiImport } from './document-form/document-ai-import';
 import { DocumentBillingStep } from './document-form/document-billing-step';
 import { DocumentClientStep } from './document-form/document-client-step';
 import { DocumentItemsStep } from './document-form/document-items-step';
+import { DocumentPreview } from './document-form/document-preview';
 import { DocumentReviewStep } from './document-form/document-review-step';
 import {
   billingStepFields,
@@ -52,6 +54,7 @@ export function DocumentForm({
   const [submissionAction, setSubmissionAction] = useState<SubmissionAction | null>(null);
   const [saveLocal, setSaveLocal] = useState(false);
   const [savedDraft, setSavedDraft] = useState<DocumentFormValues | null>(null);
+  const [desktopPreview, setDesktopPreview] = useState(false);
   const draftKey = `factumation-document-draft-v2-${kind}`;
   const defaultValues = useMemo(
     () => createDocumentDefaultValues(companies, initial),
@@ -254,7 +257,7 @@ export function DocumentForm({
       });
     }
     if (draft.paymentMethod) {
-      setValue('paymentMethod', draft.paymentMethod, { shouldDirty: true });
+      setValue('paymentMethod', normalizePaymentMethod(draft.paymentMethod), { shouldDirty: true });
     }
     if (draft.notes) setValue('notes', draft.notes, { shouldDirty: true });
     if (draft.items.length) replace(draft.items);
@@ -295,183 +298,201 @@ export function DocumentForm({
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-8 lg:px-10 lg:py-12">
-      <Link
-        href={`/${locale}/${collection}`}
-        className="focus-ring inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-600 hover:text-[var(--primary-900)]"
-      >
-        <ArrowLeft className="size-4" /> Retour
-      </Link>
-      <div className="mt-5">
-        <p className="text-sm font-semibold text-[var(--primary-600)]">
-          {initial ? 'Brouillon' : 'Nouveau document'}
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
-          {initial ? 'Modifier' : 'Créer'} {invoice ? 'une facture' : 'un devis'}
-        </h1>
-      </div>
-      <form
-        onSubmit={handleSubmit((data) => submit(data, 'draft'))}
-        className="mt-8 space-y-5"
-        noValidate
-      >
-        {!initial ? (
-          <DocumentAiImport
-            kind={kind}
-            disabled={isSubmitting}
-            onImported={applyImportedDocument}
-          />
-        ) : null}
-        <MobileProgress step={step} />
-        {savedDraft ? (
-          <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:flex-row sm:items-center sm:justify-between">
-            <span>Un brouillon local est disponible sur cet appareil.</span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  reset(savedDraft);
-                  setSaveLocal(true);
-                  setSavedDraft(null);
-                }}
-                className="font-semibold underline"
-              >
-                Restaurer
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.removeItem(draftKey);
-                  localStorage.removeItem(`factumation-document-draft-v1-${kind}`);
-                  setSavedDraft(null);
-                }}
-                className="text-blue-700"
-              >
-                Ignorer
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        <DocumentClientStep
-          active={step === 0}
+      {desktopPreview ? (
+        <DocumentPreview
+          invoice={invoice}
           initial={initial}
           companies={companies}
           clients={clients}
           values={values}
-          register={register}
-          errors={errors}
-          setValue={setValue}
-        />
-        <DocumentItemsStep
-          active={step === 1}
-          values={values}
-          register={register}
-          errors={errors}
-          append={append}
-          remove={remove}
-          fieldIds={fields}
           calculation={calculation}
           locale={locale}
-        />
-        <DocumentBillingStep
-          active={step === 2}
-          invoice={invoice}
-          values={values}
-          register={register}
-          errors={errors}
-          setValue={setValue}
-        />
-        <DocumentReviewStep
-          active={step === 3}
-          invoice={invoice}
-          companies={companies}
-          clients={clients}
-          values={values}
-          calculation={calculation}
-          locale={locale}
-        />
-        <DocumentActionStep
-          active={step === 4}
-          invoice={invoice}
-          editing={Boolean(initial)}
           pendingAction={submissionAction}
+          onEdit={() => setDesktopPreview(false)}
           onAction={runAction}
         />
-
-        <section className="ml-auto hidden max-w-md rounded-xl border border-slate-200 bg-white p-5 sm:block">
-          <DocumentTotals calculation={calculation} values={values} locale={locale} />
-        </section>
-
-        {!initial ? (
-          <label
-            className={`${step === 4 ? 'flex' : 'hidden'} items-start gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600 sm:flex`}
-          >
-            <input
-              type="checkbox"
-              checked={saveLocal}
-              onChange={(event) => {
-                setSaveLocal(event.target.checked);
-                if (!event.target.checked) localStorage.removeItem(draftKey);
-              }}
-              className="mt-0.5 size-4 accent-blue-700"
-            />
-            <span>
-              <strong className="block text-slate-900">
-                Sauvegarder ce brouillon sur cet appareil
-              </strong>
-              Les données restent dans ce navigateur jusqu’à l’enregistrement ou la déconnexion.
-            </span>
-          </label>
-        ) : null}
-        {submitError ? (
-          <p
-            role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-          >
-            {submitError}
-            {persistedDocument.current && !initial ? (
-              <Link
-                href={`/${locale}/${collection}/${persistedDocument.current.id}`}
-                className="ml-2 font-semibold underline"
-              >
-                Ouvrir le document enregistré
-              </Link>
-            ) : null}
+      ) : null}
+      <div className={desktopPreview ? 'sm:hidden' : ''}>
+        <Link
+          href={`/${locale}/${collection}`}
+          className="focus-ring inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-600 hover:text-[var(--primary-900)]"
+        >
+          <ArrowLeft className="size-4" /> Retour
+        </Link>
+        <div className="mt-5">
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            {initial ? 'Modifier' : 'Créer'} {invoice ? 'une facture' : 'un devis'}
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Remplissez les informations puis vérifiez le document avant de l’enregistrer.
           </p>
-        ) : null}
+        </div>
+        <form
+          onSubmit={handleSubmit(() => setDesktopPreview(true))}
+          className="mt-8 space-y-5"
+          noValidate
+        >
+          {!initial ? (
+            <DocumentAiImport
+              kind={kind}
+              disabled={isSubmitting}
+              onImported={applyImportedDocument}
+            />
+          ) : null}
+          <MobileProgress step={step} />
+          {savedDraft ? (
+            <div className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:flex-row sm:items-center sm:justify-between">
+              <span>Un brouillon local est disponible sur cet appareil.</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    reset(savedDraft);
+                    setSaveLocal(true);
+                    setSavedDraft(null);
+                  }}
+                  className="font-semibold underline"
+                >
+                  Restaurer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem(draftKey);
+                    localStorage.removeItem(`factumation-document-draft-v1-${kind}`);
+                    setSavedDraft(null);
+                  }}
+                  className="text-blue-700"
+                >
+                  Ignorer
+                </button>
+              </div>
+            </div>
+          ) : null}
 
-        <div className="sticky bottom-16 flex justify-between gap-3 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur sm:static sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
-          <button
-            type="button"
-            onClick={() => setStep((current) => Math.max(0, current - 1))}
-            className={`${step === 0 ? 'hidden' : 'inline-flex'} focus-ring rounded-lg border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 sm:hidden`}
-          >
-            Précédent
-          </button>
-          <Link
-            href={initial ? `/${locale}/${collection}/${initial.id}` : `/${locale}/${collection}`}
-            className="focus-ring hidden rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex"
-          >
-            Annuler
-          </Link>
-          {step < MOBILE_STEPS.length - 1 ? (
+          <DocumentClientStep
+            active={step === 0}
+            initial={initial}
+            companies={companies}
+            clients={clients}
+            values={values}
+            register={register}
+            errors={errors}
+            setValue={setValue}
+          />
+          <DocumentBillingStep
+            active={step === 2}
+            invoice={invoice}
+            values={values}
+            register={register}
+            errors={errors}
+            setValue={setValue}
+          />
+          <DocumentItemsStep
+            active={step === 1}
+            values={values}
+            register={register}
+            errors={errors}
+            append={append}
+            remove={remove}
+            fieldIds={fields}
+            calculation={calculation}
+            locale={locale}
+          />
+          <DocumentReviewStep
+            active={step === 3}
+            invoice={invoice}
+            companies={companies}
+            clients={clients}
+            values={values}
+            calculation={calculation}
+            locale={locale}
+          />
+          <DocumentActionStep
+            active={step === 4}
+            invoice={invoice}
+            editing={Boolean(initial)}
+            pendingAction={submissionAction}
+            onAction={runAction}
+          />
+
+          <section className="ml-auto hidden max-w-md rounded-xl border border-slate-200 bg-white p-5 sm:block">
+            <DocumentTotals calculation={calculation} values={values} locale={locale} />
+          </section>
+
+          {!initial ? (
+            <label
+              className={`${step === 4 ? 'flex' : 'hidden'} items-start gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600 sm:flex`}
+            >
+              <input
+                type="checkbox"
+                checked={saveLocal}
+                onChange={(event) => {
+                  setSaveLocal(event.target.checked);
+                  if (!event.target.checked) localStorage.removeItem(draftKey);
+                }}
+                className="mt-0.5 size-4 accent-blue-700"
+              />
+              <span>
+                <strong className="block text-slate-900">
+                  Sauvegarder ce brouillon sur cet appareil
+                </strong>
+                Les données restent dans ce navigateur jusqu’à l’enregistrement ou la déconnexion.
+              </span>
+            </label>
+          ) : null}
+          {submitError ? (
+            <p
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            >
+              {submitError}
+              {persistedDocument.current && !initial ? (
+                <Link
+                  href={`/${locale}/${collection}/${persistedDocument.current.id}`}
+                  className="ml-2 font-semibold underline"
+                >
+                  Ouvrir le document enregistré
+                </Link>
+              ) : null}
+            </p>
+          ) : null}
+
+          <div className="sticky bottom-16 flex justify-between gap-3 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur sm:static sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
             <button
               type="button"
-              onClick={() => void continueToNextStep()}
-              className="focus-ring ml-auto rounded-lg bg-[var(--primary-900)] px-5 py-3 text-sm font-semibold text-white sm:hidden"
+              onClick={() => setStep((current) => Math.max(0, current - 1))}
+              className={`${step === 0 ? 'hidden' : 'inline-flex'} focus-ring rounded-lg border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 sm:hidden`}
             >
-              Continuer
+              Précédent
             </button>
-          ) : null}
-          <button
-            disabled={isSubmitting}
-            className="focus-ring hidden min-w-40 items-center justify-center gap-2 rounded-lg bg-[var(--primary-900)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-800)] disabled:opacity-50 sm:inline-flex"
-          >
-            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
-            {isSubmitting ? 'Enregistrement…' : initial ? 'Enregistrer' : 'Créer le brouillon'}
-          </button>
-        </div>
-      </form>
+            <Link
+              href={initial ? `/${locale}/${collection}/${initial.id}` : `/${locale}/${collection}`}
+              className="focus-ring hidden rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:inline-flex"
+            >
+              Annuler
+            </Link>
+            {step < MOBILE_STEPS.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => void continueToNextStep()}
+                className="focus-ring ml-auto rounded-lg bg-[var(--primary-900)] px-5 py-3 text-sm font-semibold text-white sm:hidden"
+              >
+                Continuer
+              </button>
+            ) : null}
+            <button
+              disabled={isSubmitting}
+              className="focus-ring hidden min-w-40 items-center justify-center gap-2 rounded-lg bg-[var(--primary-900)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-800)] disabled:opacity-50 sm:inline-flex"
+            >
+              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
+              {isSubmitting
+                ? 'Vérification…'
+                : `Prévisualiser ${invoice ? 'la facture' : 'le devis'}`}
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }

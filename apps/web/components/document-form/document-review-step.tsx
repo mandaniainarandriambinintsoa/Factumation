@@ -1,6 +1,7 @@
 import type { DocumentCalculation } from '@factumation/domain';
 
 import type { Client, Company } from '@/lib/api/types';
+import { paymentMethodLabel } from '@/lib/document-options';
 import { formatMoney } from '@/lib/format';
 
 import type { DocumentFormValues } from './document-form-schema';
@@ -46,7 +47,7 @@ export function DocumentReviewStep({
         />
         <ReviewValue label={invoice ? 'Échéance' : 'Validité'} value={values.secondDate} />
         <ReviewValue label="Devise" value={values.currency} />
-        <ReviewValue label="Paiement" value={values.paymentMethod || 'Non renseigné'} />
+        <ReviewValue label="Paiement" value={paymentMethodLabel(values.paymentMethod)} />
       </dl>
       <div className="mt-5 border-t border-slate-100 pt-4">
         <h3 className="text-sm font-semibold text-slate-900">Prestations</h3>
