@@ -1,4 +1,4 @@
-const CACHE_NAME = 'factumation-static-v1';
+const CACHE_NAME = 'factumation-static-v2';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
@@ -29,6 +29,17 @@ self.addEventListener('message', (event) => {
   }
 });
 
+self.addEventListener('sync', (event) => {
+  if (event.tag !== 'factumation-document-outbox') return;
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) =>
+        Promise.all(clients.map((client) => client.postMessage({ type: 'SYNC_OUTBOX' }))),
+      ),
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;
@@ -40,7 +51,12 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/auth/') ||
     /\/(invoices|quotes|clients|companies|dashboard|settings)(?:\/|$)/.test(url.pathname) ||
     request.headers.has('authorization');
-  if (sensitive) return;
+  if (sensitive) {
+    if (request.mode === 'navigate') {
+      event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+    }
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));

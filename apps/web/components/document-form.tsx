@@ -12,6 +12,20 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { browserApiDownload, browserApiRequest, BrowserApiError } from '@/lib/api/browser-api';
 import type { Client, Company, Invoice, Quote } from '@/lib/api/types';
 import { normalizePaymentMethod } from '@/lib/document-options';
+import {
+  OUTBOX_RESULT_EVENT,
+  requestDocumentSync,
+  type OutboxResult,
+} from '@/lib/offline/document-sync';
+import {
+  deleteEncryptedDraft,
+  deleteDocumentJob,
+  enqueueDocumentJob,
+  listDocumentJobs,
+  readEncryptedDraft,
+  saveEncryptedDraft,
+} from '@/lib/offline/offline-storage';
+import { createClient } from '@/lib/supabase/client';
 
 import { DocumentActionStep, type SubmissionAction } from './document-form/document-action-step';
 import { DocumentAiImport } from './document-form/document-ai-import';
@@ -54,8 +68,18 @@ export function DocumentForm({
   const [submissionAction, setSubmissionAction] = useState<SubmissionAction | null>(null);
   const [saveLocal, setSaveLocal] = useState(false);
   const [savedDraft, setSavedDraft] = useState<DocumentFormValues | null>(null);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [queuedJob, setQueuedJob] = useState<{
+    id: string;
+    action: SubmissionAction;
+    blocked: boolean;
+  } | null>(null);
+  const [syncedDocumentId, setSyncedDocumentId] = useState<string | null>(null);
+  const [localStorageError, setLocalStorageError] = useState<string | null>(null);
   const [desktopPreview, setDesktopPreview] = useState(false);
   const draftKey = `factumation-document-draft-v2-${kind}`;
+  const draftLoaded = useRef(false);
+  const queuedJobId = useRef<string | null>(null);
   const defaultValues = useMemo(
     () => createDocumentDefaultValues(companies, initial),
     [companies, initial],
@@ -78,36 +102,92 @@ export function DocumentForm({
   const values = watch();
 
   useEffect(() => {
-    if (initial) return;
-    try {
-      const current = localStorage.getItem(draftKey);
-      const legacy = localStorage.getItem(`factumation-document-draft-v1-${kind}`);
-      const raw = current ?? legacy;
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { kind?: string; values?: unknown };
-      if (parsed.kind !== kind || !parsed.values || typeof parsed.values !== 'object') return;
-      const validated = documentFormSchema.safeParse({
-        ...defaultValues,
-        ...parsed.values,
-        clientMode:
-          'clientMode' in parsed.values ? parsed.values.clientMode : defaultValues.clientMode,
+    let active = true;
+    void createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        if (active) setOwnerId(data.session?.user.id ?? null);
       });
-      if (validated.success) setSavedDraft(validated.data);
-    } catch {
-      localStorage.removeItem(draftKey);
-    }
-  }, [defaultValues, draftKey, initial, kind]);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (initial || !saveLocal) return;
+    if (initial || !ownerId || draftLoaded.current) return;
+    draftLoaded.current = true;
+    let active = true;
+    void (async () => {
+      try {
+        let candidate = await readEncryptedDraft<unknown>(ownerId, kind);
+        if (!candidate) {
+          const raw =
+            localStorage.getItem(draftKey) ??
+            localStorage.getItem(`factumation-document-draft-v1-${kind}`);
+          if (raw) {
+            const parsed = JSON.parse(raw) as { kind?: string; values?: unknown };
+            if (parsed.kind === kind) candidate = parsed.values;
+          }
+        }
+        const candidateValues =
+          candidate && typeof candidate === 'object' ? candidate : ({} as Record<string, never>);
+        const validated = documentFormSchema.safeParse({ ...defaultValues, ...candidateValues });
+        if (active && validated.success) setSavedDraft(validated.data);
+        const jobs = await listDocumentJobs(ownerId, { includeBlocked: true });
+        const pending = jobs.find((job) => job.kind === kind);
+        if (active && pending) {
+          queuedJobId.current = pending.id;
+          setQueuedJob({ id: pending.id, action: pending.action, blocked: pending.blocked });
+          if (pending.blocked && pending.lastError) setSubmitError(pending.lastError);
+        }
+        localStorage.removeItem(draftKey);
+        localStorage.removeItem(`factumation-document-draft-v1-${kind}`);
+      } catch {
+        if (active) {
+          setLocalStorageError('Le brouillon local n’a pas pu être déchiffré sur cet appareil.');
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [defaultValues, draftKey, initial, kind, ownerId]);
+
+  useEffect(() => {
+    if (initial || !saveLocal || !ownerId || queuedJob) return;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     const subscription = watch((next) => {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ version: 2, kind, savedAt: new Date().toISOString(), values: next }),
-      );
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        void saveEncryptedDraft(ownerId, kind, next).catch(() => {
+          setLocalStorageError('Le brouillon n’a pas pu être sauvegardé sur cet appareil.');
+        });
+      }, 500);
     });
-    return () => subscription.unsubscribe();
-  }, [draftKey, initial, kind, saveLocal, watch]);
+    return () => {
+      subscription.unsubscribe();
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [initial, kind, ownerId, queuedJob, saveLocal, watch]);
+
+  useEffect(() => {
+    const handleResult = (event: Event) => {
+      const detail = (event as CustomEvent<OutboxResult>).detail;
+      if (detail.jobId !== queuedJobId.current) return;
+      if (detail.status === 'synced' && detail.documentId) {
+        queuedJobId.current = null;
+        setQueuedJob(null);
+        setSaveLocal(false);
+        setSyncedDocumentId(detail.documentId);
+        setSavedDraft(null);
+      } else if (detail.status === 'blocked') {
+        setQueuedJob((current) => (current ? { ...current, blocked: true } : current));
+        setSubmitError(detail.message ?? 'La synchronisation nécessite votre attention.');
+      }
+    };
+    window.addEventListener(OUTBOX_RESULT_EVENT, handleResult);
+    return () => window.removeEventListener(OUTBOX_RESULT_EVENT, handleResult);
+  }, []);
 
   // react-hook-form may update nested item values without replacing the array
   // reference. Calculate during render so totals always reflect the latest input.
@@ -124,8 +204,7 @@ export function DocumentForm({
     }
   })();
 
-  async function saveDocument(data: DocumentFormValues): Promise<Invoice | Quote> {
-    if (persistedDocument.current && !initial) return persistedDocument.current;
+  function buildDocumentPayload(data: DocumentFormValues): Record<string, unknown> {
     const optional = (value: string) => value || null;
     const documentFields = {
       items: data.items,
@@ -138,7 +217,7 @@ export function DocumentForm({
       paymentMethod: optional(data.paymentMethod),
       notes: optional(data.notes),
     };
-    const payload = initial
+    return initial
       ? documentFields
       : {
           companyId: data.companyId,
@@ -160,6 +239,11 @@ export function DocumentForm({
             : { clientId: data.clientId }),
           ...documentFields,
         };
+  }
+
+  async function saveDocument(data: DocumentFormValues): Promise<Invoice | Quote> {
+    if (persistedDocument.current && !initial) return persistedDocument.current;
+    const payload = buildDocumentPayload(data);
     const saved = await browserApiRequest<Invoice | Quote>(
       initial ? `/${collection}/${initial.id}` : `/${collection}`,
       {
@@ -170,6 +254,30 @@ export function DocumentForm({
     );
     persistedDocument.current = saved;
     return saved;
+  }
+
+  async function queueDocument(data: DocumentFormValues, action: SubmissionAction): Promise<void> {
+    const currentOwnerId =
+      ownerId ?? (await createClient().auth.getSession()).data.session?.user.id ?? null;
+    if (!currentOwnerId) {
+      throw new BrowserApiError(401, null, 'Votre session a expiré. Reconnectez-vous.');
+    }
+    await saveEncryptedDraft(currentOwnerId, kind, data);
+    const job = await enqueueDocumentJob({
+      ownerId: currentOwnerId,
+      kind,
+      action,
+      locale,
+      idempotencyKey: idempotencyKey.current,
+      payload: buildDocumentPayload(data),
+    });
+    setOwnerId(currentOwnerId);
+    setSaveLocal(true);
+    queuedJobId.current = job.id;
+    setQueuedJob({ id: job.id, action, blocked: false });
+    setSyncedDocumentId(null);
+    setSubmitError(null);
+    await requestDocumentSync();
   }
 
   async function downloadPdf(id: string): Promise<void> {
@@ -186,6 +294,10 @@ export function DocumentForm({
     setSubmissionAction(action);
     setSubmitError(null);
     try {
+      if (!initial && !navigator.onLine) {
+        await queueDocument(data, action);
+        return;
+      }
       let saved = await saveDocument(data);
       if (!initial && action !== 'draft' && saved.status === 'draft') {
         saved = await browserApiRequest<Invoice | Quote>(`/${collection}/${saved.id}/issue`, {
@@ -200,11 +312,25 @@ export function DocumentForm({
         persistedDocument.current = saved;
       }
       if (!initial && action === 'pdf') await downloadPdf(saved.id);
+      if (ownerId) await deleteEncryptedDraft(ownerId, kind);
       localStorage.removeItem(draftKey);
       localStorage.removeItem(`factumation-document-draft-v1-${kind}`);
       router.push(`/${locale}/${collection}/${saved.id}`);
       router.refresh();
     } catch (error) {
+      if (!initial && error instanceof BrowserApiError && error.status === 0) {
+        try {
+          await queueDocument(data, action);
+          return;
+        } catch (queueError) {
+          setSubmitError(
+            queueError instanceof Error
+              ? queueError.message
+              : 'Le document n’a pas pu être placé en attente.',
+          );
+          return;
+        }
+      }
       setSubmitError(
         error instanceof BrowserApiError
           ? `${error.message}${error.requestId ? ` (référence ${error.requestId})` : ''}`
@@ -216,6 +342,14 @@ export function DocumentForm({
   }
 
   function runAction(action: SubmissionAction): void {
+    if (queuedJob) {
+      setSubmitError('Ce document est déjà en attente de synchronisation.');
+      return;
+    }
+    if (syncedDocumentId) {
+      setSubmitError('Ce document est déjà synchronisé. Ouvrez-le pour continuer.');
+      return;
+    }
     void handleSubmit(
       (data) => submit(data, action),
       () => setSubmissionAction(null),
@@ -350,6 +484,7 @@ export function DocumentForm({
                     reset(savedDraft);
                     setSaveLocal(true);
                     setSavedDraft(null);
+                    setLocalStorageError(null);
                   }}
                   className="font-semibold underline"
                 >
@@ -360,6 +495,7 @@ export function DocumentForm({
                   onClick={() => {
                     localStorage.removeItem(draftKey);
                     localStorage.removeItem(`factumation-document-draft-v1-${kind}`);
+                    if (ownerId) void deleteEncryptedDraft(ownerId, kind);
                     setSavedDraft(null);
                   }}
                   className="text-blue-700"
@@ -368,6 +504,61 @@ export function DocumentForm({
                 </button>
               </div>
             </div>
+          ) : null}
+          {queuedJob ? (
+            <div
+              role="status"
+              className="flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span>
+                <strong className="block">
+                  {queuedJob.blocked ? 'Synchronisation à corriger' : 'Synchronisation en attente'}
+                </strong>
+                {queuedJob.blocked
+                  ? 'Le serveur a refusé ce document. Annulez l’envoi, corrigez les informations puis réessayez.'
+                  : 'Le document est chiffré sur cet appareil et sera synchronisé automatiquement. Annulez l’envoi avant de modifier son contenu.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  void deleteDocumentJob(queuedJob.id).then(() => {
+                    queuedJobId.current = null;
+                    idempotencyKey.current = crypto.randomUUID();
+                    setQueuedJob(null);
+                    setSubmitError(null);
+                  });
+                }}
+                className="font-semibold underline"
+              >
+                Annuler l’envoi
+              </button>
+            </div>
+          ) : null}
+          {syncedDocumentId ? (
+            <div
+              role="status"
+              className="flex flex-col gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span>
+                <strong className="block">Document synchronisé</strong>
+                Les données ont bien été enregistrées sur le serveur. Ouvrez le document pour
+                continuer ou télécharger son PDF.
+              </span>
+              <Link
+                href={`/${locale}/${collection}/${syncedDocumentId}`}
+                className="font-semibold underline"
+              >
+                Ouvrir
+              </Link>
+            </div>
+          ) : null}
+          {localStorageError ? (
+            <p
+              role="alert"
+              className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+            >
+              {localStorageError}
+            </p>
           ) : null}
 
           <DocumentClientStep
@@ -429,15 +620,20 @@ export function DocumentForm({
                 checked={saveLocal}
                 onChange={(event) => {
                   setSaveLocal(event.target.checked);
-                  if (!event.target.checked) localStorage.removeItem(draftKey);
+                  setLocalStorageError(null);
+                  if (!event.target.checked && ownerId) {
+                    void deleteEncryptedDraft(ownerId, kind);
+                  }
+                  localStorage.removeItem(draftKey);
                 }}
                 className="mt-0.5 size-4 accent-blue-700"
               />
               <span>
                 <strong className="block text-slate-900">
-                  Sauvegarder ce brouillon sur cet appareil
+                  Sauvegarder ce brouillon chiffré sur cet appareil
                 </strong>
-                Les données restent dans ce navigateur jusqu’à l’enregistrement ou la déconnexion.
+                Les données restent dans ce navigateur pendant 30 jours au maximum, jusqu’à
+                l’enregistrement ou la déconnexion.
               </span>
             </label>
           ) : null}

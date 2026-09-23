@@ -19,15 +19,23 @@ export async function browserApiRequest<T>(path: string, init?: RequestInit): Pr
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new BrowserApiError(401, null, 'Votre session a expiré. Reconnectez-vous.');
-  const response = await fetch(`${getPublicEnvironment().apiUrl}${path}`, {
-    ...init,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...init?.headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${getPublicEnvironment().apiUrl}${path}`, {
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...init?.headers,
+      },
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new BrowserApiError(0, null, 'Connexion indisponible. La requête sera réessayée.');
+    }
+    throw error;
+  }
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
       detail?: string;
