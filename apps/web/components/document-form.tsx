@@ -431,7 +431,9 @@ export function DocumentForm({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-8 lg:px-10 lg:py-12">
+    <main
+      className={`mx-auto max-w-5xl px-5 pt-8 lg:px-10 lg:pt-12 ${initial || desktopPreview ? 'pb-8 lg:pb-12' : 'pb-64'}`}
+    >
       {desktopPreview ? (
         <DocumentPreview
           invoice={invoice}

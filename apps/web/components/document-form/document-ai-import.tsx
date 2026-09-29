@@ -27,6 +27,7 @@ export function DocumentAiImport({
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const unmounted = useRef(false);
+  const [activeMode, setActiveMode] = useState<ImportMode>('image');
   const [processing, setProcessing] = useState<ImportMode | null>(null);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -44,6 +45,7 @@ export function DocumentAiImport({
   }, []);
 
   async function upload(mode: ImportMode, file: File): Promise<void> {
+    setActiveMode(mode);
     const maximum = mode === 'image' ? MAX_IMAGE_BYTES : MAX_AUDIO_BYTES;
     if (file.size > maximum) {
       setError(
@@ -81,6 +83,7 @@ export function DocumentAiImport({
   }
 
   async function startRecording(): Promise<void> {
+    setActiveMode('voice');
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setError('L’enregistrement vocal n’est pas pris en charge par ce navigateur.');
       return;
@@ -137,68 +140,8 @@ export function DocumentAiImport({
   }
 
   const busy = disabled || processing !== null;
-  return (
-    <section
-      className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 sm:p-5"
-      aria-labelledby="ai-import-title"
-    >
-      <div>
-        <h2 id="ai-import-title" className="font-semibold text-slate-900">
-          Préremplir avec l’assistant
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Photographiez un document ou dictez ses informations. Vous gardez la validation finale.
-        </p>
-      </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <input
-          ref={imageInput}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          capture="environment"
-          className="sr-only"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void upload('image', file);
-          }}
-        />
-        <button
-          type="button"
-          disabled={busy || recording}
-          onClick={() => imageInput.current?.click()}
-          className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[var(--primary-900)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-800)] disabled:opacity-50"
-        >
-          {processing === 'image' ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Camera className="size-4" />
-          )}
-          {processing === 'image' ? 'Analyse de la photo…' : 'Prendre une photo'}
-        </button>
-        <button
-          type="button"
-          disabled={busy && !recording}
-          onClick={recording ? stopRecording : () => void startRecording()}
-          className={`focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold disabled:opacity-50 ${recording ? 'border-red-300 bg-red-50 text-red-700' : 'border-blue-200 bg-white text-[var(--primary-900)] hover:bg-blue-50'}`}
-        >
-          {processing === 'voice' ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : recording ? (
-            <Square className="size-4 fill-current" />
-          ) : (
-            <Mic className="size-4" />
-          )}
-          {processing === 'voice'
-            ? 'Transcription…'
-            : recording
-              ? `Arrêter (${seconds} s)`
-              : 'Dicter les informations'}
-        </button>
-      </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500">
-        Maximum : photo 8 Mo, dictée 60 secondes. Le média est envoyé pour analyse puis supprimé de
-        la mémoire ; vérifiez toujours le préremplissage.
-      </p>
+  const feedback = (
+    <>
       {error ? (
         <p role="alert" className="mt-3 text-sm font-medium text-red-700">
           {error}
@@ -226,7 +169,92 @@ export function DocumentAiImport({
           ) : null}
         </div>
       ) : null}
-    </section>
+    </>
+  );
+
+  return (
+    <>
+      <section
+        className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 sm:p-5"
+        aria-labelledby="ai-import-title"
+      >
+        <div>
+          <h2 id="ai-import-title" className="font-semibold text-slate-900">
+            Préremplir avec l’assistant
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Photographiez un document pour préremplir les informations. Vous gardez la validation
+            finale.
+          </p>
+        </div>
+        <div className="mt-4 grid gap-3">
+          <input
+            ref={imageInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void upload('image', file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={busy || recording}
+            onClick={() => imageInput.current?.click()}
+            className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[var(--primary-900)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-800)] disabled:opacity-50"
+          >
+            {processing === 'image' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Camera className="size-4" />
+            )}
+            {processing === 'image' ? 'Analyse de la photo…' : 'Prendre une photo'}
+          </button>
+        </div>
+        <p className="mt-3 text-xs leading-5 text-slate-500">
+          Maximum : photo 8 Mo. Le média est envoyé pour analyse puis supprimé de la mémoire ;
+          vérifiez toujours le préremplissage.
+        </p>
+        {activeMode === 'image' ? feedback : null}
+      </section>
+      {/* Anchor the absolute panel to the viewport without blocking the underlying form. */}
+      <div className="pointer-events-none fixed inset-0 z-40">
+        <section
+          aria-label="Dictée vocale"
+          className="pointer-events-auto absolute bottom-[calc(10rem+env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] w-72 max-w-[calc(100%-2rem)] rounded-xl border border-blue-200 bg-white p-3 shadow-xl sm:bottom-[calc(5rem+env(safe-area-inset-bottom))] xl:bottom-6"
+        >
+          <div className="max-h-[calc(100dvh-15rem)] overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-10rem)] xl:max-h-[calc(100dvh-4rem)]">
+            <p id="voice-import-help" className="mb-2 text-xs leading-5 text-slate-500">
+              Dictez pendant 60 secondes maximum. L’audio est envoyé pour analyse puis supprimé de
+              la mémoire ; vérifiez le préremplissage.
+            </p>
+            <button
+              type="button"
+              aria-describedby="voice-import-help"
+              disabled={busy && !recording}
+              onClick={recording ? stopRecording : () => void startRecording()}
+              className={`focus-ring inline-flex w-full min-h-12 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold disabled:opacity-50 ${recording ? 'border-red-300 bg-red-50 text-red-700' : 'border-blue-200 bg-white text-[var(--primary-900)] hover:bg-blue-50'}`}
+            >
+              {processing === 'voice' ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : recording ? (
+                <Square className="size-4 fill-current" />
+              ) : (
+                <Mic className="size-4" />
+              )}
+              {processing === 'voice'
+                ? 'Transcription…'
+                : recording
+                  ? `Arrêter (${seconds} s)`
+                  : 'Dicter les informations'}
+            </button>
+            {activeMode === 'voice' ? feedback : null}
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
 
