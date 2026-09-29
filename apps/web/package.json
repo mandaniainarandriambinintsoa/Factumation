@@ -19,7 +19,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.88.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "html2pdf.js": "^0.14.0"
   },
   "devDependencies": {
     "@factumation/typescript-config": "workspace:*",

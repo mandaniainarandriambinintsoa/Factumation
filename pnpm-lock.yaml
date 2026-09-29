@@ -253,6 +253,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.116.0
         version: 2.116.0
+      html2pdf.js:
+        specifier: ^0.14.0
+        version: 0.14.0
       lucide-react:
         specifier: ^0.555.0
         version: 0.555.0(react@19.3.0)

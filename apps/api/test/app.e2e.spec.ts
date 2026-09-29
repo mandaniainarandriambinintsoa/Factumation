@@ -72,6 +72,19 @@ describe('API foundation', () => {
     expect(response.body.requestId).toEqual(response.headers['x-request-id']);
   });
 
+  it.each([
+    ['get', '/api/v1/companies'],
+    ['get', '/api/v1/clients'],
+    ['get', '/api/v1/invoices'],
+    ['get', '/api/v1/quotes'],
+    ['post', '/api/v1/invoices'],
+    ['post', '/api/v1/quotes'],
+    ['post', '/api/v1/invoices/00000000-0000-4000-8000-000000000001/send'],
+    ['post', '/api/v1/quotes/00000000-0000-4000-8000-000000000001/send'],
+  ] as const)('rejects guest %s %s', async (method, path) => {
+    await request(app.getHttpServer())[method](path).expect(401);
+  });
+
   it('publishes OpenAPI only when explicitly enabled', async () => {
     await request(app.getHttpServer()).get('/api/docs/openapi.json').expect(200);
   });

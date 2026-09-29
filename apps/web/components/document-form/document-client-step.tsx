@@ -8,6 +8,7 @@ import { Field, fieldClass, labelClass } from './document-form-shared';
 
 export function DocumentClientStep({
   active,
+  guest = false,
   initial,
   companies,
   clients,
@@ -17,6 +18,7 @@ export function DocumentClientStep({
   setValue,
 }: {
   active: boolean;
+  guest?: boolean;
   initial?: Invoice | Quote | undefined;
   companies: Company[];
   clients: Client[];
@@ -36,39 +38,43 @@ export function DocumentClientStep({
           Client
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Choisissez l’émetteur et le destinataire du document.
+          {guest
+            ? 'Saisissez le destinataire, sans l’enregistrer dans un compte.'
+            : 'Choisissez l’émetteur et le destinataire du document.'}
         </p>
       </div>
-      <Field label="Entreprise" error={errors.companyId?.message}>
-        {initial ? (
-          <>
-            <input type="hidden" {...register('companyId')} />
-            <span className={`${fieldClass} flex items-center bg-slate-100`}>
-              {companies.find((company) => company.id === initial.companyId)?.name ??
-                initial.companyName}
-            </span>
-          </>
-        ) : (
-          <select
-            {...register('companyId', {
-              onChange: (event) => {
-                const company = companies.find((entry) => entry.id === event.target.value);
-                if (!company) return;
-                setValue('currency', company.defaultCurrency as DocumentFormValues['currency']);
-                setValue('paymentMethod', normalizePaymentMethod(company.defaultPaymentMethod));
-              },
-            })}
-            className={fieldClass}
-          >
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-      {initial ? (
+      {!guest ? (
+        <Field label="Entreprise" error={errors.companyId?.message}>
+          {initial ? (
+            <>
+              <input type="hidden" {...register('companyId')} />
+              <span className={`${fieldClass} flex items-center bg-slate-100`}>
+                {companies.find((company) => company.id === initial.companyId)?.name ??
+                  initial.companyName}
+              </span>
+            </>
+          ) : (
+            <select
+              {...register('companyId', {
+                onChange: (event) => {
+                  const company = companies.find((entry) => entry.id === event.target.value);
+                  if (!company) return;
+                  setValue('currency', company.defaultCurrency as DocumentFormValues['currency']);
+                  setValue('paymentMethod', normalizePaymentMethod(company.defaultPaymentMethod));
+                },
+              })}
+              className={fieldClass}
+            >
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+      ) : null}
+      {guest ? null : initial ? (
         <Field label="Client">
           <input type="hidden" {...register('clientMode')} />
           <input type="hidden" {...register('clientId')} />
