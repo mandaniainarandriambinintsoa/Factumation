@@ -25,6 +25,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: node --test scripts/coolify-deploy.test.mjs
       - run: pnpm build
       - run: pnpm build:workspaces
 
@@ -37,3 +38,22 @@ jobs:
         with:
           deno-version: v2.x
       - run: deno check --config supabase/functions/deno.json supabase/functions/*/index.ts
+
+  deploy-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [application, edge-functions]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    concurrency:
+      group: factumation-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy and verify production sequentially
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_DEPLOYMENTS: ${{ vars.COOLIFY_DEPLOYMENTS }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: node scripts/coolify-deploy.mjs
