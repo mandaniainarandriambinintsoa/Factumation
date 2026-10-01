@@ -12,6 +12,7 @@ export function DocumentReviewStep({
   invoice,
   companies,
   clients,
+  issuerName,
   values,
   calculation,
   locale,
@@ -20,11 +21,13 @@ export function DocumentReviewStep({
   invoice: boolean;
   companies: Company[];
   clients: Client[];
+  issuerName?: string;
   values: DocumentFormValues;
   calculation: DocumentCalculation | null;
   locale: string;
 }) {
-  const company = companies.find((item) => item.id === values.companyId)?.name ?? 'Entreprise';
+  const company =
+    issuerName || companies.find((item) => item.id === values.companyId)?.name || 'Entreprise';
   const client =
     values.clientMode === 'new'
       ? values.clientName

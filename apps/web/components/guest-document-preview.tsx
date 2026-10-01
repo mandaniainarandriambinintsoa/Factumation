@@ -2,7 +2,7 @@ import type { DocumentCalculation } from '@factumation/domain';
 import { formatMoney } from '@/lib/format';
 import { paymentMethodLabel } from '@/lib/document-options';
 import type { DocumentFormValues } from './document-form/document-form-schema';
-import type { GuestIssuer } from './guest-document-form';
+import type { GuestIssuer } from './guest-document-parties-step';
 
 // Inline, explicit RGB colors also make this document safe for html2canvas.
 export function GuestDocumentPreview({

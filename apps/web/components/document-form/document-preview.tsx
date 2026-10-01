@@ -7,9 +7,12 @@ import { formatMoney } from '@/lib/format';
 
 import type { SubmissionAction } from './document-action-step';
 import type { DocumentFormValues } from './document-form-schema';
+import type { GuestIssuer } from '../guest-document-parties-step';
 
 export function DocumentPreview({
   invoice,
+  guest = false,
+  guestIssuer,
   initial,
   companies,
   clients,
@@ -21,6 +24,8 @@ export function DocumentPreview({
   onAction,
 }: {
   invoice: boolean;
+  guest?: boolean;
+  guestIssuer?: GuestIssuer;
   initial?: Invoice | Quote | undefined;
   companies: Company[];
   clients: Client[];
@@ -34,124 +39,134 @@ export function DocumentPreview({
   const company = companies.find((entry) => entry.id === values.companyId);
   const savedClient = clients.find((entry) => entry.id === values.clientId);
   const client = resolveClient(values, initial, savedClient);
-  const number = initial?.number ?? initial?.draftReference ?? 'Brouillon';
+  const number = guestIssuer?.number || initial?.number || initial?.draftReference || 'Brouillon';
   const disabled = pendingAction !== null;
 
   return (
-    <div className="hidden sm:block">
+    <div className={guest ? 'block' : 'hidden sm:block'}>
       <h1 className="text-3xl font-bold text-slate-950">Aperçu</h1>
       <p className="mt-2 text-slate-500">
         Vérifiez les informations avant la génération définitive.
       </p>
 
-      <article className="mt-10 min-h-[720px] rounded-sm border border-slate-200 bg-white px-12 py-14 shadow-[0_18px_55px_rgba(15,23,42,0.08)] lg:px-16">
-        <header className="grid grid-cols-2 gap-10 border-b border-slate-200 pb-9">
-          <div>
-            {company?.logoUrl ? (
-              <img
-                src={company.logoUrl}
-                alt={`Logo ${company.name}`}
-                className="mb-7 h-14 max-w-40 object-contain object-left"
-              />
-            ) : null}
-            <h2 className="text-xl font-bold text-slate-950">
-              {company?.name ?? initial?.companyName}
-            </h2>
-            <ContactLines
-              address={company?.address ?? initial?.companyAddress}
-              email={company?.email ?? initial?.companyEmail}
-              phone={company?.phone ?? initial?.companyPhone}
-            />
-            <FiscalLines entity={company} />
-          </div>
-
-          <div className="text-right">
-            <div className="flex items-baseline justify-end gap-3">
-              <span className="text-3xl font-light tracking-wide text-slate-900">
-                {invoice ? 'FACTURE' : 'DEVIS'}
-              </span>
-              <strong className="text-xl text-[var(--primary-900)]">{number}</strong>
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              Date : {formatDate(values.documentDate, locale)}
-            </p>
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-slate-950">{client.name || 'Client'}</h3>
+      <div className={guest ? 'mt-10 overflow-x-auto pb-3' : 'mt-10'}>
+        <article
+          className={`${guest ? 'min-w-[760px]' : ''} min-h-[720px] rounded-sm border border-slate-200 bg-white px-12 py-14 shadow-[0_18px_55px_rgba(15,23,42,0.08)] lg:px-16`}
+        >
+          <header className="grid grid-cols-2 gap-10 border-b border-slate-200 pb-9">
+            <div>
+              {!guestIssuer && company?.logoUrl ? (
+                <img
+                  src={company.logoUrl}
+                  alt={`Logo ${company.name}`}
+                  className="mb-7 h-14 max-w-40 object-contain object-left"
+                />
+              ) : null}
+              <h2 className="text-xl font-bold text-slate-950">
+                {guestIssuer?.name || company?.name || initial?.companyName}
+              </h2>
               <ContactLines
-                address={client.address}
-                email={client.email}
-                phone={client.phone}
-                right
+                address={guestIssuer?.address || company?.address || initial?.companyAddress}
+                email={guestIssuer?.email || company?.email || initial?.companyEmail}
+                phone={guestIssuer?.phone || company?.phone || initial?.companyPhone}
               />
-              <FiscalLines entity={client} />
+              {guestIssuer ? (
+                <p className="mt-3 whitespace-pre-line text-sm leading-5 text-slate-600">
+                  {guestIssuer.fiscalInfo}
+                </p>
+              ) : (
+                <FiscalLines entity={company} />
+              )}
             </div>
-          </div>
-        </header>
 
-        <div className="mt-10">
-          <div className="grid grid-cols-[minmax(0,1fr)_7rem_10rem_9rem] border-b border-slate-200 pb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-            <span>Description</span>
-            <span className="text-right">Quantité</span>
-            <span className="text-right">Prix unitaire</span>
-            <span className="text-right">Total</span>
-          </div>
-          {values.items.map((item, index) => (
-            <div
-              key={`${item.description}-${index}`}
-              className="grid min-h-28 grid-cols-[minmax(0,1fr)_7rem_10rem_9rem] items-start border-b border-slate-200 py-5 text-sm"
-            >
-              <strong className="pr-5 font-medium text-slate-800">{item.description}</strong>
-              <span className="text-right text-slate-600">{item.quantity}</span>
-              <span className="text-right text-slate-600">
-                {formatMoney(item.unitPrice, values.currency, locale)}
-              </span>
-              <strong className="text-right text-slate-950">
-                {formatMoney(calculation?.items[index]?.total ?? '0', values.currency, locale)}
-              </strong>
+            <div className="text-right">
+              <div className="flex items-baseline justify-end gap-3">
+                <span className="text-3xl font-light tracking-wide text-slate-900">
+                  {invoice ? 'FACTURE' : 'DEVIS'}
+                </span>
+                <strong className="text-xl text-[var(--primary-900)]">{number}</strong>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                Date : {formatDate(values.documentDate, locale)}
+              </p>
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-slate-950">{client.name || 'Client'}</h3>
+                <ContactLines
+                  address={client.address}
+                  email={client.email}
+                  phone={client.phone}
+                  right
+                />
+                <FiscalLines entity={client} />
+              </div>
             </div>
-          ))}
-        </div>
+          </header>
 
-        <div className="mt-8 grid grid-cols-2 gap-16">
-          <div className="text-sm text-slate-600">
-            <h3 className="font-bold text-slate-950">Informations de paiement</h3>
-            <p className="mt-2">Méthode : {paymentMethodLabel(values.paymentMethod)}</p>
-            <p>Devise : {values.currency}</p>
-            {invoice && values.secondDate ? (
-              <p>Échéance : {formatDate(values.secondDate, locale)}</p>
-            ) : null}
+          <div className="mt-10">
+            <div className="grid grid-cols-[minmax(0,1fr)_7rem_10rem_9rem] border-b border-slate-200 pb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span>Description</span>
+              <span className="text-right">Quantité</span>
+              <span className="text-right">Prix unitaire</span>
+              <span className="text-right">Total</span>
+            </div>
+            {values.items.map((item, index) => (
+              <div
+                key={`${item.description}-${index}`}
+                className="grid min-h-28 grid-cols-[minmax(0,1fr)_7rem_10rem_9rem] items-start border-b border-slate-200 py-5 text-sm"
+              >
+                <strong className="pr-5 font-medium text-slate-800">{item.description}</strong>
+                <span className="text-right text-slate-600">{item.quantity}</span>
+                <span className="text-right text-slate-600">
+                  {formatMoney(item.unitPrice, values.currency, locale)}
+                </span>
+                <strong className="text-right text-slate-950">
+                  {formatMoney(calculation?.items[index]?.total ?? '0', values.currency, locale)}
+                </strong>
+              </div>
+            ))}
           </div>
-          <div className="space-y-3 text-sm">
-            <TotalLine
-              label="Sous-total"
-              value={formatMoney(calculation?.subtotal ?? '0', values.currency, locale)}
-            />
-            {values.taxMode === 'vat' ? (
+
+          <div className="mt-8 grid grid-cols-2 gap-16">
+            <div className="text-sm text-slate-600">
+              <h3 className="font-bold text-slate-950">Informations de paiement</h3>
+              <p className="mt-2">Méthode : {paymentMethodLabel(values.paymentMethod)}</p>
+              <p>Devise : {values.currency}</p>
+              {invoice && values.secondDate ? (
+                <p>Échéance : {formatDate(values.secondDate, locale)}</p>
+              ) : null}
+            </div>
+            <div className="space-y-3 text-sm">
               <TotalLine
-                label={`TVA (${values.taxRate} %)`}
-                value={formatMoney(calculation?.taxAmount ?? '0', values.currency, locale)}
+                label="Sous-total"
+                value={formatMoney(calculation?.subtotal ?? '0', values.currency, locale)}
               />
-            ) : null}
-            {values.taxMode === 'withholding' ? (
-              <TotalLine
-                label={`Retenue (${values.taxRate} %)`}
-                value={`- ${formatMoney(calculation?.withholdingAmount ?? '0', values.currency, locale)}`}
-              />
-            ) : null}
-            <div className="flex justify-between border-t border-slate-200 pt-4 text-xl font-bold text-[var(--primary-900)]">
-              <span>Total à payer</span>
-              <span>{formatMoney(calculation?.amountDue ?? '0', values.currency, locale)}</span>
+              {values.taxMode === 'vat' ? (
+                <TotalLine
+                  label={`TVA (${values.taxRate} %)`}
+                  value={formatMoney(calculation?.taxAmount ?? '0', values.currency, locale)}
+                />
+              ) : null}
+              {values.taxMode === 'withholding' ? (
+                <TotalLine
+                  label={`Retenue (${values.taxRate} %)`}
+                  value={`- ${formatMoney(calculation?.withholdingAmount ?? '0', values.currency, locale)}`}
+                />
+              ) : null}
+              <div className="flex justify-between border-t border-slate-200 pt-4 text-xl font-bold text-[var(--primary-900)]">
+                <span>Total à payer</span>
+                <span>{formatMoney(calculation?.amountDue ?? '0', values.currency, locale)}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {values.notes ? (
-          <div className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-600">
-            <h3 className="font-bold text-slate-950">Notes</h3>
-            <p className="mt-2 whitespace-pre-wrap">{values.notes}</p>
-          </div>
-        ) : null}
-      </article>
+          {values.notes ? (
+            <div className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-600">
+              <h3 className="font-bold text-slate-950">Notes</h3>
+              <p className="mt-2 whitespace-pre-wrap">{values.notes}</p>
+            </div>
+          ) : null}
+        </article>
+      </div>
 
       <div className="mt-6 flex flex-wrap justify-end gap-3">
         <button
@@ -164,18 +179,20 @@ export function DocumentPreview({
         </button>
         <PreviewAction
           action="pdf"
-          label="Enregistrer et télécharger"
+          label={guest ? 'Télécharger le PDF' : 'Enregistrer et télécharger'}
           icon={Download}
           pendingAction={pendingAction}
           onAction={onAction}
         />
-        <PreviewAction
-          action="send"
-          label="Envoyer"
-          icon={Mail}
-          pendingAction={pendingAction}
-          onAction={onAction}
-        />
+        {guest ? null : (
+          <PreviewAction
+            action="send"
+            label="Envoyer"
+            icon={Mail}
+            pendingAction={pendingAction}
+            onAction={onAction}
+          />
+        )}
       </div>
     </div>
   );
