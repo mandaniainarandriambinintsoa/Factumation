@@ -1,0 +1,11 @@
+FACTUMATION — KIT SVG
+
+6 fichiers SVG : logo horizontal et symbole seul, en couleur, noir et blanc.
+Tous les fonds sont transparents. Tous les éléments sont des tracés vectoriels.
+Aucune police à installer, aucune image incorporée, aucune ressource externe.
+
+Bleu : #1675F8 ; bleu nuit : #101B30.
+La géométrie du symbole a été reconstruite à partir du concept validé.
+Le mot-symbole utilise URW Gothic Demi converti en tracés : approximation typographique du visuel généré, pas reproduction exacte.
+La version blanche est destinée à un fond sombre.
+Préserver les proportions et les marges intégrées ; ne pas étirer le logo.

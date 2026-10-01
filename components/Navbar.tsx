@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, FileText, User, LogOut, LayoutDashboard, ChevronDown, History, Settings, Shield } from 'lucide-react';
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
+  History,
+  Settings,
+  Shield,
+} from 'lucide-react';
 import { isAdmin } from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import AuthModal from './AuthModal';
+import BrandMark from './BrandMark';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from './ui/button';
 
@@ -61,14 +72,8 @@ const Navbar: React.FC = () => {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-
             {/* Logo */}
-            <Link to={path('/')} className="flex items-center gap-2 group">
-              <div className="bg-primary-900 text-white p-2 rounded-lg group-hover:scale-105 transition-transform duration-200">
-                <FileText size={24} />
-              </div>
-              <span className="font-bold text-xl text-primary-900 tracking-tight">Factumation</span>
-            </Link>
+            <BrandMark />
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-6">
@@ -141,7 +146,9 @@ const Navbar: React.FC = () => {
                         <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate">
                           {user.name || user.email.split('@')[0]}
                         </span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                        />
                       </Button>
 
                       {isUserMenuOpen && (
@@ -199,10 +206,7 @@ const Navbar: React.FC = () => {
                       >
                         {t('nav.login')}
                       </Button>
-                      <Button
-                        onClick={openRegisterModal}
-                        className="rounded-full"
-                      >
+                      <Button onClick={openRegisterModal} className="rounded-full">
                         {t('nav.register')}
                       </Button>
                     </>
@@ -294,7 +298,9 @@ const Navbar: React.FC = () => {
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-slate-900">{user.name || user.email.split('@')[0]}</p>
+                          <p className="font-medium text-slate-900">
+                            {user.name || user.email.split('@')[0]}
+                          </p>
                           <p className="text-sm text-slate-500">{user.email}</p>
                         </div>
                       </div>
@@ -329,17 +335,10 @@ const Navbar: React.FC = () => {
                     </>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={openLoginModal}
-                        className="w-full h-12"
-                      >
+                      <Button variant="outline" onClick={openLoginModal} className="w-full h-12">
                         {t('nav.login')}
                       </Button>
-                      <Button
-                        onClick={openRegisterModal}
-                        className="w-full h-12"
-                      >
+                      <Button onClick={openRegisterModal} className="w-full h-12">
                         {t('nav.register')}
                       </Button>
                     </div>

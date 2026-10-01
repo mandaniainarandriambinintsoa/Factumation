@@ -282,6 +282,20 @@ export async function generateMetadata({
       locale: french ? 'fr_FR' : 'en_US',
       title,
       description,
+      images: [
+        {
+          url: `${base}/og-image.png`,
+          width: 2400,
+          height: 1260,
+          alt: 'Factumation — la facturation simplifiée pour les professionnels',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${base}/og-image.png`],
     },
   };
 }

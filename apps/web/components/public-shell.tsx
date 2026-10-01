@@ -127,8 +127,11 @@ export function PublicShell({
       </header>
       {children}
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 Factumation. Tous droits réservés.</span>
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-start gap-3">
+            <BrandMark locale={locale} compact />
+            <span>© 2026 Factumation. Tous droits réservés.</span>
+          </div>
           <div className="flex gap-5">
             <Link href={`/${locale}/about`}>{t.about}</Link>
             <Link href={`/${locale}/contact`}>{t.contact}</Link>

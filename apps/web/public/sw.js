@@ -1,8 +1,14 @@
-const CACHE_NAME = 'factumation-static-v2';
+const CACHE_NAME = 'factumation-static-v3';
 const OFFLINE_URL = '/offline.html';
+const BRAND_ASSETS = [
+  OFFLINE_URL,
+  '/brand/factumation-logo.svg',
+  '/brand/factumation-symbol.svg',
+  '/icons/maskable.svg',
+];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL)));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(BRAND_ASSETS)));
   self.skipWaiting();
 });
 
@@ -64,7 +70,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/')) {
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname.startsWith('/brand/')
+  ) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(request);

@@ -1,13 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101b30" />
+    <link rel="icon" href="/brand/factumation-symbol.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/maskable.svg" />
 
     <!-- SEO Meta Tags -->
-    <title>Factumation - Générateur de Factures et Devis Gratuit en Ligne | France & Madagascar</title>
-    <meta name="description" content="Créez vos factures et devis professionnels gratuitement. Logiciel de facturation en ligne pour freelances, auto-entrepreneurs et PME en France, Madagascar et Afrique francophone. Export PDF, multi-devises (EUR, MGA, USD), conforme SIRET/NIF." />
-    <meta name="keywords" content="facturation en ligne gratuit, logiciel facturation gratuit, générateur facture en ligne, devis en ligne gratuit, facturation en ligne Madagascar, facturation en ligne France, facturation Afrique francophone, facture Madagascar gratuit, facture France gratuit, facturation électronique 2026, facture auto-entrepreneur gratuit, NIF Madagascar, SIRET France, free online invoice generator, free invoice maker Madagascar, invoice generator PDF, free quote generator online, online billing software free, facturation Antananarivo, facture MGA Ariary" />
+    <title>
+      Factumation - Générateur de Factures et Devis Gratuit en Ligne | France & Madagascar
+    </title>
+    <meta
+      name="description"
+      content="Créez vos factures et devis professionnels gratuitement. Logiciel de facturation en ligne pour freelances, auto-entrepreneurs et PME en France, Madagascar et Afrique francophone. Export PDF, multi-devises (EUR, MGA, USD), conforme SIRET/NIF."
+    />
+    <meta
+      name="keywords"
+      content="facturation en ligne gratuit, logiciel facturation gratuit, générateur facture en ligne, devis en ligne gratuit, facturation en ligne Madagascar, facturation en ligne France, facturation Afrique francophone, facture Madagascar gratuit, facture France gratuit, facturation électronique 2026, facture auto-entrepreneur gratuit, NIF Madagascar, SIRET France, free online invoice generator, free invoice maker Madagascar, invoice generator PDF, free quote generator online, online billing software free, facturation Antananarivo, facture MGA Ariary"
+    />
     <meta name="author" content="Factumation" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://factumation.vercel.app/fr" />
@@ -20,8 +31,14 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://factumation.vercel.app/" />
-    <meta property="og:title" content="Factumation - Générateur de Factures et Devis Gratuit | France & Madagascar" />
-    <meta property="og:description" content="Créez vos factures et devis professionnels gratuitement. Pour la France, Madagascar et l'Afrique francophone. Export PDF, multi-devises." />
+    <meta
+      property="og:title"
+      content="Factumation - Générateur de Factures et Devis Gratuit | France & Madagascar"
+    />
+    <meta
+      property="og:description"
+      content="Créez vos factures et devis professionnels gratuitement. Pour la France, Madagascar et l'Afrique francophone. Export PDF, multi-devises."
+    />
     <meta property="og:image" content="https://factumation.vercel.app/og-image.png" />
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:locale:alternate" content="en_US" />
@@ -29,8 +46,14 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://factumation.vercel.app/" />
-    <meta name="twitter:title" content="Factumation - Générateur de Factures et Devis Gratuit | France & Madagascar" />
-    <meta name="twitter:description" content="Créez vos factures et devis gratuitement. Pour la France, Madagascar et l'Afrique. Export PDF, multi-devises." />
+    <meta
+      name="twitter:title"
+      content="Factumation - Générateur de Factures et Devis Gratuit | France & Madagascar"
+    />
+    <meta
+      name="twitter:description"
+      content="Créez vos factures et devis gratuitement. Pour la France, Madagascar et l'Afrique. Export PDF, multi-devises."
+    />
     <meta name="twitter:image" content="https://factumation.vercel.app/og-image.png" />
 
     <!-- Google Search Console Verification -->
@@ -42,7 +65,7 @@
 
     <!-- Hash URL redirect script (for old /#/ links) -->
     <script>
-      (function() {
+      (function () {
         var hash = window.location.hash;
         if (hash && hash.startsWith('#/')) {
           var path = hash.slice(1);
@@ -54,21 +77,49 @@
     </script>
 
     <!-- Google Tag Manager (deferred to after first paint) -->
-    <script>window.addEventListener('load',function(){setTimeout(function(){(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-MBSX4499')},1500)});</script>
+    <script>
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+            var f = d.getElementsByTagName(s)[0],
+              j = d.createElement(s),
+              dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+          })(window, document, 'script', 'dataLayer', 'GTM-MBSX4499');
+        }, 1500);
+      });
+    </script>
     <!-- End Google Tag Manager -->
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <noscript
+      ><link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    /></noscript>
     <!-- Schema.org JSON-LD injected per-page by prerender.mjs -->
-</head>
-  <body class="bg-slate-50 text-slate-800 antialiased selection:bg-primary-500 selection:text-white">
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 antialiased selection:bg-primary-500 selection:text-white"
+  >
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MBSX4499"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-MBSX4499"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
     <div id="root"></div>

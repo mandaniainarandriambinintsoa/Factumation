@@ -1,14 +1,26 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  FileText, Home, ClipboardList, History, Tag, Info, Mail, BookOpen,
-  Settings, Shield, LogOut, User, X
+  FileText,
+  Home,
+  ClipboardList,
+  History,
+  Tag,
+  Info,
+  Mail,
+  BookOpen,
+  Settings,
+  Shield,
+  LogOut,
+  User,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import { isAdmin } from '../services/adminService';
 import LanguageSwitcher from './LanguageSwitcher';
+import BrandMark from './BrandMark';
 import { Button } from './ui/button';
 
 interface SidebarProps {
@@ -31,7 +43,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   // Close mobile sidebar on route change
@@ -69,12 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     <div className="flex flex-col h-full">
       {/* Header with logo + close (close only on mobile) */}
       <div className="flex items-center justify-between px-5 h-14 border-b border-slate-100 shrink-0">
-        <Link to={path('/')} className="flex items-center gap-2.5" onClick={onClose}>
-          <div className="bg-primary-900 text-white p-1.5 rounded-lg">
-            <FileText size={20} />
-          </div>
-          <span className="font-bold text-lg text-primary-900 tracking-tight">Factumation</span>
-        </Link>
+        <BrandMark compact onClick={onClose} />
         <Button
           variant="ghost"
           size="icon"
@@ -88,10 +97,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Primary nav */}
       <div className="px-3 pt-5 pb-2">
-        <p className="px-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</p>
+        <p className="px-4 pb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          Menu
+        </p>
         <nav className="space-y-1">
           {primaryLinks.map((link) => (
-            <Link key={link.path} to={path(link.path)} onClick={onClose} className={linkClass(link.path)}>
+            <Link
+              key={link.path}
+              to={path(link.path)}
+              onClick={onClose}
+              className={linkClass(link.path)}
+            >
               <link.icon size={18} />
               {link.name}
             </Link>
@@ -107,7 +123,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </p>
         <nav className="space-y-1">
           {secondaryLinks.map((link) => (
-            <Link key={link.path} to={path(link.path)} onClick={onClose} className={linkClass(link.path)}>
+            <Link
+              key={link.path}
+              to={path(link.path)}
+              onClick={onClose}
+              className={linkClass(link.path)}
+            >
               <link.icon size={18} />
               {link.name}
             </Link>
@@ -127,7 +148,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <LanguageSwitcher />
           </div>
 
-          <Link to={path('/settings')} onClick={onClose} className={`xl:hidden ${linkClass('/settings')}`}>
+          <Link
+            to={path('/settings')}
+            onClick={onClose}
+            className={`xl:hidden ${linkClass('/settings')}`}
+          >
             <Settings size={18} />
             {t('nav.settings')}
           </Link>
@@ -149,7 +174,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="mt-3 pt-3 border-t border-slate-100">
             <div className="flex items-center gap-3 px-3 py-2">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="w-9 h-9 rounded-full object-cover shrink-0"
+                />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
                   <User className="w-4 h-4 text-primary-600" />

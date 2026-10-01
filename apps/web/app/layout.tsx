@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   applicationName: 'Factumation',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Factumation' },
-  icons: { icon: '/icons/icon.svg' },
+  icons: {
+    icon: [{ url: '/brand/factumation-symbol.svg', type: 'image/svg+xml' }],
+    shortcut: '/brand/factumation-symbol.svg',
+    apple: '/icons/maskable.svg',
+  },
 };
 
 const sans = Inter({ subsets: ['latin'], variable: '--font-sans' });

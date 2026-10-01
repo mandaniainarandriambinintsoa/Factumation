@@ -135,7 +135,10 @@ export function AppShell({
       </header>
       <div className="min-h-[calc(100vh-8rem)] pb-24 xl:pb-0">{children}</div>
       <footer className="hidden h-24 items-center justify-between border-t border-slate-200 bg-white px-10 text-sm text-slate-500 xl:flex">
-        <span>© 2026 Factumation. Tous droits réservés.</span>
+        <div className="flex items-center gap-5">
+          <BrandMark locale={locale} compact />
+          <span>© 2026 Factumation. Tous droits réservés.</span>
+        </div>
         <span>Blog</span>
       </footer>
       <nav

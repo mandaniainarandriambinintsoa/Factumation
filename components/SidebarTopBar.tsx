@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, FileText, User, Settings } from 'lucide-react';
+import { Menu, User, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useI18n } from '../contexts/I18nContext';
 import { useLocalizedPath } from '../hooks/useLocalizedPath';
 import LanguageSwitcher from './LanguageSwitcher';
+import BrandMark from './BrandMark';
 import { Button } from './ui/button';
 
 interface SidebarTopBarProps {
@@ -30,12 +31,7 @@ const SidebarTopBar: React.FC<SidebarTopBarProps> = ({ onMenuToggle }) => {
           >
             <Menu size={22} />
           </Button>
-          <Link to={path('/')} className="flex items-center gap-2">
-            <div className="bg-primary-900 text-white p-1.5 rounded-lg">
-              <FileText size={18} />
-            </div>
-            <span className="font-bold text-primary-900 hidden sm:inline">Factumation</span>
-          </Link>
+          <BrandMark compact />
         </div>
 
         {/* Left spacer on desktop (sidebar has the logo) */}
