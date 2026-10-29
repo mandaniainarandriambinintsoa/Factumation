@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { SupabaseClientFactory } from '../common/supabase/supabase-client.factory.js';
 
 const BUCKET = 'document-pdfs';
-const TEMPLATE_VERSION = 'v1';
+const TEMPLATE_VERSION = 'v2';
 
 @Injectable()
 export class DocumentStorageGateway {

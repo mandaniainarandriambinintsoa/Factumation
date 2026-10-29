@@ -58,6 +58,7 @@ export function DocumentDetail({
             id={document.id}
             status={document.status}
             calculationVersion={document.calculationVersion}
+            locale={locale}
           />
         </div>
       </div>

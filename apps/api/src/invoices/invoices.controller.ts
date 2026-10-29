@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   Headers,
@@ -15,8 +16,11 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiHeader,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiSecurity,
   ApiTags,
@@ -99,6 +103,31 @@ export class InvoicesController {
     @Body() input: UpdateInvoiceDto,
   ): Promise<InvoiceResponseDto> {
     return this.invoices.update(principal, token, id, input);
+  }
+
+  @Post(':id/duplicate')
+  @ApiCreatedResponse({ type: InvoiceResponseDto })
+  @ApiConflictResponse({ description: 'The linked company or client is no longer available.' })
+  @ApiNotFoundResponse({ description: 'Invoice not found.' })
+  duplicate(
+    @CurrentPrincipal() principal: AuthPrincipal,
+    @CurrentAccessToken() token: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<InvoiceResponseDto> {
+    return this.invoices.duplicate(principal, token, id);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: 'Draft invoice deleted.' })
+  @ApiConflictResponse({ description: 'Only v2 draft invoices can be deleted.' })
+  @ApiNotFoundResponse({ description: 'Invoice not found.' })
+  remove(
+    @CurrentPrincipal() principal: AuthPrincipal,
+    @CurrentAccessToken() token: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.invoices.remove(principal, token, id);
   }
 
   @Post(':id/issue')

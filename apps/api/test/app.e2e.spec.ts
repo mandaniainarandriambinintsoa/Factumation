@@ -80,12 +80,17 @@ describe('API foundation', () => {
     ['post', '/api/v1/invoices'],
     ['post', '/api/v1/quotes'],
     ['post', '/api/v1/invoices/00000000-0000-4000-8000-000000000001/send'],
+    ['post', '/api/v1/invoices/00000000-0000-4000-8000-000000000001/duplicate'],
+    ['delete', '/api/v1/invoices/00000000-0000-4000-8000-000000000001'],
     ['post', '/api/v1/quotes/00000000-0000-4000-8000-000000000001/send'],
   ] as const)('rejects guest %s %s', async (method, path) => {
     await request(app.getHttpServer())[method](path).expect(401);
   });
 
   it('publishes OpenAPI only when explicitly enabled', async () => {
-    await request(app.getHttpServer()).get('/api/docs/openapi.json').expect(200);
+    const response = await request(app.getHttpServer()).get('/api/docs/openapi.json').expect(200);
+
+    expect(response.body.paths).toHaveProperty('/api/v1/invoices/{id}/duplicate');
+    expect(response.body.paths['/api/v1/invoices/{id}']).toHaveProperty('delete');
   });
 });

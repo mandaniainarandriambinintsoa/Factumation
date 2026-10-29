@@ -266,15 +266,17 @@ function FiscalLines({
     | undefined;
 }) {
   if (!entity) return null;
+  const showEuropeanIds = entity.fiscalRegion === 'EU' || Boolean(entity.siret || entity.vatNumber);
+  const showMadagascarIds = entity.fiscalRegion === 'MG' || Boolean(entity.nif || entity.stat);
   return (
     <div className="mt-3 text-sm leading-5 text-slate-600">
-      {entity.fiscalRegion === 'EU' ? (
+      {showEuropeanIds ? (
         <>
           <div>SIRET : {entity.siret || '—'}</div>
           <div>TVA : {entity.vatNumber || '—'}</div>
         </>
       ) : null}
-      {entity.fiscalRegion === 'MG' ? (
+      {showMadagascarIds ? (
         <>
           <div>NIF : {entity.nif || '—'}</div>
           <div>STAT : {entity.stat || '—'}</div>

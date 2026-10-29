@@ -26,11 +26,15 @@ const row: QuoteReadRow = {
   company_address: null,
   company_email: 'company@example.com',
   company_phone: null,
+  company_nif: '4000000000',
+  company_stat: '12345678901234',
   logo_url: null,
   client_name: 'Ada Lovelace',
   client_address: null,
   client_email: 'ada@example.com',
   client_phone: null,
+  client_nif: null,
+  client_stat: null,
   items: [
     {
       id: 'line-1',

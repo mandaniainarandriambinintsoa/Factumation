@@ -1,6 +1,16 @@
 'use client';
 
-import { Check, CheckCircle2, Download, Loader2, Mail, Send, X } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  Download,
+  Loader2,
+  Mail,
+  Pencil,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -11,15 +21,18 @@ export function DocumentActions({
   id,
   status,
   calculationVersion,
+  locale,
 }: {
   kind: 'invoice' | 'quote';
   id: string;
   status: string;
   calculationVersion: 'legacy-v1' | 'v2';
+  locale: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const collection = kind === 'invoice' ? 'invoices' : 'quotes';
   const act = async (action: 'issue' | 'send' | 'mark-paid' | 'accept' | 'reject') => {
     setPending(action);
@@ -50,11 +63,58 @@ export function DocumentActions({
       setPending(null);
     }
   };
+  const duplicateForEditing = async () => {
+    setPending('duplicate');
+    setError(null);
+    try {
+      const copy = await browserApiRequest<{ id: string }>(`/invoices/${id}/duplicate`, {
+        method: 'POST',
+      });
+      router.push(`/${locale}/invoices/${copy.id}/edit`);
+    } catch (cause) {
+      setError(
+        cause instanceof BrowserApiError
+          ? cause.message
+          : 'La copie modifiable n’a pas pu être créée.',
+      );
+      setPending(null);
+    }
+  };
+  const deleteDraft = async () => {
+    setPending('delete');
+    setError(null);
+    try {
+      await browserApiRequest<void>(`/invoices/${id}`, { method: 'DELETE' });
+      router.push(`/${locale}/invoices`);
+      router.refresh();
+    } catch (cause) {
+      setError(
+        cause instanceof BrowserApiError ? cause.message : 'La facture n’a pas pu être supprimée.',
+      );
+      setPending(null);
+      setConfirmDelete(false);
+    }
+  };
   const button =
     'focus-ring inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50';
   return (
     <div>
       <div className="flex flex-wrap justify-end gap-2">
+        {kind === 'invoice' && status !== 'draft' ? (
+          <button
+            type="button"
+            onClick={() => void duplicateForEditing()}
+            disabled={pending !== null}
+            className={`${button} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+          >
+            {pending === 'duplicate' ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Pencil className="size-4" />
+            )}
+            Modifier
+          </button>
+        ) : null}
         <button
           onClick={download}
           disabled={pending !== null}
@@ -137,7 +197,53 @@ export function DocumentActions({
             </button>
           </>
         ) : null}
+        {kind === 'invoice' && status === 'draft' && calculationVersion === 'v2' ? (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            disabled={pending !== null}
+            className={`${button} border border-red-200 bg-white text-red-700 hover:bg-red-50`}
+          >
+            <Trash2 className="size-4" />
+            Supprimer
+          </button>
+        ) : null}
       </div>
+      {confirmDelete ? (
+        <div
+          role="alert"
+          aria-labelledby="delete-invoice-title"
+          className="mt-3 rounded-lg border border-red-200 bg-red-50 p-4 text-left"
+        >
+          <p id="delete-invoice-title" className="text-sm font-semibold text-red-900">
+            Supprimer définitivement ce brouillon ?
+          </p>
+          <p className="mt-1 text-xs leading-5 text-red-700">Cette action est irréversible.</p>
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              disabled={pending !== null}
+              className={`${button} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={() => void deleteDraft()}
+              disabled={pending !== null}
+              className={`${button} bg-red-700 text-white hover:bg-red-800`}
+            >
+              {pending === 'delete' ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
+              Confirmer la suppression
+            </button>
+          </div>
+        </div>
+      ) : null}
       {error ? (
         <p role="alert" className="mt-2 text-right text-xs text-red-600">
           {error}

@@ -1,7 +1,7 @@
 'use client';
 
 import { documentImportResponseSchema, type DocumentImportResponse } from '@factumation/contracts';
-import { Camera, Loader2, Mic, Square } from 'lucide-react';
+import { Camera, Loader2, Mic, Square, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { browserApiFormRequest, BrowserApiError } from '@/lib/api/browser-api';
@@ -30,6 +30,7 @@ export function DocumentAiImport({
   const [activeMode, setActiveMode] = useState<ImportMode>('image');
   const [processing, setProcessing] = useState<ImportMode | null>(null);
   const [recording, setRecording] = useState(false);
+  const [voiceExpanded, setVoiceExpanded] = useState(true);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<DocumentImportResponse | null>(null);
@@ -219,40 +220,74 @@ export function DocumentAiImport({
         </p>
         {activeMode === 'image' ? feedback : null}
       </section>
-      {/* Anchor the absolute panel to the viewport without blocking the underlying form. */}
+      {/* Anchor the voice controls to the viewport without blocking the underlying form. */}
       <div className="pointer-events-none fixed inset-0 z-40">
-        <section
-          aria-label="Dictée vocale"
-          className="pointer-events-auto absolute bottom-[calc(10rem+env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] w-72 max-w-[calc(100%-2rem)] rounded-xl border border-blue-200 bg-white p-3 shadow-xl sm:bottom-[calc(5rem+env(safe-area-inset-bottom))] xl:bottom-6"
-        >
-          <div className="max-h-[calc(100dvh-15rem)] overflow-y-auto overscroll-contain sm:max-h-[calc(100dvh-10rem)] xl:max-h-[calc(100dvh-4rem)]">
-            <p id="voice-import-help" className="mb-2 text-xs leading-5 text-slate-500">
-              Dictez pendant 60 secondes maximum. L’audio est envoyé pour analyse puis supprimé de
-              la mémoire ; vérifiez le préremplissage.
-            </p>
-            <button
-              type="button"
-              aria-describedby="voice-import-help"
-              disabled={busy && !recording}
-              onClick={recording ? stopRecording : () => void startRecording()}
-              className={`focus-ring inline-flex w-full min-h-12 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold disabled:opacity-50 ${recording ? 'border-red-300 bg-red-50 text-red-700' : 'border-blue-200 bg-white text-[var(--primary-900)] hover:bg-blue-50'}`}
-            >
-              {processing === 'voice' ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : recording ? (
-                <Square className="size-4 fill-current" />
-              ) : (
-                <Mic className="size-4" />
-              )}
-              {processing === 'voice'
-                ? 'Transcription…'
-                : recording
-                  ? `Arrêter (${seconds} s)`
-                  : 'Dicter les informations'}
-            </button>
-            {activeMode === 'voice' ? feedback : null}
-          </div>
-        </section>
+        {voiceExpanded ? (
+          <section
+            aria-label="Dictée vocale"
+            className="pointer-events-auto absolute bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] w-72 max-w-[calc(100%-2rem)] rounded-xl border border-blue-200 bg-white p-3 shadow-xl sm:bottom-[calc(2rem+env(safe-area-inset-bottom))]"
+          >
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-slate-900">Dictée vocale</h2>
+              <button
+                type="button"
+                onClick={() => setVoiceExpanded(false)}
+                aria-label="Réduire la dictée vocale"
+                aria-expanded="true"
+                className="focus-ring inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <div className="max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain">
+              <p id="voice-import-help" className="mb-2 text-xs leading-5 text-slate-500">
+                Dictez pendant 60 secondes maximum. L’audio est envoyé pour analyse puis supprimé de
+                la mémoire ; vérifiez le préremplissage.
+              </p>
+              <button
+                type="button"
+                aria-describedby="voice-import-help"
+                disabled={busy && !recording}
+                onClick={recording ? stopRecording : () => void startRecording()}
+                className={`focus-ring inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold disabled:opacity-50 ${recording ? 'border-red-300 bg-red-50 text-red-700' : 'border-blue-200 bg-white text-[var(--primary-900)] hover:bg-blue-50'}`}
+              >
+                {processing === 'voice' ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : recording ? (
+                  <Square className="size-4 fill-current" />
+                ) : (
+                  <Mic className="size-4" />
+                )}
+                {processing === 'voice'
+                  ? 'Transcription…'
+                  : recording
+                    ? `Arrêter (${seconds} s)`
+                    : 'Dicter les informations'}
+              </button>
+              {activeMode === 'voice' ? feedback : null}
+            </div>
+          </section>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setVoiceExpanded(true)}
+            aria-label={
+              recording
+                ? `Rouvrir la dictée vocale, ${seconds} secondes`
+                : 'Ouvrir la dictée vocale'
+            }
+            aria-expanded="false"
+            className={`focus-ring pointer-events-auto absolute right-0 top-1/2 inline-flex min-h-12 min-w-12 -translate-y-1/2 items-center justify-center rounded-l-xl border border-r-0 shadow-lg ${recording ? 'border-red-300 bg-red-50 text-red-700' : 'border-blue-200 bg-white text-[var(--primary-900)] hover:bg-blue-50'}`}
+          >
+            {processing === 'voice' ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : recording ? (
+              <Square className="size-4 fill-current" />
+            ) : (
+              <Mic className="size-5" />
+            )}
+          </button>
+        )}
       </div>
     </>
   );

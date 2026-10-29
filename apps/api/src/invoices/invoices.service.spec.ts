@@ -30,11 +30,15 @@ const row: InvoiceReadRow = {
   company_address: null,
   company_email: 'company@example.com',
   company_phone: null,
+  company_nif: '4000000000',
+  company_stat: '12345678901234',
   logo_url: null,
   client_name: 'Ada Lovelace',
   client_address: null,
   client_email: 'ada@example.com',
   client_phone: null,
+  client_nif: null,
+  client_stat: null,
   items: [
     {
       id: 'line-1',
@@ -79,6 +83,7 @@ function createService(withEmail = false) {
     issue: vi.fn(),
     list: vi.fn(),
     updateDraft: vi.fn(),
+    deleteDraft: vi.fn(),
     hasEmailEntitlement: vi.fn(),
     markSent: vi.fn(),
     markPaid: vi.fn(),
@@ -219,6 +224,56 @@ describe('InvoicesService', () => {
         notes: 'Updated',
       }),
     );
+  });
+
+  it('creates a new draft when modifying an issued invoice', async () => {
+    const { repository, service } = createService();
+    const issued = {
+      ...row,
+      invoice_number: 'INV-2026-000001',
+      status: 'issued',
+      issued_at: '2026-09-21T13:00:00.000Z',
+    };
+    vi.mocked(repository.findById).mockResolvedValue(issued);
+    vi.mocked(repository.createDraft).mockResolvedValue(row);
+
+    await service.duplicate(principal, token, invoiceId);
+
+    expect(repository.createDraft).toHaveBeenCalledWith(
+      token,
+      principal.id,
+      expect.objectContaining({
+        p_company_id: row.company_id,
+        p_client_id: row.client_id,
+        p_items: [expect.objectContaining({ description: 'Engine design' })],
+        p_idempotency_key: expect.stringMatching(/^invoice:duplicate:/),
+      }),
+    );
+  });
+
+  it('deletes only an owned v2 draft', async () => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue(row);
+    vi.mocked(repository.deleteDraft).mockResolvedValue(true);
+
+    await service.remove(principal, token, invoiceId);
+
+    expect(repository.deleteDraft).toHaveBeenCalledWith(token, principal.id, invoiceId);
+  });
+
+  it('refuses to delete an issued invoice', async () => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue({
+      ...row,
+      invoice_number: 'INV-2026-000001',
+      status: 'issued',
+      issued_at: '2026-09-21T13:00:00.000Z',
+    });
+
+    await expect(service.remove(principal, token, invoiceId)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
   });
 
   it('issues through the atomic repository operation', async () => {

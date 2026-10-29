@@ -9,7 +9,7 @@ import type {
 import { SupabaseClientFactory } from '../common/supabase/supabase-client.factory.js';
 
 const INVOICE_COLUMNS =
-  'id,user_id,company_id,client_id,draft_reference,invoice_number,invoice_date,due_date,company_name,company_address,company_email,company_phone,logo_url,client_name,client_address,client_email,client_phone,items,subtotal,tax_mode,tax_rate,tax_amount,withholding_amount,total,amount_due,currency,payment_method,status,calculation_version,issued_at,notes,created_at,updated_at';
+  'id,user_id,company_id,client_id,draft_reference,invoice_number,invoice_date,due_date,company_name,company_address,company_email,company_phone,company_nif,company_stat,logo_url,client_name,client_address,client_email,client_phone,client_nif,client_stat,items,subtotal,tax_mode,tax_rate,tax_amount,withholding_amount,total,amount_due,currency,payment_method,status,calculation_version,issued_at,notes,created_at,updated_at';
 
 export type InvoicePage = { rows: InvoiceReadRow[]; total: number };
 
@@ -117,6 +117,21 @@ export class InvoicesRepository {
       .maybeSingle();
     if (error) throw new DataAccessError('invoices.updateDraft', error.code);
     return data;
+  }
+
+  async deleteDraft(accessToken: string, ownerId: string, id: string): Promise<boolean> {
+    const { data, error } = await this.clients
+      .createForUser(accessToken)
+      .from('invoices')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', ownerId)
+      .eq('status', 'draft')
+      .eq('calculation_version', 'v2')
+      .select('id')
+      .maybeSingle();
+    if (error) throw new DataAccessError('invoices.deleteDraft', error.code);
+    return data !== null;
   }
 
   async issue(accessToken: string, ownerId: string, id: string): Promise<InvoiceReadRow | null> {

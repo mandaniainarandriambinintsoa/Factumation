@@ -14,10 +14,15 @@ export type DocumentPrintModel = {
   companyAddress: string | null;
   companyEmail: string;
   companyPhone: string | null;
+  companyNif: string | null;
+  companyStat: string | null;
+  logoUrl: string | null;
   clientName: string;
   clientAddress: string | null;
   clientEmail: string;
   clientPhone: string | null;
+  clientNif: string | null;
+  clientStat: string | null;
   documentDate: string;
   secondDate: string | null;
   currency: string;
@@ -147,28 +152,69 @@ function drawHeader(
   bold: PDFFont,
 ): number {
   const label = model.kind === 'invoice' ? 'FACTURE' : 'DEVIS';
-  drawText(page, model.companyName, 40, 770, 16, bold, ink);
-  let leftY = 749;
+  drawKnownCompanyLogo(page, model.logoUrl);
+  drawCentered(page, label, 335, 770, 23, regular, ink);
+  let numberY = 775;
+  for (const line of wrapIdentifier(
+    model.number ?? model.draftReference ?? 'BROUILLON',
+    bold,
+    13,
+    125,
+  )) {
+    drawRight(page, line, 553, numberY, 13, bold, navy);
+    numberY -= 17;
+  }
+  drawRight(page, `Date : ${formatDate(model.documentDate)}`, 553, numberY - 3, 9, regular, slate);
+
+  let leftY = 690;
+  for (const [index, line] of wrap(model.companyName, bold, 16, 225).entries()) {
+    drawText(page, line, 40, leftY, 16, bold, ink);
+    leftY -= index === 0 ? 21 : 19;
+  }
+  leftY -= 3;
   for (const line of contactLines(model.companyAddress, model.companyEmail, model.companyPhone)) {
     drawText(page, line, 40, leftY, 9, regular, muted);
     leftY -= 15;
   }
-  drawRight(page, label, 474, 770, 23, regular, ink);
-  drawRight(page, model.number ?? model.draftReference ?? 'BROUILLON', 553, 770, 13, bold, navy);
-  drawRight(page, `Date : ${formatDate(model.documentDate)}`, 553, 747, 9, regular, slate);
-  drawRight(page, model.clientName, 553, 704, 14, bold, ink);
-  let rightY = 684;
+  for (const line of fiscalLines(model.companyNif, model.companyStat)) {
+    drawText(page, line, 40, leftY, 9, regular, slate);
+    leftY -= 15;
+  }
+  drawRight(page, model.clientName, 553, 675, 14, bold, ink);
+  let rightY = 654;
   for (const line of contactLines(model.clientAddress, model.clientEmail, model.clientPhone)) {
     drawRight(page, line, 553, rightY, 9, regular, muted);
     rightY -= 15;
   }
+  for (const line of fiscalLines(model.clientNif, model.clientStat)) {
+    drawRight(page, line, 553, rightY, 9, regular, slate);
+    rightY -= 15;
+  }
   page.drawLine({
-    start: { x: 40, y: 626 },
-    end: { x: 555, y: 626 },
+    start: { x: 40, y: 540 },
+    end: { x: 555, y: 540 },
     thickness: 0.8,
     color: border,
   });
-  return 596;
+  return 510;
+}
+
+function drawKnownCompanyLogo(page: PDFPage, logoUrl: string | null): void {
+  if (!logoUrl?.includes('6512999c3031a6889a3ed45e_logo')) return;
+  page.drawCircle({
+    x: 63,
+    y: 772,
+    size: 15,
+    color: rgb(230 / 255, 0, 18 / 255),
+  });
+  page.drawRectangle({ x: 48, y: 772, width: 30, height: 16, color: rgb(1, 1, 1) });
+  page.drawCircle({
+    x: 63,
+    y: 772,
+    size: 15,
+    borderColor: ink,
+    borderWidth: 0.7,
+  });
 }
 
 function drawTableHeader(page: PDFPage, y: number, font: PDFFont) {
@@ -194,6 +240,10 @@ function contactLines(address: string | null, email: string, phone: string | nul
   return [...(address?.split(/\r?\n/).filter(Boolean) ?? []), email, ...(phone ? [phone] : [])];
 }
 
+function fiscalLines(nif: string | null, stat: string | null): string[] {
+  return [...(nif ? [`NIF : ${nif}`] : []), ...(stat ? [`STAT : ${stat}`] : [])];
+}
+
 function paymentLabel(value: string | null): string {
   const labels: Record<string, string> = {
     bank_transfer: 'Virement Bancaire',
@@ -203,7 +253,7 @@ function paymentLabel(value: string | null): string {
     cash: 'Espèces',
     mobile_money: 'Mobile Money',
   };
-  return value ? (labels[value] ?? value) : 'Non renseigné';
+  return value ? (labels[value] ?? value) : '';
 }
 
 function formatDate(value: string): string {
@@ -237,6 +287,18 @@ function drawRight(
   drawText(page, text, right - font.widthOfTextAtSize(text, size), y, size, font, color);
 }
 
+function drawCentered(
+  page: PDFPage,
+  text: string,
+  center: number,
+  y: number,
+  size: number,
+  font: PDFFont,
+  color = slate,
+) {
+  drawText(page, text, center - font.widthOfTextAtSize(text, size) / 2, y, size, font, color);
+}
+
 function money(value: string, currency: string) {
   const amount = Number(value);
   return Number.isFinite(amount)
@@ -256,5 +318,30 @@ function wrap(value: string, font: PDFFont, size: number, width: number) {
     }
   }
   if (line) result.push(line);
+  return result.length ? result : [''];
+}
+
+function wrapIdentifier(value: string, font: PDFFont, size: number, width: number): string[] {
+  const result: string[] = [];
+  let remaining = value;
+  while (font.widthOfTextAtSize(remaining, size) > width) {
+    let splitAt = -1;
+    for (let index = 1; index < remaining.length; index += 1) {
+      if (font.widthOfTextAtSize(remaining.slice(0, index + 1), size) > width) break;
+      if (remaining[index] === '-') splitAt = index + 1;
+    }
+    if (splitAt < 1) {
+      splitAt = 1;
+      while (
+        splitAt < remaining.length &&
+        font.widthOfTextAtSize(remaining.slice(0, splitAt + 1), size) <= width
+      ) {
+        splitAt += 1;
+      }
+    }
+    result.push(remaining.slice(0, splitAt));
+    remaining = remaining.slice(splitAt);
+  }
+  if (remaining) result.push(remaining);
   return result.length ? result : [''];
 }

@@ -281,6 +281,54 @@ export class InvoicesService {
     }
   }
 
+  async duplicate(
+    principal: AuthPrincipal,
+    accessToken: string,
+    id: string,
+  ): Promise<InvoiceResponseDto> {
+    const source = await this.repository.findById(accessToken, principal.id, id);
+    if (!source) throw new NotFoundException('Invoice not found.');
+    this.assertAllowedCompany(principal, source.company_id);
+    if (!source.company_id || !source.client_id) {
+      throw new ConflictException(
+        'This invoice cannot be copied because its company or client is no longer available.',
+      );
+    }
+    const items = this.readItems(source.items).map((item) => ({
+      description: item.description ?? item.name ?? '',
+      quantity: String(item.quantity),
+      unitPrice: String(item.unitPrice),
+    }));
+    return this.create(principal, accessToken, `invoice:duplicate:${id}:${randomUUID()}`, {
+      companyId: source.company_id,
+      clientId: source.client_id,
+      items,
+      currency: this.currency(source.currency),
+      invoiceDate: source.invoice_date,
+      dueDate: source.due_date,
+      taxMode: this.taxMode(source.tax_mode, source.tax_rate),
+      taxRate: String(source.tax_rate),
+      paymentMethod: source.payment_method,
+      notes: source.notes,
+    });
+  }
+
+  async remove(principal: AuthPrincipal, accessToken: string, id: string): Promise<void> {
+    try {
+      const invoice = await this.repository.findById(accessToken, principal.id, id);
+      if (!invoice) throw new NotFoundException('Invoice not found.');
+      this.assertAllowedCompany(principal, invoice.company_id);
+      if (invoice.status !== 'draft' || invoice.calculation_version !== 'v2') {
+        throw new ConflictException('Only draft invoices can be deleted.');
+      }
+      if (!(await this.repository.deleteDraft(accessToken, principal.id, id))) {
+        throw new ConflictException('The invoice is no longer an editable draft.');
+      }
+    } catch (error) {
+      this.rethrowHttp(error, 'Unable to delete the invoice.');
+    }
+  }
+
   async issue(
     principal: AuthPrincipal,
     accessToken: string,
@@ -476,10 +524,15 @@ export class InvoicesService {
       companyAddress: row.company_address,
       companyEmail: row.company_email,
       companyPhone: row.company_phone,
+      companyNif: row.company_nif,
+      companyStat: row.company_stat,
+      logoUrl: row.logo_url,
       clientName: row.client_name,
       clientAddress: row.client_address,
       clientEmail: row.client_email,
       clientPhone: row.client_phone,
+      clientNif: row.client_nif,
+      clientStat: row.client_stat,
       documentDate: document.invoiceDate,
       secondDate: document.dueDate,
       currency: document.currency,

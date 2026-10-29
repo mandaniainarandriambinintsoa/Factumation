@@ -9,7 +9,7 @@ import type {
 import { SupabaseClientFactory } from '../common/supabase/supabase-client.factory.js';
 
 const QUOTE_COLUMNS =
-  'id,user_id,company_id,client_id,draft_reference,quote_number,quote_date,validity_date,company_name,company_address,company_email,company_phone,logo_url,client_name,client_address,client_email,client_phone,items,subtotal,tax_mode,tax_rate,tax_amount,withholding_amount,total,amount_due,currency,payment_method,status,calculation_version,issued_at,notes,created_at,updated_at';
+  'id,user_id,company_id,client_id,draft_reference,quote_number,quote_date,validity_date,company_name,company_address,company_email,company_phone,company_nif,company_stat,logo_url,client_name,client_address,client_email,client_phone,client_nif,client_stat,items,subtotal,tax_mode,tax_rate,tax_amount,withholding_amount,total,amount_due,currency,payment_method,status,calculation_version,issued_at,notes,created_at,updated_at';
 
 export type QuotePage = { rows: QuoteReadRow[]; total: number };
 

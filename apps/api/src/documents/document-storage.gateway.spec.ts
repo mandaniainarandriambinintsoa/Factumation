@@ -33,7 +33,7 @@ describe('DocumentStorageGateway', () => {
 
     expect(result).toEqual(bytes);
     expect(render).not.toHaveBeenCalled();
-    expect(storage.download).toHaveBeenCalledWith('owner-id/invoices/document-id/v1.pdf');
+    expect(storage.download).toHaveBeenCalledWith('owner-id/invoices/document-id/v2.pdf');
   });
 
   it('renders and stores a missing PDF in the private owner path', async () => {
@@ -53,7 +53,7 @@ describe('DocumentStorageGateway', () => {
 
     expect(result).toBe(bytes);
     expect(storage.upload).toHaveBeenCalledWith(
-      'owner-id/quotes/document-id/v1.pdf',
+      'owner-id/quotes/document-id/v2.pdf',
       bytes,
       expect.objectContaining({ contentType: 'application/pdf', upsert: false }),
     );
