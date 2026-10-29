@@ -132,12 +132,6 @@ export async function renderDocumentPdf(model: DocumentPrintModel): Promise<Uint
     }
   }
 
-  for (const current of pdf.getPages()) {
-    current.drawText(
-      `Généré par Factumation · ${model.number ?? model.draftReference ?? 'Brouillon'}`,
-      { x: 40, y: 30, size: 7.5, font: regular, color: muted },
-    );
-  }
   pdf.setTitle(
     `${model.kind === 'invoice' ? 'Facture' : 'Devis'} ${model.number ?? model.draftReference ?? ''}`,
   );
