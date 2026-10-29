@@ -27,6 +27,7 @@ import { DocumentStorageGateway } from '../documents/document-storage.gateway.js
 import type { InvoiceReadRow, InvoiceUpdate } from '../common/supabase/database.types.js';
 import {
   IdempotencyConflictError,
+  InvoiceNumberConflictError,
   InvoicesRepository,
   InvoiceQuotaExceededError,
   InvoiceStateConflictError,
@@ -189,13 +190,14 @@ export class InvoicesService {
       companyId: input.companyId,
       clientId: input.clientId ?? null,
       client: inlineClient,
+      number: input.number ?? null,
       ...normalized,
       calculation,
     });
     const storedItems = calculation.items.map((item) => ({ ...item, id: randomUUID() }));
 
     try {
-      const row = await this.repository.createDraft(accessToken, principal.id, {
+      let row = await this.repository.createDraft(accessToken, principal.id, {
         p_company_id: input.companyId,
         p_client_id: input.clientId ?? null,
         p_client: inlineClient,
@@ -215,6 +217,13 @@ export class InvoicesService {
         p_idempotency_key: idempotencyKey,
         p_request_fingerprint: fingerprint,
       });
+      if (input.number) {
+        const numbered = await this.repository.updateDraft(accessToken, principal.id, row.id, {
+          invoice_number: input.number,
+        });
+        if (!numbered) throw new ConflictException('The invoice is no longer an editable draft.');
+        row = numbered;
+      }
       return this.toResponse(row);
     } catch (error) {
       if (error instanceof IdempotencyConflictError) {
@@ -222,6 +231,9 @@ export class InvoicesService {
       }
       if (error instanceof InvoiceQuotaExceededError) {
         throw new ForbiddenException(error.message);
+      }
+      if (error instanceof InvoiceNumberConflictError) {
+        throw new ConflictException(error.message);
       }
       throw new InternalServerErrorException('Unable to create the invoice draft.');
     }
@@ -256,6 +268,7 @@ export class InvoicesService {
       const calculation = this.calculate(merged);
       const existingItems = this.readItems(existing.items);
       const values: InvoiceUpdate = {
+        ...(input.number !== undefined ? { invoice_number: input.number || null } : {}),
         invoice_date: merged.invoiceDate,
         due_date: merged.dueDate ?? null,
         items: calculation.items.map((item, index) => ({
@@ -277,6 +290,9 @@ export class InvoicesService {
       if (!updated) throw new ConflictException('The invoice is no longer an editable draft.');
       return this.toResponse(updated);
     } catch (error) {
+      if (error instanceof InvoiceNumberConflictError) {
+        throw new ConflictException(error.message);
+      }
       this.rethrowHttp(error, 'Unable to update the invoice.');
     }
   }

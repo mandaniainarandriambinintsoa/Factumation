@@ -39,7 +39,11 @@ export function DocumentPreview({
   const company = companies.find((entry) => entry.id === values.companyId);
   const savedClient = clients.find((entry) => entry.id === values.clientId);
   const client = resolveClient(values, initial, savedClient);
-  const number = guestIssuer?.number || initial?.number || initial?.draftReference || 'Brouillon';
+  const number =
+    guestIssuer?.number ||
+    values.documentNumber ||
+    initial?.draftReference ||
+    'Brouillon';
   const disabled = pendingAction !== null;
 
   return (

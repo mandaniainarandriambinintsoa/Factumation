@@ -13,6 +13,7 @@ export function DocumentBillingStep({
   register,
   errors,
   setValue,
+  showDocumentNumber = true,
 }: {
   active: boolean;
   invoice: boolean;
@@ -20,6 +21,7 @@ export function DocumentBillingStep({
   register: UseFormRegister<DocumentFormValues>;
   errors: FieldErrors<DocumentFormValues>;
   setValue: UseFormSetValue<DocumentFormValues>;
+  showDocumentNumber?: boolean;
 }) {
   return (
     <section
@@ -34,6 +36,19 @@ export function DocumentBillingStep({
           Définissez les dates, la devise et les conditions.
         </p>
       </div>
+      {showDocumentNumber ? (
+        <Field
+          label={invoice ? 'Numéro de facture' : 'Numéro du devis'}
+          error={errors.documentNumber?.message}
+        >
+          <input
+            {...register('documentNumber')}
+            className={fieldClass}
+            placeholder="Attribué automatiquement si vide"
+            autoComplete="off"
+          />
+        </Field>
+      ) : null}
       <Field
         label={invoice ? 'Date de facture' : 'Date du devis'}
         error={errors.documentDate?.message}

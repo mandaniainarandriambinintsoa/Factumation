@@ -15,6 +15,7 @@ const migrationFiles = [
   '20260925_private_document_storage.sql',
   '20260926_external_api_keys.sql',
   '20260927_fix_document_status_constraints.sql',
+  '20261029153000_preserve_custom_invoice_number.sql',
 ];
 
 const baseline = `
@@ -202,6 +203,50 @@ describe('staged Supabase migrations', () => {
       "SELECT last_value::text FROM public.document_counters WHERE document_type = 'invoice'",
     );
     expect(counter.rows[0]?.last_value).toBe('1');
+  });
+
+  it('preserves a custom invoice number when issuing a draft', async () => {
+    const userId = '00000000-0000-4000-8000-000000000011';
+    const companyId = '00000000-0000-4000-8000-000000000012';
+    const clientId = '00000000-0000-4000-8000-000000000013';
+    await database.exec(`
+      INSERT INTO auth.users(id) VALUES ('${userId}');
+      INSERT INTO public.companies(
+        id, user_id, name, email, invoice_prefix, quote_prefix, is_default
+      ) VALUES ('${companyId}', '${userId}', 'Custom Number Test', 'test@example.com', 'INV', 'DEV', true);
+      INSERT INTO public.clients(id, user_id, name, email)
+      VALUES ('${clientId}', '${userId}', 'Client Test', 'client@example.com');
+      INSERT INTO public.subscriptions(user_id, plan, status)
+      VALUES ('${userId}', 'pro', 'active');
+      SELECT set_config('request.jwt.claim.sub', '${userId}', false);
+    `);
+
+    const created = await database.query<{ create_invoice_draft: string }>(
+      `SELECT public.create_invoice_draft(
+        $1::uuid, $2::uuid, NULL, $3::jsonb, 'EUR', '2026-10-29'::date,
+        '2026-11-29'::date, 'none', 0, 100, 0, 0, 100, 100,
+        'Virement', NULL, 'invoice-custom-0001', $4
+      )`,
+      [
+        companyId,
+        clientId,
+        JSON.stringify([{ description: 'Service', quantity: '1', unitPrice: '100', total: '100' }]),
+        'b'.repeat(64),
+      ],
+    );
+    const invoiceId = created.rows[0]!.create_invoice_draft;
+    await database.query('UPDATE public.invoices SET invoice_number = $1 WHERE id = $2::uuid', [
+      'CLIENT-2026-42',
+      invoiceId,
+    ]);
+
+    await database.query('SELECT public.issue_invoice($1::uuid)', [invoiceId]);
+
+    const invoice = await database.query<{ invoice_number: string; status: string }>(
+      'SELECT invoice_number, status FROM public.invoices WHERE id = $1::uuid',
+      [invoiceId],
+    );
+    expect(invoice.rows[0]).toEqual({ invoice_number: 'CLIENT-2026-42', status: 'issued' });
   });
 
   it('creates, authenticates, rate-counts, rotates and revokes an API credential', async () => {

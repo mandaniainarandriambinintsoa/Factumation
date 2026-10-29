@@ -6,6 +6,7 @@ import type { InvoiceReadRow } from '../common/supabase/database.types.js';
 import { DocumentEmailGateway } from '../documents/document-email.gateway.js';
 import {
   IdempotencyConflictError,
+  InvoiceNumberConflictError,
   InvoiceQuotaExceededError,
   InvoicesRepository,
 } from './invoices.repository.js';
@@ -123,6 +124,25 @@ describe('InvoicesService', () => {
     });
   });
 
+  it('stores a custom invoice number on the newly created draft', async () => {
+    const { repository, service } = createService();
+    vi.mocked(repository.createDraft).mockResolvedValue(row);
+    vi.mocked(repository.updateDraft).mockResolvedValue({
+      ...row,
+      invoice_number: 'CLIENT-2026-42',
+    });
+
+    const invoice = await service.create(principal, token, 'invoice:create:custom', {
+      ...input,
+      number: 'CLIENT-2026-42',
+    });
+
+    expect(repository.updateDraft).toHaveBeenCalledWith(token, principal.id, invoiceId, {
+      invoice_number: 'CLIENT-2026-42',
+    });
+    expect(invoice.number).toBe('CLIENT-2026-42');
+  });
+
   it('rejects missing or unsafe idempotency keys before data access', async () => {
     const { repository, service } = createService();
 
@@ -224,6 +244,37 @@ describe('InvoicesService', () => {
         notes: 'Updated',
       }),
     );
+  });
+
+  it('updates the custom number of an editable draft', async () => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue(row);
+    vi.mocked(repository.updateDraft).mockResolvedValue({
+      ...row,
+      invoice_number: 'INV-MANUEL-007',
+    });
+
+    const invoice = await service.update(principal, token, invoiceId, {
+      number: 'INV-MANUEL-007',
+    });
+
+    expect(repository.updateDraft).toHaveBeenCalledWith(
+      token,
+      principal.id,
+      invoiceId,
+      expect.objectContaining({ invoice_number: 'INV-MANUEL-007' }),
+    );
+    expect(invoice.number).toBe('INV-MANUEL-007');
+  });
+
+  it('rejects an invoice number already used by the company', async () => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue(row);
+    vi.mocked(repository.updateDraft).mockRejectedValue(new InvoiceNumberConflictError());
+
+    await expect(
+      service.update(principal, token, invoiceId, { number: 'INV-DUPLICATE' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('creates a new draft when modifying an issued invoice', async () => {

@@ -22,6 +22,7 @@ export const documentFormSchema = z
     clientVatNumber: optionalText(30),
     clientNif: optionalText(50),
     clientStat: optionalText(50),
+    documentNumber: optionalText(80),
     currency: z.enum(['EUR', 'USD', 'GBP', 'CAD', 'CHF', 'MGA']),
     documentDate: z.string().min(1, 'La date est requise.'),
     secondDate: z.string().min(1, 'La date est requise.'),
@@ -108,10 +109,7 @@ export function createDocumentDefaultValues(
     companies.find((company) => company.isDefault) ??
     companies[0];
   return {
-    companyId:
-      initial?.companyId ??
-      defaultCompany?.id ??
-      '',
+    companyId: initial?.companyId ?? defaultCompany?.id ?? '',
     clientMode: initialClientMode,
     clientId: initial?.clientId ?? '',
     clientName: initial?.clientName ?? '',
@@ -124,6 +122,7 @@ export function createDocumentDefaultValues(
     clientVatNumber: '',
     clientNif: '',
     clientStat: '',
+    documentNumber: initial?.number ?? '',
     currency:
       (initial?.currency as SupportedCurrency | undefined) ??
       (defaultCompany?.defaultCurrency as SupportedCurrency | undefined) ??
@@ -169,6 +168,7 @@ export const clientStepFields: Array<keyof DocumentFormValues> = [
 ];
 
 export const billingStepFields: Array<keyof DocumentFormValues> = [
+  'documentNumber',
   'documentDate',
   'secondDate',
   'currency',

@@ -227,6 +227,7 @@ export type InvoiceRow = {
 };
 
 export type InvoiceUpdate = {
+  invoice_number?: string | null;
   invoice_date?: string;
   due_date?: string | null;
   items?: unknown;

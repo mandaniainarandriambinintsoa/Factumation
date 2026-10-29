@@ -216,6 +216,7 @@ export function GuestDocumentForm({ locale, kind }: { locale: string; kind: 'inv
         <DocumentBillingStep
           active={step === 2}
           invoice={invoice}
+          showDocumentNumber={false}
           values={values}
           register={register}
           errors={errors}

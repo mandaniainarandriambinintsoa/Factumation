@@ -207,6 +207,7 @@ export function DocumentForm({
   function buildDocumentPayload(data: DocumentFormValues): Record<string, unknown> {
     const optional = (value: string) => value || null;
     const documentFields = {
+      ...(invoice ? { number: optional(data.documentNumber) } : {}),
       items: data.items,
       currency: data.currency,
       ...(invoice

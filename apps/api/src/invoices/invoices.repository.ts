@@ -34,6 +34,13 @@ export class InvoiceQuotaExceededError extends Error {
   }
 }
 
+export class InvoiceNumberConflictError extends Error {
+  constructor() {
+    super('Ce numéro de facture est déjà utilisé pour cette entreprise.');
+    this.name = 'InvoiceNumberConflictError';
+  }
+}
+
 @Injectable()
 export class InvoicesRepository {
   constructor(@Inject(SupabaseClientFactory) private readonly clients: SupabaseClientFactory) {}
@@ -115,6 +122,7 @@ export class InvoicesRepository {
       .eq('calculation_version', 'v2')
       .select(INVOICE_COLUMNS)
       .maybeSingle();
+    if (error?.code === '23505') throw new InvoiceNumberConflictError();
     if (error) throw new DataAccessError('invoices.updateDraft', error.code);
     return data;
   }

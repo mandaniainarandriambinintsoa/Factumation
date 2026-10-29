@@ -39,6 +39,14 @@ export class InvoiceLineDto {
 }
 
 export class CreateInvoiceDto {
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 80 })
+  @Transform(trimString)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(80)
+  @IsOptional()
+  number?: string | null;
+
   @ApiProperty({ type: String, format: 'uuid' })
   @IsUUID()
   companyId!: string;
@@ -98,6 +106,14 @@ export class CreateInvoiceDto {
 }
 
 class UpdateInvoiceFields {
+  @ApiPropertyOptional({ type: String, nullable: true, maxLength: 80 })
+  @Transform(trimString)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(80)
+  @IsOptional()
+  number!: string | null;
+
   @ApiProperty({ type: [InvoiceLineDto], minItems: 1, maxItems: 100 })
   @ValidateNested({ each: true })
   @Type(() => InvoiceLineDto)
